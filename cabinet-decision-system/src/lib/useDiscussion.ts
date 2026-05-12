@@ -175,9 +175,10 @@ export function useDiscussion() {
                 }
                 const delta = data.delta as string;
                 currentMsgContent += delta;
-                const lastMsg = newState.messages[newState.messages.length - 1];
-                if (lastMsg) {
-                  lastMsg.content = currentMsgContent;
+                const lastIdx = newState.messages.length - 1;
+                if (lastIdx >= 0) {
+                  const prev = newState.messages[lastIdx];
+                  newState.messages[lastIdx] = { ...prev, content: currentMsgContent };
                 }
                 break;
               }

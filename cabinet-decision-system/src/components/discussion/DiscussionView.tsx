@@ -59,12 +59,21 @@ export default function DiscussionView({ question, config }: Props) {
                 }`}
               >
                 <div
-                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-bold text-white transition-all ${
+                  className={`flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full border transition-all ${
                     isActive ? 'scale-110 shadow-lg' : ''
                   }`}
-                  style={{ backgroundColor: m.color }}
+                  style={{
+                    backgroundColor: 'rgba(0,0,0,0.03)',
+                    borderColor: 'rgba(0,0,0,0.15)',
+                  }}
                 >
-                  {m.nameZh.charAt(0)}
+                  {m.avatar ? (
+                    <img src={m.avatar} alt={m.nameZh} className="h-full w-full object-cover" />
+                  ) : (
+                    <span className="text-xs font-bold text-white" style={{ backgroundColor: m.color }}>
+                      {m.nameZh.charAt(0)}
+                    </span>
+                  )}
                 </div>
                 <div className="min-w-0">
                   <div className="text-sm font-medium">{m.nameZh}</div>
@@ -104,6 +113,17 @@ export default function DiscussionView({ question, config }: Props) {
               <span className="text-green-600">✓ 完成</span>
             )}
           </div>
+          {/* Round progress */}
+          <div className="mt-3 flex gap-1.5">
+            {state.rounds.map((r) => (
+              <RoundDivider
+                key={r.id}
+                label={r.label}
+                active={r.active}
+                completed={r.completed}
+              />
+            ))}
+          </div>
         </div>
 
         {/* Messages */}
@@ -124,20 +144,6 @@ export default function DiscussionView({ question, config }: Props) {
               <p className="mt-1 text-xs text-gray-400">AI 模型正在连接中...</p>
             </div>
           )}
-
-          {/* Round progress */}
-          <div className="sticky top-0 z-10 bg-gradient-to-b from-[#f5f0eb] pb-3 pt-1">
-            <div className="flex gap-1.5">
-              {state.rounds.map((r) => (
-                <RoundDivider
-                  key={r.id}
-                  label={r.label}
-                  active={r.active}
-                  completed={r.completed}
-                />
-              ))}
-            </div>
-          </div>
 
           {/* Messages by round */}
           {state.rounds.map((round) => {

@@ -38,10 +38,19 @@ export default function MessageBubble({ message, isActive }: Props) {
       {/* Avatar + name row */}
       <div className="flex items-baseline gap-2.5 mb-2">
         <div
-          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs font-bold text-white"
-          style={{ backgroundColor: color }}
+          className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full border text-xs"
+          style={{
+            backgroundColor: isModerator ? 'transparent' : `${color}10`,
+            borderColor: 'rgba(0,0,0,0.15)',
+          }}
         >
-          {isModerator ? "🎤" : name.charAt(0)}
+          {isModerator ? (
+            <span>🎤</span>
+          ) : member?.avatar ? (
+            <img src={member.avatar} alt={name} className="h-full w-full object-cover" />
+          ) : (
+            <span style={{ backgroundColor: color }} className="font-bold text-white">{name.charAt(0)}</span>
+          )}
         </div>
         <span className="text-sm font-semibold" style={{ color }}>
           {name}
