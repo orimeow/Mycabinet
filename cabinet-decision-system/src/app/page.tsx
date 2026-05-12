@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { cabinetMembers } from "@/data/personas";
-import MemberCard from "@/components/cabinet/MemberCard";
 import { AIProviderConfig } from "@/lib/types";
 
 const exampleQuestions = [
@@ -46,67 +45,84 @@ export default function Home() {
         <div className="absolute bottom-0 left-1/3 h-[400px] w-[400px] rounded-full bg-gradient-to-br from-purple-200/20 to-pink-200/20 blur-3xl" />
       </div>
 
-      <main className="relative mx-auto max-w-7xl px-4 pb-20 pt-8 md:px-8">
-        {/* Cabinet members - Equal-sized grid */}
-        <div className="mb-12 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
-          {cabinetMembers.map((member) => (
-            <div key={member.id}>
-              <MemberCard member={member} />
-            </div>
-          ))}
-        </div>
-
-        {/* Question input + Examples */}
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-          {/* Question card */}
-          <div className="rounded-3xl border bg-white/80 p-6 backdrop-blur-sm lg:col-span-2"
-            style={{ borderColor: 'rgba(0,0,0,0.06)' }}
-          >
-            <p className="mb-3 text-xs font-medium uppercase tracking-wider text-gray-400">
-              提出你的问题
-            </p>
-            <textarea
-              id="question"
-              value={question}
-              onChange={(e) => setQuestion(e.target.value)}
-              placeholder="例如：AI 是否会取代人类工作？我们该如何应对？"
-              className="h-32 w-full resize-none rounded-xl border bg-white/60 p-4 text-sm leading-relaxed
-                placeholder:text-gray-300 focus:border-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-200"
-              style={{ borderColor: 'rgba(0,0,0,0.06)' }}
-              maxLength={2000}
-            />
-            <div className="mt-3 flex items-center justify-between">
-              <span className="text-xs text-gray-400">{question.length} / 2000</span>
-              <button
-                onClick={handleSubmit}
-                disabled={!question.trim()}
-                className="rounded-xl bg-[#1a1a1a] px-6 py-3 text-sm font-semibold text-white
-                  transition-all hover:bg-[#333] hover:scale-[1.02] active:scale-[0.98]
-                  disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100"
-              >
-                开始讨论 →
-              </button>
-            </div>
-          </div>
-
-          {/* Examples card */}
-          <div className="rounded-3xl bg-gradient-to-br from-pink-400 via-rose-400 to-orange-400 p-6 text-white">
-            <p className="mb-3 text-xs font-medium uppercase tracking-wider text-white/60">
-              试试这些问题
-            </p>
-            <div className="space-y-2">
+      <main className="relative mx-auto max-w-4xl px-6 pb-20 pt-10">
+        {/* Question input */}
+        <div className="rounded-md border bg-white/60 p-6 backdrop-blur-sm"
+          style={{ borderColor: 'rgba(0,0,0,0.08)' }}
+        >
+          <textarea
+            id="question"
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
+            onKeyDown={(e) => {
+              if ((e.metaKey || e.ctrlKey) && e.key === "Enter") handleSubmit();
+            }}
+            placeholder="你想讨论什么问题？"
+            className="w-full resize-none bg-transparent px-4 py-4 text-lg leading-relaxed
+              placeholder:text-gray-500 focus:outline-none"
+            rows={5}
+            maxLength={2000}
+          />
+          <div className="mt-3 flex items-center justify-between">
+            <div className="flex flex-wrap gap-2">
               {exampleQuestions.map((q, i) => (
                 <button
                   key={i}
                   onClick={() => setQuestion(q)}
-                  className="w-full rounded-xl border border-white/20 bg-white/10 px-3 py-2.5 text-left text-sm text-white/80
-                    transition-all hover:bg-white/20 hover:text-white active:scale-[0.98]"
+                  className="rounded-md px-3 py-1.5 text-xs text-gray-400 transition-all hover:bg-teal-50/60 hover:text-gray-600"
                 >
                   {q}
                 </button>
               ))}
             </div>
+            <button
+              onClick={handleSubmit}
+              disabled={!question.trim()}
+              className="ml-4 shrink-0 rounded-md bg-[#1a1a1a] px-6 py-2.5 text-sm font-semibold text-white
+                transition-all hover:bg-[#333] active:scale-[0.98]
+                disabled:cursor-not-allowed disabled:opacity-100"
+            >
+              开始讨论 →
+            </button>
           </div>
+        </div>
+
+        {/* Divider */}
+        <div className="my-10 flex items-center gap-4">
+          <div className="h-px flex-1 bg-gray-200" />
+          <span className="text-xs font-medium uppercase tracking-wider text-gray-400">
+            参与讨论
+          </span>
+          <div className="h-px flex-1 bg-gray-200" />
+        </div>
+
+        {/* Member avatars */}
+        <div className="flex justify-center gap-10">
+          {cabinetMembers.map((member) => (
+            <div key={member.id} className="flex flex-col items-center gap-2">
+              <div
+                className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border"
+                style={{
+                  backgroundColor: 'rgba(0,0,0,0.03)',
+                  borderColor: 'rgba(0,0,0,0.15)',
+                }}
+              >
+                {member.avatar ? (
+                  <img
+                    src={member.avatar}
+                    alt={member.nameZh}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <span className="text-2xl font-bold text-gray-400">
+                    {member.nameZh.charAt(0)}
+                  </span>
+                )}
+              </div>
+              <span className="text-sm font-medium text-gray-700">{member.nameZh}</span>
+              <span className="text-xs text-gray-400">{member.nameEn}</span>
+            </div>
+          ))}
         </div>
       </main>
     </div>

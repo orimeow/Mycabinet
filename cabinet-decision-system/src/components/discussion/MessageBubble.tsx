@@ -24,7 +24,7 @@ export default function MessageBubble({ message, isActive }: Props) {
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2 }}
-      className={`rounded-2xl border p-4 transition-all duration-200 ${
+      className={`rounded-md border p-4 transition-all duration-200 ${
         isActive ? 'shadow-md' : ''
       }`}
       style={{

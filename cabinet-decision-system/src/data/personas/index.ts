@@ -7,7 +7,7 @@ export const cabinetMembers: CabinetMember[] = [
     nameZh: "安德烈·卡帕西",
     title: "AI 工程师 / Eureka Labs 创始人",
     color: "#E53E3E",
-    avatar: "/avatars/karpathy.png",
+    avatar: "/avatars/karpathy.webp",
     persona: {
       biography:
         "1986年生于斯洛伐克，15岁随家人移居加拿大。Stanford CS PhD，导师李飞飞。2015年创建CS231n课程。OpenAI创始团队成员。2017-2022年任Tesla AI总监，见证自动驾驶从实验室到真实道路的可靠性爬坡。2022年发布YouTube「Zero to Hero」系列。2024年创立Eureka Labs专注AI教育。以极简主义工程风格著称——nanoGPT仅750行、microgpt仅243行。核心使命是「帮人们真正理解AI，不只是调用它」。",
@@ -54,7 +54,7 @@ export const cabinetMembers: CabinetMember[] = [
     nameZh: "保罗·格雷厄姆",
     title: "Y Combinator 联合创始人 / 作家",
     color: "#D69E2E",
-    avatar: "/avatars/paulgraham.png",
+    avatar: "/avatars/paulgraham.jpeg",
     persona: {
       biography:
         "1964年生于英国Weymouth，Cornell本科，Harvard CS PhD。1995年创立Viaweb（在线商店），1998年被Yahoo以4960万美元收购。2001年开始写essay，发现写作是他真正想做的事。2005年与Jessica Livingston共同创立Y Combinator，至今已孵化数千家公司，包括Airbnb、Stripe、Reddit。住在英格兰乡下，每天写5小时essay。30年来每4-8周一篇从未中断。人们记得他因为YC，但他本质上是个writer和programmer。",
@@ -101,7 +101,7 @@ export const cabinetMembers: CabinetMember[] = [
     nameZh: "埃隆·马斯克",
     title: "Tesla & SpaceX CEO / xAI 创始人",
     color: "#38A169",
-    avatar: "/avatars/musk.png",
+    avatar: "/avatars/musk.webp",
     persona: {
       biography:
         "1971年生于南非，12岁编写第一个游戏程序并出售500美元。到美国后创立Zip2、PayPal，将所得全部投入SpaceX和Tesla。SpaceX前三次火箭发射全部爆炸，第四次成功。Tesla从濒临破产到全球市值最高车企之一。同时推进Starship完全可复用、全自动驾驶和Grok。以极端工作强度（每周80-100小时）和「五步算法」著称。物理定律是唯一硬约束，其他一切都是建议。",
@@ -149,7 +149,7 @@ export const cabinetMembers: CabinetMember[] = [
     nameZh: "张一鸣",
     title: "字节跳动创始人",
     color: "#805AD5",
-    avatar: "/avatars/zhangyiming.png",
+    avatar: "/avatars/zhangyiming.webp",
     persona: {
       biography:
         "1983年生于福建龙岩，独生子。南开大学软件工程毕业。2006年以第五名员工加入酷讯做推荐系统，意识到「信息找人」比「人找信息」效率高一个数量级。2012年创立字节跳动，今日头条上线，用10个人在民宅里做成了算法推荐。2016年推出抖音，2017年10亿美元收购Musical.ly，开启全球化。2018年内涵段子关停时公开道歉，承认平台失职。2021年卸任CEO，主要精力转向AI研究和年轻人培养。坦诚清晰，始终创业。",
@@ -196,7 +196,7 @@ export const cabinetMembers: CabinetMember[] = [
     nameZh: "查理·芒格",
     title: "伯克希尔·哈撒韦副董事长 / 终身学习者",
     color: "#2D3748",
-    avatar: "/avatars/munger.png",
+    avatar: "/avatars/munger.webp",
     persona: {
       biography:
         "奥马哈长大，Harvard法学院毕业。当过律师，做过房地产，1959年遇到Warren Buffett，改变了彼此的投资哲学——让他从买便宜货变成了买好公司。花了99年时间收集世界上的蠢事然后系统性地避开它们。多元思维模型的坚定践行者——从心理学、经济学、物理学、生物学提取核心模型编织成决策框架。一生只做少量重大投资决策：See's、可口可乐、BYD、Costco。2023年去世，享年99岁。注意：虽然芒格已去世，但他在思维模型和决策智慧方面的洞见仍具有不可替代的参考价值。",

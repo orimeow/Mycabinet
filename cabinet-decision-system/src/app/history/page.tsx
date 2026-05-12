@@ -46,13 +46,13 @@ export default function HistoryPage() {
         {loading ? (
           <div className="py-20 text-center text-gray-400">加载中...</div>
         ) : discussions.length === 0 ? (
-          <div className="rounded-3xl border bg-white/80 py-20 text-center backdrop-blur-sm"
+          <div className="rounded-md border bg-white/80 py-20 text-center backdrop-blur-sm"
             style={{ borderColor: 'rgba(0,0,0,0.06)' }}
           >
             <p className="text-lg text-gray-400">暂无讨论记录</p>
             <button
               onClick={() => router.push("/")}
-              className="mt-4 rounded-xl bg-[#1a1a1a] px-5 py-2.5 text-sm font-medium text-white transition-all hover:bg-[#333]"
+              className="mt-4 rounded-md bg-[#1a1a1a] px-5 py-2.5 text-sm font-medium text-white transition-all hover:bg-[#333]"
             >
               发起第一个讨论
             </button>
@@ -62,7 +62,7 @@ export default function HistoryPage() {
             {discussions.map((d) => (
               <div
                 key={d.id}
-                className="group rounded-3xl border bg-white/80 p-5 transition-all duration-200 hover:bg-white hover:shadow-sm"
+                className="group rounded-md border bg-white/80 p-5 transition-all duration-200 hover:bg-white hover:shadow-sm"
                 style={{ borderColor: 'rgba(0,0,0,0.06)' }}
               >
                 <h3 className="line-clamp-2 text-sm font-semibold">{d.question}</h3>

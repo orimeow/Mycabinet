@@ -106,33 +106,34 @@ export default function SettingsPage() {
 
   return (
     <div className="relative min-h-screen overflow-hidden">
+      {/* Gradient mesh background */}
       <div className="pointer-events-none fixed inset-0">
         <div className="absolute -left-40 -top-40 h-[600px] w-[600px] rounded-full bg-gradient-to-br from-pink-200/40 to-orange-200/40 blur-3xl" />
         <div className="absolute -right-40 top-1/3 h-[500px] w-[500px] rounded-full bg-gradient-to-br from-teal-200/30 to-cyan-200/30 blur-3xl" />
       </div>
 
-      <main className="relative mx-auto max-w-3xl px-4 py-8 md:px-8">
+      <main className="relative mx-auto max-w-3xl px-6 py-6">
         {/* Title */}
-        <div className="mb-8">
-          <h1 className="heading-lg">设置</h1>
-          <p className="mt-2 text-muted">配置 AI 供应商和 API 密钥</p>
+        <div className="mb-6">
+          <h1 className="text-xl font-semibold">设置</h1>
+          <p className="mt-1 text-sm text-gray-400">配置 AI 供应商和 API 密钥</p>
         </div>
 
-        <div className="grid gap-4">
+        <div className="grid gap-3">
           {/* Provider selection */}
-          <div className="rounded-3xl border bg-white/80 p-6 backdrop-blur-sm" style={{ borderColor }}>
-            <p className="text-label mb-4">AI 供应商</p>
+          <div className="rounded-md border bg-white p-5" style={{ borderColor }}>
+            <p className="mb-4 text-xs font-medium uppercase tracking-wider text-gray-400">AI 供应商</p>
             <div className="grid grid-cols-2 gap-2 md:grid-cols-5">
               {PROVIDER_OPTIONS.map((opt) => (
                 <button
                   key={opt.value}
                   onClick={() => handleProviderChange(opt.value)}
-                  className={`rounded-xl px-3 py-3 text-sm font-medium transition-all duration-200 ${
+                  className={`rounded-md px-3 py-3 text-sm font-medium transition-all duration-200 ${
                     provider === opt.value
                       ? 'bg-[#1a1a1a] text-white'
-                      : 'bg-white/60 text-gray-600 hover:bg-white'
+                      : 'border text-gray-600 hover:bg-gray-50'
                   }`}
-                  style={{ borderColor: provider === opt.value ? undefined : borderColor, borderWidth: 1 }}
+                  style={{ borderColor: provider === opt.value ? undefined : borderColor, borderWidth: provider === opt.value ? undefined : 1 }}
                 >
                   {opt.label}
                 </button>
@@ -142,14 +143,14 @@ export default function SettingsPage() {
 
           {/* API Key */}
           {provider !== "ollama" && (
-            <div className="rounded-3xl border bg-white/80 p-6 backdrop-blur-sm" style={{ borderColor }}>
-              <p className="text-label mb-3">API Key</p>
+            <div className="rounded-md border bg-white p-5" style={{ borderColor }}>
+              <p className="mb-3 text-xs font-medium uppercase tracking-wider text-gray-400">API Key</p>
               <input
                 type="password"
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
                 placeholder="sk-..."
-                className="w-full rounded-xl border bg-white/60 px-4 py-3 text-sm focus:border-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-200"
+                className="w-full rounded-md border bg-gray-50 px-4 py-3 text-sm focus:border-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-300"
                 style={{ borderColor }}
               />
               {provider === "openrouter" && (
@@ -161,14 +162,14 @@ export default function SettingsPage() {
           )}
 
           {/* Model */}
-          <div className="rounded-3xl border bg-white/80 p-6 backdrop-blur-sm" style={{ borderColor }}>
-            <p className="text-label mb-3">模型</p>
+          <div className="rounded-md border bg-white p-5" style={{ borderColor }}>
+            <p className="mb-3 text-xs font-medium uppercase tracking-wider text-gray-400">模型</p>
             <input
               type="text"
               value={model}
               onChange={(e) => setModel(e.target.value)}
               placeholder="模型名称"
-              className="w-full rounded-xl border bg-white/60 px-4 py-3 text-sm focus:border-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-200"
+              className="w-full rounded-md border bg-gray-50 px-4 py-3 text-sm focus:border-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-300"
               style={{ borderColor }}
             />
 
@@ -179,7 +180,7 @@ export default function SettingsPage() {
                   <button
                     key={m}
                     onClick={() => setModel(m)}
-                    className={`rounded-lg px-3 py-1.5 text-xs transition-colors ${
+                    className={`rounded-md px-3 py-1.5 text-xs transition-colors ${
                       model === m
                         ? 'bg-[#1a1a1a] text-white'
                         : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
@@ -196,7 +197,7 @@ export default function SettingsPage() {
                   <button
                     key={m}
                     onClick={() => setModel(m)}
-                    className={`rounded-lg px-3 py-1.5 text-xs transition-colors ${
+                    className={`rounded-md px-3 py-1.5 text-xs transition-colors ${
                       model === m
                         ? 'bg-[#1a1a1a] text-white'
                         : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
@@ -211,14 +212,14 @@ export default function SettingsPage() {
 
           {/* Ollama URL */}
           {provider === "ollama" && (
-            <div className="rounded-3xl border bg-white/80 p-6 backdrop-blur-sm" style={{ borderColor }}>
-              <p className="text-label mb-3">服务地址</p>
+            <div className="rounded-md border bg-white p-5" style={{ borderColor }}>
+              <p className="mb-3 text-xs font-medium uppercase tracking-wider text-gray-400">服务地址</p>
               <input
                 type="text"
                 value={baseUrl}
                 onChange={(e) => setBaseUrl(e.target.value)}
                 placeholder="http://localhost:11434"
-                className="w-full rounded-xl border bg-white/60 px-4 py-3 text-sm focus:border-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-200"
+                className="w-full rounded-md border bg-gray-50 px-4 py-3 text-sm focus:border-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-300"
                 style={{ borderColor }}
               />
             </div>
@@ -229,7 +230,7 @@ export default function SettingsPage() {
             <button
               onClick={handleTest}
               disabled={testing || (provider !== "ollama" && !apiKey.trim())}
-              className="rounded-xl border px-5 py-3 text-sm font-medium transition-all duration-200 hover:bg-white disabled:cursor-not-allowed disabled:opacity-40"
+              className="rounded-md border px-5 py-3 text-sm font-medium transition-all duration-200 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
               style={{ borderColor }}
             >
               {testing ? "测试中..." : "测试连接"}
@@ -242,7 +243,7 @@ export default function SettingsPage() {
             <div className="flex-1" />
             <button
               onClick={handleSave}
-              className="bento-btn-primary"
+              className="rounded-md bg-[#1a1a1a] px-5 py-3 text-sm font-medium text-white transition-all hover:bg-[#333] active:scale-[0.98]"
             >
               {saved ? "✓ 已保存" : "保存设置"}
             </button>

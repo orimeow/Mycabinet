@@ -54,7 +54,7 @@ export default function DiscussionView({ question, config }: Props) {
             return (
               <div
                 key={m.id}
-                className={`flex items-center gap-2.5 rounded-xl px-3 py-2.5 transition-all duration-200 ${
+                className={`flex items-center gap-2.5 rounded-md px-3 py-2.5 transition-all duration-200 ${
                   isActive ? 'bg-black/5' : 'hover:bg-black/[0.03]'
                 }`}
               >
@@ -184,7 +184,7 @@ export default function DiscussionView({ question, config }: Props) {
           })}
 
           {state.error && (
-            <div className="rounded-2xl border border-red-200/50 bg-red-50/50 p-4 text-sm text-red-600"
+            <div className="rounded-md border border-red-200/50 bg-red-50/50 p-4 text-sm text-red-600"
               style={{ borderColor: 'rgba(220,38,38,0.15)' }}
             >
               错误: {state.error}
