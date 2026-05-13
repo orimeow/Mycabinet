@@ -1,63 +1,34 @@
-import { Discussion, DiscussionMessage } from "@/lib/types";
+import { Discussion } from "@/lib/types";
 import fs from "fs";
 import path from "path";
 
-const DATA_DIR = path.join(process.cwd(), "data");
+const ROOT_DATA_DIR = path.join(process.cwd(), "data", "users");
 
-function ensureDataDir() {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
-  }
-}
-
-function getDiscussionsDir() {
-  const dir = path.join(DATA_DIR, "discussions");
-  ensureDataDir();
+function getUserDir(userId: string): string {
+  const dir = path.join(ROOT_DATA_DIR, userId, "discussions");
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
   }
   return dir;
 }
 
-function getDiscussionFilePath(id: string): string {
-  return path.join(getDiscussionsDir(), `${id}.json`);
+function getDiscussionFilePath(userId: string, id: string): string {
+  return path.join(getUserDir(userId), `${id}.json`);
 }
 
 export function saveDiscussion(discussion: Discussion): void {
-  fs.writeFileSync(getDiscussionFilePath(discussion.id), JSON.stringify(discussion, null, 2));
+  if (!discussion.userId) throw new Error("Discussion must have a userId");
+  fs.writeFileSync(getDiscussionFilePath(discussion.userId, discussion.id), JSON.stringify(discussion, null, 2));
 }
 
-export function saveMessage(message: DiscussionMessage, discussionId: string): void {
-  const discussion = getDiscussion(discussionId);
-  if (discussion) {
-    discussion.messages.push(message);
-    saveDiscussion(discussion);
-  }
-}
-
-export function updateDiscussion(id: string, updates: Partial<Discussion>): void {
-  const discussion = getDiscussion(id);
-  if (discussion) {
-    saveDiscussion({ ...discussion, ...updates });
-  }
-}
-
-export function appendMessageToDiscussion(discussionId: string, message: DiscussionMessage): void {
-  const discussion = getDiscussion(discussionId);
-  if (discussion) {
-    discussion.messages.push(message);
-    saveDiscussion(discussion);
-  }
-}
-
-export function getDiscussion(id: string): Discussion | null {
-  const filePath = getDiscussionFilePath(id);
+export function getDiscussion(userId: string, id: string): Discussion | null {
+  const filePath = getDiscussionFilePath(userId, id);
   if (!fs.existsSync(filePath)) return null;
   return JSON.parse(fs.readFileSync(filePath, "utf-8")) as Discussion;
 }
 
-export function listDiscussions(limit: number = 20, offset: number = 0): Discussion[] {
-  const dir = getDiscussionsDir();
+export function listDiscussions(userId: string, limit: number = 50): Discussion[] {
+  const dir = getUserDir(userId);
   const files = fs.readdirSync(dir).filter((f) => f.endsWith(".json"));
 
   const discussions: Discussion[] = [];
@@ -70,14 +41,12 @@ export function listDiscussions(limit: number = 20, offset: number = 0): Discuss
     }
   }
 
-  // Sort by createdAt desc
   discussions.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-
-  return discussions.slice(offset, offset + limit);
+  return discussions.slice(0, limit);
 }
 
-export function deleteDiscussion(id: string): void {
-  const filePath = getDiscussionFilePath(id);
+export function deleteDiscussion(userId: string, id: string): void {
+  const filePath = getDiscussionFilePath(userId, id);
   if (fs.existsSync(filePath)) {
     fs.unlinkSync(filePath);
   }

@@ -14,15 +14,21 @@ export default function RoundDivider({ label, active, completed }: Props) {
       className="flex items-center gap-2.5 py-2"
     >
       <div
-        className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold text-white transition-all ${
+        className={`flex h-5 w-5 items-center justify-center rounded-full transition-all ${
           completed
             ? "bg-green-500"
             : active
-              ? "bg-[#1a1a1a]"
-              : "bg-gray-200 text-gray-400"
+              ? ""
+              : ""
         }`}
       >
-        {completed ? "✓" : active ? "" : "○"}
+        {completed ? (
+          <span className="text-[10px] font-bold text-white">✓</span>
+        ) : active ? (
+          <span className="inline-block h-2 w-2 rounded-full bg-[#1a1a1a] animate-pulse" />
+        ) : (
+          <span className="inline-block h-1.5 w-1.5 rounded-full bg-gray-200" />
+        )}
       </div>
       <span
         className={`text-xs font-medium whitespace-nowrap ${

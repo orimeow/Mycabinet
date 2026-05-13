@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { cabinetMembers } from "@/data/personas";
 import { AIProviderConfig } from "@/lib/types";
+import { getUserId } from "@/lib/user";
 
 const exampleQuestions = [
   "AI 是否会取代人类工作？我们该如何应对？",
@@ -14,6 +15,10 @@ const exampleQuestions = [
 export default function Home() {
   const router = useRouter();
   const [question, setQuestion] = useState("");
+
+  useEffect(() => {
+    getUserId(); // ensure device ID exists
+  }, []);
 
   const handleSubmit = () => {
     if (!question.trim()) return;

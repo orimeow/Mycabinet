@@ -38,10 +38,13 @@ export interface DiscussionMessage {
 export interface Discussion {
   id: string;
   question: string;
+  userId: string;
   messages: DiscussionMessage[];
-  status: "pending" | "running" | "completed" | "failed";
+  status: "pending" | "running" | "completed" | "terminated" | "failed";
   createdAt: string;
   completedAt?: string;
+  terminatedAt?: string;
+  error?: string;
   provider: string;
 }
 

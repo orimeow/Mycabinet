@@ -11,23 +11,36 @@ import { useEffect, useRef, useState, useCallback } from "react";
 interface Props {
   question: string;
   config: AIProviderConfig;
+  userId?: string;
+  existingMessages?: DiscussionMessage[];
+  discussionId?: string;
 }
 
-export default function DiscussionView({ question, config }: Props) {
-  const { state, startDiscussion } = useDiscussion();
+export default function DiscussionView({ question, config, userId, existingMessages, discussionId }: Props) {
+  const { state, startDiscussion, terminateDiscussion: abortLocal } = useDiscussion();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [autoScroll, setAutoScroll] = useState(true);
   const started = useRef(false);
 
+  const terminateDiscussion = useCallback(async () => {
+    if (discussionId && userId) {
+      fetch("/api/discussions", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: discussionId, userId, action: "terminate" }),
+      }).catch(() => {});
+    }
+    abortLocal();
+  }, [discussionId, userId, abortLocal]);
+
   useEffect(() => {
     if (started.current) return;
     started.current = true;
-    startDiscussion(question, config);
+    startDiscussion(question, config, userId ?? "", existingMessages);
     return () => {
-      // Abort on unmount (handles Strict Mode double-mount in dev)
-      (startDiscussion as any).__abort?.();
+      terminateDiscussion();
     };
-  }, [question, config, startDiscussion]);
+  }, [question, config, userId, existingMessages, startDiscussion, terminateDiscussion]);
 
   useEffect(() => {
     if (autoScroll && scrollRef.current) {
@@ -160,7 +173,7 @@ export default function DiscussionView({ question, config }: Props) {
                 <div className="ml-5 space-y-2.5 border-l-2 pl-4"
                   style={{
                     borderColor: round.active
-                      ? `${cabinetMembers[0].color}20`
+                      ? "rgba(0,0,0,0.08)"
                       : round.completed
                         ? "rgba(34,197,94,0.15)"
                         : "rgba(0,0,0,0.04)",
@@ -178,7 +191,13 @@ export default function DiscussionView({ question, config }: Props) {
                       />
                     );
                   })}
-                  {round.active && !roundMessages.some((m) => m.content === "") && (
+                  {state.retrying && round.active && (
+                    <div className="flex items-center gap-2 py-3 text-sm text-amber-600">
+                      <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-amber-400" />
+                      {state.retrying.message}（第 {state.retrying.attempt} 次重试）
+                    </div>
+                  )}
+                  {round.active && !roundMessages.some((m) => m.content === "") && !state.retrying && (
                     <div className="flex items-center gap-2 py-3 text-sm text-gray-400">
                       <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-gray-300" />
                       等待发言...
@@ -205,13 +224,24 @@ export default function DiscussionView({ question, config }: Props) {
           <div className="flex items-center justify-between">
             <div className="text-xs text-gray-400">
               {config.provider === "openrouter" ? "OpenRouter" : config.provider} · {config.model || "默认模型"}
+              {discussionId && <span className="ml-2 text-gray-300">#{discussionId.slice(-6)}</span>}
             </div>
-            <button
-              onClick={() => setAutoScroll(!autoScroll)}
-              className="rounded-lg px-3 py-1.5 text-xs text-gray-400 transition-colors hover:bg-black/5"
-            >
-              {autoScroll ? "暂停滚动" : "恢复滚动"}
-            </button>
+            <div className="flex items-center gap-2">
+              {state.isRunning && (
+                <button
+                  onClick={terminateDiscussion}
+                  className="rounded-lg px-3 py-1.5 text-xs text-red-500 transition-colors hover:bg-red-50"
+                >
+                  终止讨论
+                </button>
+              )}
+              <button
+                onClick={() => setAutoScroll(!autoScroll)}
+                className="rounded-lg px-3 py-1.5 text-xs text-gray-400 transition-colors hover:bg-black/5"
+              >
+                {autoScroll ? "暂停滚动" : "恢复滚动"}
+              </button>
+            </div>
           </div>
         </div>
       </div>

@@ -3,6 +3,23 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Discussion } from "@/lib/types";
+import { getUserId } from "@/lib/user";
+
+const STATUS_LABELS: Record<string, string> = {
+  running: "进行中",
+  completed: "已完成",
+  terminated: "已终止",
+  failed: "失败",
+  pending: "待开始",
+};
+
+const STATUS_COLORS: Record<string, { bg: string; color: string }> = {
+  running: { bg: "rgba(234,179,8,0.1)", color: "#ca8a04" },
+  completed: { bg: "rgba(34,197,94,0.1)", color: "#16a34a" },
+  terminated: { bg: "rgba(107,114,128,0.1)", color: "#6b7280" },
+  failed: { bg: "rgba(239,68,68,0.1)", color: "#ef4444" },
+  pending: { bg: "rgba(107,114,128,0.1)", color: "#6b7280" },
+};
 
 export default function HistoryPage() {
   const router = useRouter();
@@ -10,7 +27,8 @@ export default function HistoryPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/discussions")
+    const userId = getUserId();
+    fetch(`/api/discussions?userId=${userId}`)
       .then((res) => res.json())
       .then((data) => {
         setDiscussions(data);
@@ -19,11 +37,28 @@ export default function HistoryPage() {
       .catch(() => setLoading(false));
   }, []);
 
+  const handleTerminate = async (id: string) => {
+    const userId = getUserId();
+    const res = await fetch("/api/discussions", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, userId, action: "terminate" }),
+    });
+    if (res.ok) {
+      setDiscussions((prev) =>
+        prev.map((d) =>
+          d.id === id ? { ...d, status: "terminated" as const, terminatedAt: new Date().toISOString() } : d
+        )
+      );
+    }
+  };
+
   const handleDelete = async (id: string) => {
+    const userId = getUserId();
     await fetch("/api/discussions", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id }),
+      body: JSON.stringify({ id, userId }),
     });
     setDiscussions((prev) => prev.filter((d) => d.id !== id));
   };
@@ -46,8 +81,9 @@ export default function HistoryPage() {
         {loading ? (
           <div className="py-20 text-center text-gray-400">加载中...</div>
         ) : discussions.length === 0 ? (
-          <div className="rounded-md border bg-white/80 py-20 text-center backdrop-blur-sm"
-            style={{ borderColor: 'rgba(0,0,0,0.06)' }}
+          <div
+            className="rounded-md border bg-white/80 py-20 text-center backdrop-blur-sm"
+            style={{ borderColor: "rgba(0,0,0,0.06)" }}
           >
             <p className="text-lg text-gray-400">暂无讨论记录</p>
             <button
@@ -59,38 +95,84 @@ export default function HistoryPage() {
           </div>
         ) : (
           <div className="grid gap-4 md:grid-cols-2">
-            {discussions.map((d) => (
-              <div
-                key={d.id}
-                className="group rounded-md border bg-white/80 p-5 transition-all duration-200 hover:bg-white hover:shadow-sm"
-                style={{ borderColor: 'rgba(0,0,0,0.06)' }}
-              >
-                <h3 className="line-clamp-2 text-sm font-semibold">{d.question}</h3>
-
-                <div className="mt-3 flex items-center gap-2 text-xs text-gray-400">
-                  <span>{new Date(d.createdAt).toLocaleString("zh-CN", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
-                  <span
-                    className="rounded-full px-2 py-0.5"
-                    style={{
-                      backgroundColor: d.status === "completed" ? "rgba(34,197,94,0.1)" : "rgba(0,0,0,0.04)",
-                      color: d.status === "completed" ? "#16a34a" : "#6b7280",
-                    }}
+            {discussions.map((d) => {
+              const statusStyle = STATUS_COLORS[d.status] ?? STATUS_COLORS.pending;
+              return (
+                <div
+                  key={d.id}
+                  className="group rounded-md border bg-white/80 p-5 transition-all duration-200 hover:bg-white hover:shadow-sm"
+                  style={{ borderColor: "rgba(0,0,0,0.06)" }}
+                >
+                  <h3
+                    className="line-clamp-2 cursor-pointer text-sm font-semibold transition-colors hover:text-gray-500"
+                    onClick={() => router.push(`/discussion/${d.id}`)}
                   >
-                    {d.status === "completed" ? "已完成" : "进行中"}
-                  </span>
-                </div>
+                    {d.question}
+                  </h3>
 
-                <div className="mt-4 flex items-center justify-between">
-                  <span className="text-xs text-gray-400">{d.messages.length} 条发言</span>
-                  <button
-                    onClick={() => handleDelete(d.id)}
-                    className="rounded-lg px-2.5 py-1.5 text-xs text-gray-400 opacity-0 transition-all hover:bg-red-50 hover:text-red-500 group-hover:opacity-100"
-                  >
-                    删除
-                  </button>
+                  <div className="mt-3 flex items-center gap-2 text-xs text-gray-400">
+                    <span>
+                      {new Date(d.createdAt).toLocaleString("zh-CN", {
+                        month: "short",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </span>
+                    <span
+                      className="rounded-full px-2 py-0.5"
+                      style={{ backgroundColor: statusStyle.bg, color: statusStyle.color }}
+                    >
+                      {STATUS_LABELS[d.status] ?? d.status}
+                    </span>
+                  </div>
+
+                  <div className="mt-4 flex items-center justify-between">
+                    <span className="text-xs text-gray-400">{d.messages.length} 条发言</span>
+                    <div className="flex gap-1">
+                      {d.status === "running" && (
+                        <>
+                          <button
+                            onClick={() => router.push(`/discussion/${d.id}`)}
+                            className="rounded-md px-2.5 py-1.5 text-xs text-gray-500 transition-all hover:bg-black/5"
+                          >
+                            继续
+                          </button>
+                          <button
+                            onClick={() => handleTerminate(d.id)}
+                            className="rounded-md px-2.5 py-1.5 text-xs text-red-500 transition-all hover:bg-red-50"
+                          >
+                            终止
+                          </button>
+                        </>
+                      )}
+                      {(d.status === "completed" || d.status === "terminated") && (
+                        <button
+                          onClick={() => router.push(`/discussion/${d.id}`)}
+                          className="rounded-md px-2.5 py-1.5 text-xs text-gray-500 transition-all hover:bg-black/5"
+                        >
+                          查看
+                        </button>
+                      )}
+                      {d.status === "failed" && (
+                        <button
+                          onClick={() => router.push(`/discussion/${d.id}`)}
+                          className="rounded-md px-2.5 py-1.5 text-xs text-red-500 transition-all hover:bg-red-50"
+                        >
+                          查看错误
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleDelete(d.id)}
+                        className="rounded-md px-2.5 py-1.5 text-xs text-gray-400 opacity-0 transition-all hover:bg-red-50 hover:text-red-500 group-hover:opacity-100"
+                      >
+                        删除
+                      </button>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </main>

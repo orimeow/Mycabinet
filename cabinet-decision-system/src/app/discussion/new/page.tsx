@@ -4,17 +4,20 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { AIProviderConfig } from "@/lib/types";
 import DiscussionView from "@/components/discussion/DiscussionView";
+import { getUserId } from "@/lib/user";
 
 export default function NewDiscussionPage() {
   const router = useRouter();
   const [question, setQuestion] = useState("");
   const [config, setConfig] = useState<AIProviderConfig | null>(null);
+  const [userId, setUserId] = useState("");
   const initialized = useRef(false);
 
   useEffect(() => {
-    // Guard against React Strict Mode double-mount in dev
     if (initialized.current) return;
     initialized.current = true;
+
+    setUserId(getUserId());
 
     const stored = sessionStorage.getItem("pending-question");
     const storedConfig = sessionStorage.getItem("pending-config");
@@ -24,7 +27,6 @@ export default function NewDiscussionPage() {
     }
     setQuestion(stored);
     setConfig(JSON.parse(storedConfig));
-    // Clear immediately after reading
     sessionStorage.removeItem("pending-question");
     sessionStorage.removeItem("pending-config");
   }, [router]);
@@ -44,5 +46,5 @@ export default function NewDiscussionPage() {
     );
   }
 
-  return <DiscussionView question={question} config={config} />;
+  return <DiscussionView question={question} config={config} userId={userId} />;
 }

@@ -52,7 +52,7 @@ export default function MessageBubble({ message, isActive }: Props) {
             <span style={{ backgroundColor: color }} className="font-bold text-white">{name.charAt(0)}</span>
           )}
         </div>
-        <span className="text-sm font-semibold" style={{ color }}>
+        <span className="text-sm font-semibold text-gray-900">
           {name}
         </span>
         {nameEn && (

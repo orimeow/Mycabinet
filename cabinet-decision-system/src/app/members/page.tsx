@@ -19,7 +19,7 @@ export default function MembersPage() {
         {/* Title */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold tracking-tight md:text-4xl">内阁成员</h1>
-          <p className="mt-2 text-sm text-gray-400">点击左侧成员查看完整人设文档</p>
+          <p className="mt-2 text-sm text-gray-400">点击左侧成员查看完整介绍</p>
         </div>
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-12">
