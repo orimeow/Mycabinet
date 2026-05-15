@@ -1,7 +1,7 @@
 # PRD: Cabinet Decision System (内阁决策系统)
 
-> Version: 1.0  
-> Date: 2026-05-11  
+> Version: 2.0  
+> Date: 2026-05-15  
 > Author: Product Team
 
 ---
@@ -46,12 +46,12 @@
 
 ### 3.1 Core Features
 
-#### F1: 内阁成员展示
-- **描述**: 首页展示 6 位内阁成员的卡片，包含头像、姓名、头衔、核心理念
+#### F1: 内阁成员展示 ✅
+- **描述**: 首页展示 5 位内阁成员的头像卡片，/members 页面展示完整人设
 - **Acceptance Criteria**:
-  - [ ] 6 张卡片并排展示，hover 时显示详细人设摘要
-  - [ ] 点击卡片可查看完整人设文档（独立页面/弹窗）
-  - [ ] 每位成员有独特的配色方案
+  - [x] 首页卡片并排展示
+  - [x] 点击卡片跳转 /members 完整人设页面
+  - [x] 每位成员有独特的配色方案和真实头像
 
 #### F2: 用户提问
 - **描述**: 用户在输入框中输入问题，触发内阁讨论
@@ -89,15 +89,18 @@
   - [ ] 点击可回顾完整讨论内容
   - [ ] 支持删除历史记录
 
-#### F6: AI 供应商配置
+#### F6: AI 供应商配置 ✅
 - **描述**: 支持切换不同 AI 后端
 - **Acceptance Criteria**:
-  - [ ] 支持 Claude API (Anthropic)
-  - [ ] 支持 OpenAI API
-  - [ ] 支持 Ollama 本地模型
-  - [ ] 用户可在设置页配置 API Key 和模型
-  - [ ] 提供连接测试功能
-  - [ ] 切换时显示兼容性提示
+  - [x] 支持 Claude API (Anthropic)
+  - [x] 支持 OpenRouter API
+  - [x] 支持 Gemini API
+  - [x] 支持 Bailian (阿里云百炼) API
+  - [x] 支持 OpenAI API
+  - [x] 支持 Ollama 本地模型
+  - [x] 用户可在设置页配置 API Key 和模型
+  - [x] 提供连接测试功能
+  - [x] 切换时显示兼容性提示
 
 ### 3.2 Enhanced Features
 
@@ -268,7 +271,7 @@
 
 | 决策 | 选择 | 原因 |
 |-----|------|------|
-| 框架 | Next.js 14+ App Router | 全栈一体化，SSR 友好，API Routes 内置 |
+| 框架 | Next.js 16+ App Router | 全栈一体化，SSR 友好，API Routes 内置 |
 | 实时通信 | Server-Sent Events (SSE) | 单向流式推送足够，比 WebSocket 简单 |
 | 样式 | Tailwind CSS + shadcn/ui | 快速开发，组件质量高，主题支持好 |
 | 动画 | Framer Motion | React 生态最成熟的动画库 |
@@ -289,7 +292,7 @@ interface AIProvider {
   }): AsyncIterable<string>;
 }
 
-// 实现: ClaudeProvider, OpenAIProvider, OllamaProvider
+// 实现: ClaudeProvider, OpenAIProvider, OpenRouterProvider, GeminiProvider, OllamaProvider, BailianProvider
 // 通过工厂模式根据配置选择 provider
 ```
 
@@ -418,12 +421,11 @@ interface AIProvider {
 
 | 序号 | 成员 | 代表视角 | 配色 |
 |-----|------|---------|------|
-| 1 | 沃伦·巴菲特 | 价值投资、长期主义、商业智慧 | 蓝色 #1A73E8 |
+| 1 | 安德烈·卡帕西 | AI 工程、技术教育、第一性原理 | 蓝色 #1A73E8 |
 | 2 | 埃隆·马斯克 | 第一性原理、创新、冒险精神 | 红色 #E53E3E |
 | 3 | 安格拉·默克尔 | 务实政治、科学决策、危机管理 | 绿色 #38A169 |
 | 4 | 尤瓦尔·赫拉利 | 宏大叙事、人类命运、技术伦理 | 紫色 #805AD5 |
 | 5 | 克里斯蒂娜·拉加德 | 宏观经济、国际金融秩序、全球治理 | 金色 #D69E2E |
-| 6 | 潘基文 | 多边主义、全球治理、气候变化 | 深灰 #2D3748 |
 
 ---
 
@@ -478,29 +480,34 @@ interface AIProvider {
 
 ## 11. Phased Rollout Plan
 
-### Phase 1: MVP (Week 1-2)
+### Phase 1: MVP ✅ Completed (2026-05-11 ~ 2026-05-15)
 
-**目标**: 验证核心讨论流程可行
+**目标**: 核心讨论流程可用
 
-- [ ] 基础 Next.js 项目搭建
-- [ ] 6 位内阁成员人设文档 (Markdown)
-- [ ] 单一 AI 供应商支持 (Claude API)
-- [ ] 首页 + 问题输入 + 讨论视图
-- [ ] 三轮讨论流程实现
-- [ ] SSE 实时流式展示
-- [ ] 基础响应式布局
+- [x] 基础 Next.js 项目搭建
+- [x] 5 位内阁成员人设文档 (TypeScript/Markdown)
+- [x] 多 AI 供应商支持 (Claude / OpenRouter / Gemini / Bailian / OpenAI / Ollama)
+- [x] 首页 + 问题输入 + 讨论视图
+- [x] 三轮讨论流程实现
+- [x] SSE 实时流式展示
+- [x] 响应式布局
+- [x] 内阁成员展示 (/members)
+- [x] 讨论历史存储与回顾 (/history)
+- [x] 设置页面 (API 配置)
+- [x] 多用户支持
+- [x] 讨论终止/恢复功能
 
 ### Phase 2: V1 (Week 3-4)
 
 **目标**: 完善用户体验和功能
 
-- [ ] 多 AI 供应商支持 (OpenAI + Ollama)
-- [ ] 讨论历史存储与回顾
-- [ ] 设置页面 (API 配置)
-- [ ] Dark/Light 主题切换
-- [ ] 打字动画和交互优化
+- [ ] 讨论质量优化 (更好的 system prompts)
 - [ ] 讨论导出功能
-- [ ] 成员详情弹窗
+- [ ] 自定义内阁成员
+- [ ] 分享功能 (链接生成)
+- [ ] Dark/Light 主题切换
+- [ ] 讨论性能监控
+- [ ] 移动端适配
 
 ### Phase 3: V2 (Week 5-6)
 
@@ -517,12 +524,14 @@ interface AIProvider {
 
 ## 12. Open Questions
 
-1. **Token 成本控制**: 一次完整讨论的 Token 消耗量可能较大 (6人 × 3轮 × 平均500 tokens ≈ 9,000+ tokens)，是否需要提供"精简模式"?
+1. **Token 成本控制**: Phase 1 中 `maxTokens: 4096` 已限制单条输出，但完整讨论的 Token 总量无显示和限制机制。建议在讨论完成后显示消耗统计。
 2. **内容审核**: 当用户提出敏感问题时，如何平衡自由表达和内容安全?
 3. **人设准确性**: 历史人物的观点如何确保不产生误导性引用? 是否需要免责声明?
 4. **多语言支持**: 首期是否只支持中文? 是否需要考虑英文用户的界面?
 5. **数据隐私**: 讨论历史是否加密存储? 是否需要用户账户体系?
 6. **Ollama 模型选择**: 哪些本地模型能较好地扮演历史人物角色? 需要实测验证。
+7. **内阁成员更新**: 已将巴菲特/潘基文替换为 Andrej Karpathy，需验证新成员 prompt 质量。
+8. **多供应商稳定性**: OpenRouter 等第三方代理的超时/错误处理需要加强。
 
 ---
 
@@ -530,65 +539,49 @@ interface AIProvider {
 
 ```
 cabinet-decision-system/
-├── app/
-│   ├── layout.tsx
-│   ├── page.tsx                          # 首页
-│   ├── discussion/[id]/page.tsx          # 讨论详情页
-│   ├── members/page.tsx                  # 成员列表页
-│   ├── history/page.tsx                  # 历史页
-│   ├── settings/page.tsx                 # 设置页
-│   └── api/
-│       ├── chat/route.ts                 # SSE 流式接口
-│       ├── discussions/route.ts          # 讨论 CRUD
-│       └── config/route.ts               # 配置管理
-├── components/
-│   ├── cabinet/
-│   │   ├── MemberCard.tsx                # 成员卡片
-│   │   ├── MemberDetail.tsx              # 成员详情
-│   │   └── MemberGrid.tsx                # 成员网格
-│   ├── discussion/
-│   │   ├── DiscussionView.tsx            # 讨论主视图
-│   │   ├── MessageBubble.tsx             # 发言气泡
-│   │   ├── RoundDivider.tsx              # 轮次分隔
-│   │   ├── TypingIndicator.tsx           # 打字指示器
-│   │   └── ProgressBar.tsx               # 进度条
-│   ├── common/
-│   │   ├── Header.tsx                    # 顶部导航
-│   │   ├── InputArea.tsx                 # 输入区域
-│   │   └── ThemeToggle.tsx               # 主题切换
-│   └── settings/
-│       ├── ProviderConfig.tsx             # 供应商配置
-│       └── ConnectionTest.tsx             # 连接测试
-├── lib/
-│   ├── ai/
-│   │   ├── provider.ts                   # Provider 抽象接口
-│   │   ├── claude-provider.ts            # Claude 实现
-│   │   ├── openai-provider.ts            # OpenAI 实现
-│   │   └── ollama-provider.ts            # Ollama 实现
-│   ├── agents/
-│   │   ├── moderator.ts                  # 主持人 Agent
-│   │   ├── cabinet-member.ts             # 内阁成员 Agent
-│   │   ├── orchestrator.ts               # 讨论编排器
-│   │   └── round-manager.ts              # 轮次管理器
-│   ├── db/
-│   │   ├── schema.ts                     # 数据库 schema
-│   │   └── queries.ts                    # 查询函数
-│   └── utils.ts                          # 工具函数
+├── src/
+│   ├── app/
+│   │   ├── layout.tsx
+│   │   ├── page.tsx                          # 首页
+│   │   ├── discussion/[id]/page.tsx          # 讨论详情页
+│   │   ├── members/page.tsx                  # 成员列表页
+│   │   ├── history/page.tsx                  # 历史页
+│   │   ├── settings/page.tsx                 # 设置页
+│   │   └── api/
+│   │       ├── chat/route.ts                 # SSE 流式接口
+│   │       ├── discussions/route.ts          # 讨论 CRUD
+│   │       └── config/route.ts               # 配置管理
+│   ├── components/
+│   │   ├── cabinet/
+│   │   │   ├── MemberCard.tsx                # 成员卡片
+│   │   │   └── MemberPicker.tsx              # 成员选择器
+│   │   ├── discussion/
+│   │   │   ├── DiscussionView.tsx            # 讨论主视图
+│   │   │   ├── MessageBubble.tsx             # 发言气泡
+│   │   │   └── RoundDivider.tsx              # 轮次分隔
+│   │   └── common/
+│   │       └── Header.tsx                    # 顶部导航
+│   ├── data/personas/                        # 人设文档
+│   │   └── index.ts                          # 人设配置
+│   ├── lib/
+│   │   ├── agents/
+│   │   │   └── orchestrator.ts               # 讨论编排器
+│   │   ├── ai/
+│   │   │   ├── provider.ts                   # Provider 抽象接口
+│   │   │   └── error-classifier.ts           # 错误分类器
+│   │   ├── db/
+│   │   │   └── database.ts                   # 数据库
+│   │   ├── types.ts                          # 类型定义
+│   │   ├── useDiscussion.ts                  # 讨论 Hook
+│   │   └── user.ts                           # 用户管理
+│   └── styles/
+│       └── globals.css
 ├── data/
-│   └── personas/                         # 人设文档
-│       ├── buffett.md
-│       ├── musk.md
-│       ├── curie.md
-│       ├── mandela.md
-│       ├── jobs.md
-│       └── confucius.md
-├── styles/
-│   └── globals.css
+│   └── users/                                # 本地 JSON 数据存储
 ├── public/
-│   └── avatars/                          # 头像图片
-├── prisma/
-│   └── schema.prisma                     # 数据库模型
+│   └── avatars/                              # 头像图片
 ├── package.json
+├── next.config.ts
 ├── tsconfig.json
-└── tailwind.config.ts
+└── postcss.config.mjs
 ```
