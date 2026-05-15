@@ -1,0 +1,14 @@
+{
+  "id": "d-1778751575233-097v11",
+  "question": "你好",
+  "userId": "test-user",
+  "mode": "chat",
+  "selectedMemberIds": [
+    "einstein",
+    "curie"
+  ],
+  "messages": [],
+  "status": "running",
+  "createdAt": "2026-05-14T09:39:35.233Z",
+  "provider": "openrouter"
+}

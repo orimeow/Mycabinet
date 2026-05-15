@@ -1,0 +1,130 @@
+{
+  "id": "d-1778740911978-z2oejd",
+  "question": "加密货币是否应该被各国政府全面禁止？",
+  "userId": "N",
+  "mode": "debate",
+  "selectedMemberIds": [
+    "karpathy",
+    "musk",
+    "zhang"
+  ],
+  "messages": [
+    {
+      "id": "round1-karpathy-1778740912294",
+      "round": 1,
+      "speakerId": "karpathy",
+      "speakerName": "安德烈·卡帕西",
+      "content": "[发言失败：401 Incorrect API key provided. For details, see: https://help.aliyun.com/zh/model-studio/error-code#apikey-error]",
+      "timestamp": "2026-05-14T06:41:52.294Z",
+      "sender": "member"
+    },
+    {
+      "id": "round1-musk-1778740912347",
+      "round": 1,
+      "speakerId": "musk",
+      "speakerName": "埃隆·马斯克",
+      "content": "[发言失败：401 Incorrect API key provided. For details, see: https://help.aliyun.com/zh/model-studio/error-code#apikey-error]",
+      "timestamp": "2026-05-14T06:41:52.347Z",
+      "sender": "member"
+    },
+    {
+      "id": "round2-challenge-karpathy-musk-1778740912409",
+      "round": 2,
+      "speakerId": "karpathy",
+      "speakerName": "安德烈·卡帕西",
+      "content": "[发言失败：401 Incorrect API key provided. For details, see: https://help.aliyun.com/zh/model-studio/error-code#apikey-error]",
+      "timestamp": "2026-05-14T06:41:52.409Z",
+      "challengeTarget": "musk",
+      "sender": "member"
+    },
+    {
+      "id": "round2-respond-musk-karpathy-1778740912473",
+      "round": 2,
+      "speakerId": "musk",
+      "speakerName": "埃隆·马斯克",
+      "content": "[发言失败：401 Incorrect API key provided. For details, see: https://help.aliyun.com/zh/model-studio/error-code#apikey-error]",
+      "timestamp": "2026-05-14T06:41:52.473Z",
+      "sender": "member"
+    },
+    {
+      "id": "round2-challenge-musk-karpathy-1778740912518",
+      "round": 2,
+      "speakerId": "musk",
+      "speakerName": "埃隆·马斯克",
+      "content": "[发言失败：401 Incorrect API key provided. For details, see: https://help.aliyun.com/zh/model-studio/error-code#apikey-error]",
+      "timestamp": "2026-05-14T06:41:52.518Z",
+      "challengeTarget": "karpathy",
+      "sender": "member"
+    },
+    {
+      "id": "round2-respond-karpathy-musk-1778740912572",
+      "round": 2,
+      "speakerId": "karpathy",
+      "speakerName": "安德烈·卡帕西",
+      "content": "[发言失败：401 Incorrect API key provided. For details, see: https://help.aliyun.com/zh/model-studio/error-code#apikey-error]",
+      "timestamp": "2026-05-14T06:41:52.572Z",
+      "sender": "member"
+    },
+    {
+      "id": "round2-challenge-karpathy-musk-1778740912633",
+      "round": 2,
+      "speakerId": "karpathy",
+      "speakerName": "安德烈·卡帕西",
+      "content": "[发言失败：401 Incorrect API key provided. For details, see: https://help.aliyun.com/zh/model-studio/error-code#apikey-error]",
+      "timestamp": "2026-05-14T06:41:52.633Z",
+      "challengeTarget": "musk",
+      "sender": "member"
+    },
+    {
+      "id": "round2-respond-musk-karpathy-1778740912733",
+      "round": 2,
+      "speakerId": "musk",
+      "speakerName": "埃隆·马斯克",
+      "content": "[发言失败：401 Incorrect API key provided. For details, see: https://help.aliyun.com/zh/model-studio/error-code#apikey-error]",
+      "timestamp": "2026-05-14T06:41:52.733Z",
+      "sender": "member"
+    },
+    {
+      "id": "round2-challenge-musk-karpathy-1778740912787",
+      "round": 2,
+      "speakerId": "musk",
+      "speakerName": "埃隆·马斯克",
+      "content": "[发言失败：401 Incorrect API key provided. For details, see: https://help.aliyun.com/zh/model-studio/error-code#apikey-error]",
+      "timestamp": "2026-05-14T06:41:52.787Z",
+      "challengeTarget": "karpathy",
+      "sender": "member"
+    },
+    {
+      "id": "round2-respond-karpathy-musk-1778740912838",
+      "round": 2,
+      "speakerId": "karpathy",
+      "speakerName": "安德烈·卡帕西",
+      "content": "[发言失败：401 Incorrect API key provided. For details, see: https://help.aliyun.com/zh/model-studio/error-code#apikey-error]",
+      "timestamp": "2026-05-14T06:41:52.838Z",
+      "sender": "member"
+    },
+    {
+      "id": "round3-summary-karpathy-1778740912883",
+      "round": 3,
+      "speakerId": "karpathy",
+      "speakerName": "安德烈·卡帕西",
+      "content": "[发言失败：401 Incorrect API key provided. For details, see: https://help.aliyun.com/zh/model-studio/error-code#apikey-error]",
+      "timestamp": "2026-05-14T06:41:52.883Z",
+      "sender": "member"
+    },
+    {
+      "id": "round3-summary-musk-1778740912940",
+      "round": 3,
+      "speakerId": "musk",
+      "speakerName": "埃隆·马斯克",
+      "content": "[发言失败：401 Incorrect API key provided. For details, see: https://help.aliyun.com/zh/model-studio/error-code#apikey-error]",
+      "timestamp": "2026-05-14T06:41:52.940Z",
+      "sender": "member"
+    }
+  ],
+  "status": "completed",
+  "createdAt": "2026-05-14T06:41:51.978Z",
+  "provider": "bailian",
+  "error": "埃隆·马斯克 发言失败：401 Incorrect API key provided. For details, see: https://help.aliyun.com/zh/model-studio/error-code#apikey-error",
+  "completedAt": "2026-05-14T06:41:52.941Z"
+}

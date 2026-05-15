@@ -1,0 +1,23 @@
+{
+  "id": "d-1778753420696-5be36k",
+  "question": "",
+  "userId": "test-user",
+  "mode": "chat",
+  "selectedMemberIds": [
+    "karpathy"
+  ],
+  "messages": [
+    {
+      "id": "chat-karpathy-1778753420701",
+      "round": 0,
+      "speakerId": "karpathy",
+      "speakerName": "安德烈·卡帕西",
+      "content": "[回复失败：OpenRouter API key is required]",
+      "timestamp": "2026-05-14T10:10:20.701Z",
+      "sender": "member"
+    }
+  ],
+  "status": "running",
+  "createdAt": "2026-05-14T10:10:20.696Z",
+  "provider": "openrouter"
+}

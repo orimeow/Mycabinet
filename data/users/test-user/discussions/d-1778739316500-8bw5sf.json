@@ -1,0 +1,15 @@
+{
+  "id": "d-1778739316500-8bw5sf",
+  "question": "test",
+  "userId": "test-user",
+  "mode": "debate",
+  "selectedMemberIds": [
+    "karpathy",
+    "musk"
+  ],
+  "messages": [],
+  "status": "failed",
+  "createdAt": "2026-05-14T06:15:16.500Z",
+  "provider": "openrouter",
+  "error": "安德烈·卡帕西 发言失败：401 Missing Authentication header"
+}

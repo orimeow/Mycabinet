@@ -1,0 +1,13 @@
+{
+  "id": "d-1778751765397-p3hdpw",
+  "question": "test",
+  "userId": "test-user",
+  "mode": "chat",
+  "selectedMemberIds": [
+    "einstein"
+  ],
+  "messages": [],
+  "status": "running",
+  "createdAt": "2026-05-14T09:42:45.397Z",
+  "provider": "openrouter"
+}

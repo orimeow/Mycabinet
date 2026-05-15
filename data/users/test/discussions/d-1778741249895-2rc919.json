@@ -1,0 +1,44 @@
+{
+  "id": "d-1778741249895-2rc919",
+  "question": "test",
+  "userId": "test",
+  "mode": "debate",
+  "selectedMemberIds": [
+    "karpathy",
+    "musk"
+  ],
+  "messages": [
+    {
+      "id": "round1-karpathy-1778741251086",
+      "round": 1,
+      "speakerId": "karpathy",
+      "speakerName": "安德烈·卡帕西",
+      "content": "[发言失败：401 Missing Authentication header]",
+      "timestamp": "2026-05-14T06:47:31.086Z",
+      "sender": "member"
+    },
+    {
+      "id": "round1-musk-1778741252107",
+      "round": 1,
+      "speakerId": "musk",
+      "speakerName": "埃隆·马斯克",
+      "content": "[发言失败：401 Missing Authentication header]",
+      "timestamp": "2026-05-14T06:47:32.107Z",
+      "sender": "member"
+    },
+    {
+      "id": "round2-challenge-karpathy-musk-1778741253443",
+      "round": 2,
+      "speakerId": "karpathy",
+      "speakerName": "安德烈·卡帕西",
+      "content": "[发言失败：401 Missing Authentication header]",
+      "timestamp": "2026-05-14T06:47:33.443Z",
+      "challengeTarget": "musk",
+      "sender": "member"
+    }
+  ],
+  "status": "failed",
+  "createdAt": "2026-05-14T06:47:29.895Z",
+  "provider": "openrouter",
+  "error": "埃隆·马斯克 回应失败：401 Missing Authentication header"
+}
