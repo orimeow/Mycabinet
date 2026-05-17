@@ -147,6 +147,10 @@ async function handleChat(
 ) {
   const { message: messageFromClient, question, discussionId, conversationHistory = [] } = body;
   let { selectedMemberId } = body;
+  const configFromClient = body.config;
+
+  console.log(`[handleChat] discussionId=${discussionId || 'NULL'}, message=${messageFromClient?.slice(0, 50)}, question=${question?.slice(0, 50)}`);
+  console.log(`[handleChat] config:`, { provider: configFromClient.provider, hasApiKey: !!configFromClient.apiKey, apiKeyLen: configFromClient.apiKey?.length, model: configFromClient.model });
 
   // For chat mode initial requests, use `question` as the message
   const message = messageFromClient ?? question ?? "";
@@ -161,6 +165,13 @@ async function handleChat(
       return new Response("Discussion not found", { status: 404 });
     }
     discussion = existing;
+    // For follow-up requests, validate that the client sent a valid API key
+    if (!configFromClient.apiKey && configFromClient.provider !== "ollama") {
+      return new Response(
+        JSON.stringify({ error: "API Key 丢失，请刷新页面重新开始讨论" }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
+    }
     // For subsequent requests, use the stored selectedMemberIds if not provided
     if (!selectedMemberId && discussion.selectedMemberIds?.length === 1) {
       selectedMemberId = discussion.selectedMemberIds[0];
@@ -190,6 +201,21 @@ async function handleChat(
         // Send discussionId immediately so client can reference it
         controller.enqueue(encoder.encode(`event: discussion_started\ndata: ${JSON.stringify({ discussionId: discussion.id })}\n\n`));
 
+        // For follow-up requests, save the user message to discussion first
+        // (initial request already has the question stored in discussion.question)
+        if (!isInitialRequest && message?.trim()) {
+          discussion.messages.push({
+            id: `user-msg-${Date.now()}`,
+            round: 0,
+            speakerId: "user",
+            speakerName: "我",
+            content: message,
+            timestamp: new Date().toISOString(),
+            sender: "user",
+          });
+          saveDiscussion(discussion);
+        }
+
         // Initial request: all selected members respond to the question
         if (isInitialRequest && discussion.selectedMemberIds && discussion.selectedMemberIds.length > 0) {
           const memberIds = discussion.selectedMemberIds;
@@ -202,14 +228,12 @@ async function handleChat(
             }
             console.log('[handleChat] Starting session for member:', memberId);
 
-            // Build conversation history including all prior responses
+            // Initial request: include only the user's question, not other members' responses.
+            // This prevents the LLM from echoing prior members' exact sentences.
+            // The system prompt rule #9 reinforces this at the instruction level.
             const sessionHistory: AIMessage[] = [
-              ...conversationHistory,
+              ...conversationHistory.filter((m) => m.role === "user"),
               ...(message ? [{ role: "user" as const, content: message }] : []),
-              ...discussion.messages.map((m) => ({
-                role: m.sender === "user" ? ("user" as const) : ("assistant" as const),
-                content: m.content,
-              })),
             ];
 
             console.log(`[handleChat] Member ${memberId} sessionHistory:`, JSON.stringify(sessionHistory, null, 2).slice(0, 500));
@@ -232,9 +256,9 @@ async function handleChat(
             }
             console.log('[handleChat] Finished session for member:', memberId);
 
-            // Small delay between members to avoid free-tier model caching
+            // Small delay between members to prevent API response caching
             if (memberId !== memberIds[memberIds.length - 1]) {
-              await new Promise((r) => setTimeout(r, 500));
+              await new Promise((r) => setTimeout(r, 2000));
             }
           }
         } else {
@@ -251,14 +275,13 @@ async function handleChat(
           for (const memberId of targetIds) {
             if (clientAbortSignal.aborted) break;
 
-            const sessionHistory: AIMessage[] = [
-              ...conversationHistory,
-              ...(message ? [{ role: "user" as const, content: message }] : []),
-              ...discussion.messages.map((m) => ({
-                role: m.sender === "user" ? ("user" as const) : ("assistant" as const),
-                content: m.content,
-              })),
-            ];
+            // For follow-up requests, use discussion.messages as the sole conversation source
+            // (it already includes the user message we saved above + all prior AI responses)
+            // Don't combine with client conversationHistory to avoid duplicating messages
+            const sessionHistory: AIMessage[] = discussion.messages.map((m) => ({
+              role: m.sender === "user" ? ("user" as const) : ("assistant" as const),
+              content: m.content,
+            }));
 
             for await (const event of runChatSession(
               message ?? "",

@@ -111,6 +111,7 @@ export function useDiscussion() {
       }, 5 * 60 * 1000);
 
       console.log("[readStream] Calling fetch /api/chat...");
+      console.log("[readStream] params.config:", JSON.stringify({ provider: params.config.provider, hasApiKey: !!params.config.apiKey, apiKeyLen: params.config.apiKey?.length }));
 
       const response = await fetch("/api/chat", {
         method: "POST",
@@ -169,9 +170,11 @@ export function useDiscussion() {
             console.log(`[readStream] setState triggered by: ${eventType}`, { prevMsgCount: prev.messages.length, prevRunning: prev.isRunning, prevLoading: prev.loadingMember });
             const newState = { ...prev, messages: [...prev.messages] };
 
-            // Store discussionId if server sends it
+            // Store discussionId if server sends it — also update ref immediately
+            // so subsequent sendMessage calls don't depend on async useEffect timing
             if (data.discussionId) {
               newState.discussionId = data.discussionId as string;
+              discussionIdRef.current = data.discussionId as string;
             }
 
             if (newState.loadingMember && eventType !== "round_start" && eventType !== "discussion_started") {
@@ -291,6 +294,14 @@ export function useDiscussion() {
 
       clearActivityTimeout();
       clearTimeout(timeoutTimer);
+
+      // Ensure isRunning is set to false when stream ends
+      setState((prev) => ({
+        ...prev,
+        isRunning: false,
+        loadingMember: null,
+        retrying: null,
+      }));
     },
     [resetActivityTimeout, clearActivityTimeout]
   );
@@ -360,6 +371,9 @@ export function useDiscussion() {
   const sendMessage = useCallback(
     async (text: string, config: AIProviderConfig, userId: string, memberIds: string[]) => {
       if (memberIds.length === 0) return;
+
+      console.log("[sendMessage] received config:", JSON.stringify({ provider: config.provider, hasApiKey: !!config.apiKey, apiKeyLen: config.apiKey?.length }));
+      console.log("[sendMessage] memberIds:", memberIds, "discussionId:", discussionIdRef.current);
 
       // Add user message immediately
       const newUserMsg: DiscussionMessage = {

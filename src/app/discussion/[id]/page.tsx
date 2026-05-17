@@ -6,6 +6,7 @@ import { Discussion, AIProviderConfig } from "@/lib/types";
 import DiscussionView from "@/components/discussion/DiscussionView";
 import { getUserId } from "@/lib/user";
 import { cabinetMembers } from "@/data/personas";
+import ReactMarkdown from "react-markdown";
 
 export default function DiscussionDetailPage() {
   const params = useParams();
@@ -190,7 +191,7 @@ function ChatReadOnlyMessages({ messages }: { messages: Discussion["messages"] }
           <span className="mb-1 block text-xs font-semibold" style={{ color: member?.color ?? "#6b7280" }}>
             {msg.speakerName || msg.speakerId}
           </span>
-          {msg.content}
+          <ReactMarkdown>{msg.content}</ReactMarkdown>
         </div>
       </div>
     );
@@ -228,8 +229,8 @@ function DebateReadOnlyMessages({ messages }: { messages: Discussion["messages"]
             <span className="text-xs text-gray-400">第{msg.round}轮</span>
           )}
         </div>
-        <div className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-gray-700">
-          {msg.content}
+        <div className="mt-2 text-sm leading-relaxed text-gray-700 markdown-content">
+          <ReactMarkdown>{msg.content}</ReactMarkdown>
         </div>
       </div>
     );

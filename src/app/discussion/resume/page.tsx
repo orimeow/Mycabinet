@@ -43,12 +43,19 @@ function ResumeContent() {
 
   if (!discussion) return null;
 
+  // Restore API key from localStorage — it's not stored server-side
+  const storedApiKey = localStorage.getItem("ai-api-key") || "";
+  const storedBaseUrl = localStorage.getItem("ai-base-url") || undefined;
+  const storedModel = localStorage.getItem("ai-model") || "";
+
   return (
     <DiscussionView
       question={discussion.question}
       config={{
         provider: discussion.provider as AIProviderConfig["provider"],
-        model: "",
+        apiKey: storedApiKey,
+        model: storedModel,
+        baseUrl: storedBaseUrl,
       }}
       userId={discussion.userId}
       existingMessages={discussion.messages}

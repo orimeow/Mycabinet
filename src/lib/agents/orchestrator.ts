@@ -470,15 +470,36 @@ export async function* runChatSession(
     ? otherNames.reduce((text, name) => text.replace(new RegExp(name + "\\s*", "g"), ""), message)
     : "";
 
-  console.log(`[runChatSession] Member: ${member.nameZh}, message:`, personalizedMessage?.slice(0, 100));
+  // Anti-default-response constraints: prevent members from falling back on persona shortcuts
+  // when directly asked a question in chat mode.
+  const ANTI_DEFAULTS: Record<string, string> = {
+    munger: "【回复纪律】不要使用「我没什么要补充的」「这在我能力圈之外」等沉默式回应，除非话题完全超出你的专业领域。当被直接询问时，必须给出实质性的观点或分析。",
+    musk: "【回复纪律】不要机械套用「白痴指数」「物理定律」「渐近极限」等标志性概念。只有当这些概念与问题直接相关时才使用。避免在每轮对话中重复相同的词汇和框架。",
+  };
+  const antiDefault = ANTI_DEFAULTS[member.id] ?? "";
+
+  // Cache-busting nonce: Gemini free tier deduplicates on user message content.
+  // Appending at the END of the user message — putting it first caused the LLM
+  // to treat the nonce as the main content and ignore the actual question.
+  const cacheNonce = `[req:${Date.now()}-${Math.random().toString(36).slice(2, 8)}]`;
+  const userContent = personalizedMessage
+    ? `${personalizedMessage}\n\n${cacheNonce}`
+    : cacheNonce;
+
+  console.log(`[runChatSession] Member: ${member.nameZh}, message:`, userContent?.slice(0, 100));
   console.log(`[runChatSession] System prompt preview:`, `你是 ${member.nameZh}（${member.nameEn}），${member.title}`);
+
+  // Inject member-specific anti-default-response constraint into system prompt
+  const systemPrompt = antiDefault
+    ? buildSystemPrompt(member) + `\n\n【当前回复强制要求】${antiDefault}`
+    : buildSystemPrompt(member);
 
   let fullContent = "";
   try {
     for await (const result of streamChat(
       config,
-      buildSystemPrompt(member),
-      [...conversationHistory, { role: "user", content: personalizedMessage }],
+      systemPrompt,
+      [...conversationHistory, { role: "user", content: userContent }],
       4096,
       signal,
       member.id,

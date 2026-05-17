@@ -8,10 +8,10 @@ import RoundDivider from "./RoundDivider";
 import { AIProviderConfig } from "@/lib/types";
 import { useEffect, useRef, useState, useCallback } from "react";
 
-// Module-level: survives across StrictMode double-mounts and component instances
-// (persists until HMR re-evaluates the module)
+// Module-level: survives across StrictMode double-mounts.
+// Prevents StrictMode from triggering the same component's effect twice.
+// Cleared on unmount so new discussions can start normally.
 let discussionStarted = false;
-let lastModuleMountTime = 0;
 
 interface Props {
   question: string;
@@ -21,6 +21,11 @@ interface Props {
   discussionId?: string;
   mode?: "debate" | "chat";
   selectedMemberIds?: string[];
+}
+
+interface MentionState {
+  atPos: number;
+  filter: string;
 }
 
 export default function DiscussionView({
@@ -39,6 +44,13 @@ export default function DiscussionView({
   // Chat mode input
   const [chatInput, setChatInput] = useState("");
   const chatInputRef = useRef<HTMLTextAreaElement>(null);
+  const [mentionState, setMentionState] = useState<MentionState | null>(null);
+  const [mentionNavIndex, setMentionNavIndex] = useState(0);
+
+  // Members available for @mention — only participants
+  const availableMembers = selectedMemberIds.length > 0
+    ? cabinetMembers.filter((m) => selectedMemberIds.includes(m.id))
+    : cabinetMembers;
 
   const terminateDiscussion = useCallback(async () => {
     if (externalDiscussionId && userId) {
@@ -53,54 +65,24 @@ export default function DiscussionView({
 
   const initialized = useRef(false);
 
-  // Detect HMR remount using module-level timestamp
-  const now = Date.now();
-  const isHmrRemount = now - lastModuleMountTime < 500;
-  lastModuleMountTime = now;
-
   useEffect(() => {
     if (initialized.current) return;
+    initialized.current = true;
 
-    // On first mount in this module cycle, check if StrictMode already started a discussion
-    if (!isHmrRemount && discussionStarted) {
-      initialized.current = true;
+    // StrictMode double-mount: only the first mount should start the discussion.
+    if (discussionStarted) {
       console.log("[DiscussionView] Already started by StrictMode sibling, skipping");
       return;
     }
-
-    initialized.current = true;
-
-    // On HMR remount, don't restart the discussion
-    if (isHmrRemount) {
-      console.log("[DiscussionView] HMR remount detected, skipping re-init");
-      return;
-    }
-
     discussionStarted = true;
 
-    console.log("[DiscussionView] useEffect triggered. question=", question?.slice(0, 30));
+    console.log("[DiscussionView] Starting discussion. question=", question?.slice(0, 30));
 
-    if (existingMessages && existingMessages.length > 0) {
-      console.log("[DiscussionView] Restoring existing discussion with", existingMessages.length, "messages");
-      startDiscussion(question, config, userId ?? "", mode, selectedMemberIds, existingMessages);
-    } else {
-      startDiscussion(question, config, userId ?? "", mode, selectedMemberIds, existingMessages);
-    }
+    startDiscussion(question, config, userId ?? "", mode, selectedMemberIds, existingMessages);
 
     return () => {
-      // Only abort if this instance actually started the discussion AND we're truly unmounting
-      if (discussionStarted && !isHmrRemount) {
-        // Check if we're navigating away (enough time has passed since mount)
-        if (now - lastModuleMountTime > 2000) {
-          console.log("[DiscussionView] cleanup - navigating away, aborting");
-          abortLocal();
-          discussionStarted = false;
-        } else {
-          console.log("[DiscussionView] cleanup - StrictMode teardown, NOT aborting");
-        }
-      } else {
-        console.log("[DiscussionView] cleanup - HMR remount, NOT aborting");
-      }
+      console.log("[DiscussionView] cleanup");
+      discussionStarted = false;
     };
   }, []);
 
@@ -118,6 +100,9 @@ export default function DiscussionView({
 
   const handleSendChat = useCallback(() => {
     if (!chatInput.trim() || state.isRunning) return;
+    closeMention();
+
+    console.log("[handleSendChat] config:", JSON.stringify({ provider: config?.provider, hasApiKey: !!config?.apiKey, apiKeyLen: config?.apiKey?.length }));
 
     // Parse @ mentions from input
     const mentionRegex = /@([^\s]+)/g;
@@ -152,10 +137,130 @@ export default function DiscussionView({
     ? cabinetMembers.filter((m) => selectedMemberIds.includes(m.id))
     : cabinetMembers;
 
+  // ===== @mention autocomplete =====
+  const closeMention = useCallback(() => {
+    setMentionState(null);
+    setMentionNavIndex(0);
+  }, []);
+
+  const handleChatInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    const cursorPos = e.target.selectionStart ?? value.length;
+    setChatInput(value);
+
+    // Detect @mention trigger
+    const textBeforeCursor = value.slice(0, cursorPos);
+    const lastAt = textBeforeCursor.lastIndexOf("@");
+    if (lastAt !== -1 && (lastAt === 0 || /\s/.test(textBeforeCursor[lastAt - 1]))) {
+      const afterAt = textBeforeCursor.slice(lastAt + 1);
+      if (/^[a-zA-Z一-鿿]{0,20}$/.test(afterAt)) {
+        setMentionState({ atPos: lastAt, filter: afterAt });
+        setMentionNavIndex(0);
+        return;
+      }
+    }
+    closeMention();
+  }, [closeMention]);
+
+  const selectMention = useCallback((memberId: string) => {
+    const member = cabinetMembers.find((m) => m.id === memberId);
+    if (!member || !chatInputRef.current) return;
+
+    const value = chatInput;
+    const state = mentionState;
+    if (!state) return;
+
+    const newText = value.slice(0, state.atPos) + "@" + member.nameZh + " " + value.slice(state.atPos + state.filter.length + 1);
+    const newCursorPos = state.atPos + member.nameZh.length + 2;
+    setChatInput(newText);
+    closeMention();
+
+    setTimeout(() => {
+      chatInputRef.current?.focus();
+      chatInputRef.current?.setSelectionRange(newCursorPos, newCursorPos);
+    }, 0);
+  }, [mentionState, closeMention]);
+
+  const handleMentionKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (!mentionState) return;
+
+    const filtered = availableMembers.filter((m) =>
+      m.nameZh.includes(mentionState.filter) || m.nameEn.toLowerCase().includes(mentionState.filter.toLowerCase())
+    );
+
+    switch (e.key) {
+      case "ArrowDown":
+        e.preventDefault();
+        setMentionNavIndex((prev) => Math.min(prev + 1, filtered.length - 1));
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        setMentionNavIndex((prev) => Math.max(prev - 1, 0));
+        break;
+      case "Enter":
+        if (!e.shiftKey) {
+          e.preventDefault();
+          if (filtered[mentionNavIndex]) {
+            selectMention(filtered[mentionNavIndex].id);
+          }
+        }
+        break;
+      case "Escape":
+        e.preventDefault();
+        closeMention();
+        break;
+    }
+  }, [mentionState, mentionNavIndex, availableMembers, selectMention, closeMention]);
+
+  // Filtered members for the dropdown
+  const filteredMembers = mentionState
+    ? availableMembers.filter((m) =>
+        m.nameZh.includes(mentionState.filter) || m.nameEn.toLowerCase().includes(mentionState.filter.toLowerCase())
+      )
+    : [];
+
   const isDebate = mode === "debate";
 
   return (
-    <div className="flex h-[calc(100vh-60px)]">
+    <div className="relative flex h-[calc(100vh-60px)]">
+      {/* @mention dropdown */}
+      {mentionState && filteredMembers.length > 0 && !state.isRunning && (
+        <div
+          className="absolute bottom-16 left-6 z-50 w-64 overflow-hidden rounded-lg border bg-white shadow-lg"
+          style={{ borderColor: "rgba(0,0,0,0.08)" }}
+        >
+          <div className="max-h-48 overflow-y-auto py-1">
+            {filteredMembers.map((m, i) => (
+              <button
+                key={m.id}
+                onMouseDown={(e) => { e.preventDefault(); selectMention(m.id); }}
+                onMouseEnter={() => setMentionNavIndex(i)}
+                className={`flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm transition-colors ${
+                  i === mentionNavIndex ? "bg-black/[0.04]" : "hover:bg-black/[0.02]"
+                }`}
+              >
+                <div
+                  className="flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-full border"
+                  style={{ backgroundColor: "rgba(0,0,0,0.03)", borderColor: "rgba(0,0,0,0.15)" }}
+                >
+                  {m.avatar ? (
+                    <img src={m.avatar} alt={m.nameZh} className="h-full w-full object-cover" />
+                  ) : (
+                    <span className="text-[10px] font-bold text-white" style={{ backgroundColor: m.color }}>
+                      {m.nameZh.charAt(0)}
+                    </span>
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <div className="font-medium">{m.nameZh}</div>
+                  <div className="truncate text-xs text-gray-400">{m.title}</div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Sidebar */}
       <div
         className="hidden w-64 shrink-0 border-r border-gray-200/50 bg-white/40 p-5 backdrop-blur-sm lg:block"
@@ -231,7 +336,6 @@ export default function DiscussionView({
               <span className="text-green-600">✓ 完成</span>
             )}
           </div>
-          {/* Round progress — debate mode only */}
           {isDebate && (
             <div className="mt-3 flex gap-1.5">
               {state.rounds.map((r) => (
@@ -252,7 +356,6 @@ export default function DiscussionView({
           onScroll={handleScroll}
           className="flex-1 space-y-2 overflow-y-auto px-6 py-4"
         >
-          {/* Initial loading — show when running but no message with content yet */}
           {state.isRunning &&
             !state.messages.some((m) => m.content.length > 0) && (
               <div className="flex flex-col items-center justify-center py-24 text-center">
@@ -359,7 +462,7 @@ export default function DiscussionView({
 
         {/* Bottom bar */}
         <div
-          className="border-t bg-white/60 px-6 py-3 backdrop-blur-sm"
+          className="relative border-t bg-white/60 px-6 py-3 backdrop-blur-sm"
           style={{ borderColor: "rgba(0,0,0,0.06)" }}
         >
           {/* Chat mode: input box */}
@@ -368,9 +471,11 @@ export default function DiscussionView({
               <textarea
                 ref={chatInputRef}
                 value={chatInput}
-                onChange={(e) => setChatInput(e.target.value)}
+                onChange={handleChatInputChange}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
+                  if (mentionState) {
+                    handleMentionKeyDown(e);
+                  } else if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
                     handleSendChat();
                   }
