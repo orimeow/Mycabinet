@@ -51,7 +51,7 @@ export default function DiscussionDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex h-[calc(100vh-60px)] items-center justify-center">
+      <div className="flex h-[calc(100dvh-56px)] items-center justify-center">
         <div className="text-sm text-gray-400">加载中...</div>
       </div>
     );
@@ -59,7 +59,7 @@ export default function DiscussionDetailPage() {
 
   if (!discussion) {
     return (
-      <div className="flex h-[calc(100vh-60px)] flex-col items-center justify-center gap-3">
+      <div className="flex h-[calc(100dvh-56px)] flex-col items-center justify-center gap-3">
         <p className="text-sm text-gray-400">讨论不存在</p>
         <button
           onClick={() => router.push("/")}
@@ -78,18 +78,18 @@ export default function DiscussionDetailPage() {
 
   // Always show read-only view — "继续" goes to /discussion/resume for SSE reconnect
   return (
-    <div className="flex min-h-[calc(100vh-60px)] flex-col">
+    <div className="flex min-h-[calc(100dvh-56px)] flex-col">
       {/* Header */}
       <div
-        className="border-b bg-white/60 px-6 py-4 backdrop-blur-sm"
+        className="border-b bg-white/60 px-4 py-3 backdrop-blur-sm md:px-6 md:py-4"
         style={{ borderColor: "rgba(0,0,0,0.06)" }}
       >
-        <h2 className="text-lg font-bold tracking-tight">{discussion.question}</h2>
-        <div className="mt-2 flex items-center gap-3 text-xs text-gray-400">
+        <h2 className="text-base md:text-lg font-bold tracking-tight break-words">{discussion.question}</h2>
+        <div className="mt-1 md:mt-2 flex flex-wrap items-center gap-2 text-xs text-gray-400">
           <span>{discussion.messages.length} 条发言</span>
           <StatusBadge status={discussion.status} />
         </div>
-        <div className="mt-3 flex gap-2">
+        <div className="mt-2 md:mt-3 flex flex-wrap gap-2">
           {isRunning && (
             <button
               onClick={handleResume}
@@ -116,7 +116,7 @@ export default function DiscussionDetailPage() {
       </div>
 
       {/* Messages - read-only */}
-      <div className="flex-1 space-y-2 overflow-y-auto px-6 py-4">
+      <div className="flex-1 space-y-2 overflow-y-auto px-3 py-4 md:px-6">
         {discussion.mode === "chat" ? (
           <ChatReadOnlyMessages messages={discussion.messages} />
         ) : (
@@ -126,7 +126,7 @@ export default function DiscussionDetailPage() {
 
       {/* Error info */}
       {isFailed && discussion.error && (
-        <div className="mx-6 mb-4 rounded-md border border-red-200/50 bg-red-50/50 p-3 text-xs text-red-600"
+        <div className="mx-3 md:mx-6 mb-4 rounded-md border border-red-200/50 bg-red-50/50 p-3 text-xs text-red-600"
           style={{ borderColor: "rgba(220,38,38,0.15)" }}
         >
           {discussion.error}
@@ -160,7 +160,7 @@ function ChatReadOnlyMessages({ messages }: { messages: Discussion["messages"] }
       return (
         <div key={msg.id} className="flex justify-end">
           <div
-            className="max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed"
+            className="max-w-[90%] md:max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed"
             style={{ backgroundColor: "rgba(0,0,0,0.05)" }}
           >
             {msg.content}
@@ -204,7 +204,7 @@ function DebateReadOnlyMessages({ messages }: { messages: Discussion["messages"]
     return (
       <div
         key={msg.id}
-        className="rounded-md border bg-white/60 p-4 backdrop-blur-sm"
+        className="rounded-md border bg-white/60 p-3 md:p-4 backdrop-blur-sm"
         style={{ borderColor: "rgba(0,0,0,0.06)" }}
       >
         <div className="flex items-center gap-2">

@@ -81,10 +81,10 @@ export default function HistoryPage() {
         <div className="absolute -right-40 top-1/3 h-[500px] w-[500px] rounded-full bg-gradient-to-br from-teal-200/30 to-cyan-200/30 blur-3xl" />
       </div>
 
-      <main className="relative mx-auto max-w-7xl px-4 py-8 md:px-8">
+      <main className="relative mx-auto max-w-7xl px-4 py-6 md:px-8 md:py-8">
         {/* Title */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold tracking-tight md:text-4xl">历史记录</h1>
+        <div className="mb-6 md:mb-8">
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight md:text-4xl">历史记录</h1>
           <p className="mt-2 text-sm text-gray-400">回顾过往的智囊团讨论记录</p>
         </div>
 

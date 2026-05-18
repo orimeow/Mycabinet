@@ -25,14 +25,14 @@ function MembersPageContent() {
         <div className="absolute -right-40 top-1/3 h-[500px] w-[500px] rounded-full bg-gradient-to-br from-teal-200/30 to-cyan-200/30 blur-3xl" />
       </div>
 
-      <main className="relative mx-auto max-w-7xl px-4 py-8 md:px-8">
+      <main className="relative mx-auto max-w-7xl px-4 py-6 md:px-8 md:py-8">
         {/* Title */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold tracking-tight md:text-4xl">内阁成员</h1>
+        <div className="mb-6 md:mb-8">
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight md:text-4xl">内阁成员</h1>
           <p className="mt-2 text-sm text-gray-400">点击左侧成员查看完整介绍</p>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-12">
+        <div className="flex flex-col md:grid md:grid-cols-12 gap-6">
           {/* Sidebar - member list */}
           <div className="md:col-span-3">
             <div className="space-y-2">

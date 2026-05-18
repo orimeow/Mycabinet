@@ -46,6 +46,7 @@ export default function DiscussionView({
   const chatInputRef = useRef<HTMLTextAreaElement>(null);
   const [mentionState, setMentionState] = useState<MentionState | null>(null);
   const [mentionNavIndex, setMentionNavIndex] = useState(0);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   // Members available for @mention — only participants
   const availableMembers = selectedMemberIds.length > 0
@@ -222,7 +223,7 @@ export default function DiscussionView({
   const isDebate = mode === "debate";
 
   return (
-    <div className="relative flex h-[calc(100vh-60px)]">
+    <div className="relative flex h-[calc(100dvh-56px)]">
       {/* @mention dropdown */}
       {mentionState && filteredMembers.length > 0 && !state.isRunning && (
         <div
@@ -261,7 +262,7 @@ export default function DiscussionView({
         </div>
       )}
 
-      {/* Sidebar */}
+      {/* Sidebar - desktop */}
       <div
         className="hidden w-64 shrink-0 border-r border-gray-200/50 bg-white/40 p-5 backdrop-blur-sm lg:block"
         style={{ borderColor: "rgba(0,0,0,0.06)" }}
@@ -269,92 +270,90 @@ export default function DiscussionView({
         <h3 className="mb-4 text-xs font-medium uppercase tracking-wider text-gray-400">
           {isDebate ? "参与成员" : "对话对象"}
         </h3>
-        <div className="space-y-1.5">
-          {sidebarMembers.map((m) => {
-            const isActive = state.currentSpeaker === m.id && state.isRunning;
-            return (
-              <div
-                key={m.id}
-                onClick={() => !isDebate && handleSidebarMemberClick(m.id)}
-                className={`flex items-center gap-2.5 rounded-md px-3 py-2.5 transition-all duration-200 ${
-                  isActive ? "bg-black/5" : "hover:bg-black/[0.03]"
-                } ${!isDebate && chatInput.trim() && !state.isRunning ? "cursor-pointer" : ""}`}
-              >
-                <div
-                  className={`flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full border transition-all ${
-                    isActive ? "scale-110 shadow-lg" : ""
-                  }`}
-                  style={{
-                    backgroundColor: "rgba(0,0,0,0.03)",
-                    borderColor: "rgba(0,0,0,0.15)",
-                  }}
-                >
-                  {m.avatar ? (
-                    <img src={m.avatar} alt={m.nameZh} className="h-full w-full object-cover" />
-                  ) : (
-                    <span className="text-xs font-bold text-white" style={{ backgroundColor: m.color }}>
-                      {m.nameZh.charAt(0)}
-                    </span>
-                  )}
-                </div>
-                <div className="min-w-0">
-                  <div className="text-sm font-medium">{m.nameZh}</div>
-                  <div className="truncate text-xs text-gray-400">{m.title}</div>
-                </div>
-                {isActive && (
-                  <span className="ml-auto h-2 w-2 animate-pulse rounded-full" style={{ backgroundColor: m.color }} />
-                )}
-              </div>
-            );
-          })}
-        </div>
+        <SidebarMembers members={sidebarMembers} state={state} isDebate={isDebate} onMemberClick={handleSidebarMemberClick} chatInput={chatInput} />
       </div>
 
       {/* Main area */}
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Header */}
         <div
-          className="border-b bg-white/60 px-6 py-4 backdrop-blur-sm"
+          className="flex items-start justify-between gap-2 border-b bg-white/60 px-3 py-3 backdrop-blur-sm md:px-6 md:py-4"
           style={{ borderColor: "rgba(0,0,0,0.06)" }}
         >
-          <h2 className="text-lg font-bold tracking-tight">{state.question || question}</h2>
-          <div className="mt-2 flex items-center gap-3 text-xs text-gray-400">
-            <span>已发言 {state.messages.length} 条</span>
-            {state.loadingMember && (
-              <span className="flex items-center gap-1.5 text-gray-600">
-                <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-gray-400" />
-                {state.loadingMember}
-              </span>
-            )}
-            {state.isRunning && !state.loadingMember && (
-              <span className="flex items-center gap-1.5 text-gray-600">
-                <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-gray-400" />
-                {isDebate ? "讨论进行中" : "AI 正在回复..."}
-              </span>
-            )}
-            {!state.isRunning && state.messages.length > 0 && (
-              <span className="text-green-600">✓ 完成</span>
+          <div className="min-w-0 flex-1">
+            <h2 className="text-base md:text-lg font-bold tracking-tight break-words">{state.question || question}</h2>
+            <div className="mt-1 md:mt-2 flex flex-wrap items-center gap-2 text-xs text-gray-400">
+              <span>已发言 {state.messages.length} 条</span>
+              {state.loadingMember && (
+                <span className="flex items-center gap-1.5 text-gray-600">
+                  <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-gray-400" />
+                  {state.loadingMember}
+                </span>
+              )}
+              {state.isRunning && !state.loadingMember && (
+                <span className="flex items-center gap-1.5 text-gray-600">
+                  <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-gray-400" />
+                  {isDebate ? "讨论进行中" : "AI 正在回复..."}
+                </span>
+              )}
+              {!state.isRunning && state.messages.length > 0 && (
+                <span className="text-green-600">✓ 完成</span>
+              )}
+            </div>
+            {isDebate && (
+              <div className="mt-2 flex gap-1.5">
+                {state.rounds.map((r) => (
+                  <RoundDivider
+                    key={r.id}
+                    label={r.label}
+                    active={r.active}
+                    completed={r.completed}
+                  />
+                ))}
+              </div>
             )}
           </div>
-          {isDebate && (
-            <div className="mt-3 flex gap-1.5">
-              {state.rounds.map((r) => (
-                <RoundDivider
-                  key={r.id}
-                  label={r.label}
-                  active={r.active}
-                  completed={r.completed}
-                />
-              ))}
-            </div>
-          )}
+          {/* Mobile sidebar toggle */}
+          <button
+            className="shrink-0 flex h-8 w-8 items-center justify-center rounded-md md:hidden"
+            onClick={() => setMobileSidebarOpen(true)}
+            aria-label="查看成员"
+          >
+            <svg className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+          </button>
         </div>
+
+        {/* Mobile sidebar overlay */}
+        {mobileSidebarOpen && (
+          <div className="fixed inset-0 z-50 md:hidden" onClick={() => setMobileSidebarOpen(false)}>
+            <div className="absolute inset-0 bg-black/30" />
+            <div
+              className="absolute right-0 top-0 h-full w-72 border-l bg-white/95 p-4 backdrop-blur-sm"
+              style={{ borderColor: "rgba(0,0,0,0.06)" }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xs font-medium uppercase tracking-wider text-gray-400">
+                  {isDebate ? "参与成员" : "对话对象"}
+                </h3>
+                <button onClick={() => setMobileSidebarOpen(false)} className="text-gray-400 hover:text-gray-600">
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <SidebarMembers members={sidebarMembers} state={state} isDebate={isDebate} onMemberClick={(id) => { handleSidebarMemberClick(id); setMobileSidebarOpen(false); }} chatInput={chatInput} />
+            </div>
+          </div>
+        )}
 
         {/* Messages */}
         <div
           ref={scrollRef}
           onScroll={handleScroll}
-          className="flex-1 space-y-2 overflow-y-auto px-6 py-4"
+          className="flex-1 space-y-2 overflow-y-auto px-3 py-4 md:px-6"
         >
           {state.isRunning &&
             !state.messages.some((m) => m.content.length > 0) && (
@@ -462,7 +461,7 @@ export default function DiscussionView({
 
         {/* Bottom bar */}
         <div
-          className="relative border-t bg-white/60 px-6 py-3 backdrop-blur-sm"
+          className="relative border-t bg-white/60 px-3 py-2.5 backdrop-blur-sm md:px-6 md:py-3"
           style={{ borderColor: "rgba(0,0,0,0.06)" }}
         >
           {/* Chat mode: input box */}
@@ -532,6 +531,63 @@ export default function DiscussionView({
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+// Reusable sidebar members list
+function SidebarMembers({
+  members,
+  state,
+  isDebate,
+  onMemberClick,
+  chatInput,
+}: {
+  members: typeof cabinetMembers;
+  state: ReturnType<typeof useDiscussion>["state"];
+  isDebate: boolean;
+  onMemberClick: (id: string) => void;
+  chatInput: string;
+}) {
+  return (
+    <div className="space-y-1.5">
+      {members.map((m) => {
+        const isActive = state.currentSpeaker === m.id && state.isRunning;
+        return (
+          <div
+            key={m.id}
+            onClick={() => !isDebate && onMemberClick(m.id)}
+            className={`flex items-center gap-2.5 rounded-md px-3 py-2.5 transition-all duration-200 ${
+              isActive ? "bg-black/5" : "hover:bg-black/[0.03]"
+            } ${!isDebate && chatInput.trim() && !state.isRunning ? "cursor-pointer" : ""}`}
+          >
+            <div
+              className={`flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full border transition-all ${
+                isActive ? "scale-110 shadow-lg" : ""
+              }`}
+              style={{
+                backgroundColor: "rgba(0,0,0,0.03)",
+                borderColor: "rgba(0,0,0,0.15)",
+              }}
+            >
+              {m.avatar ? (
+                <img src={m.avatar} alt={m.nameZh} className="h-full w-full object-cover" />
+              ) : (
+                <span className="text-xs font-bold text-white" style={{ backgroundColor: m.color }}>
+                  {m.nameZh.charAt(0)}
+                </span>
+              )}
+            </div>
+            <div className="min-w-0">
+              <div className="text-sm font-medium">{m.nameZh}</div>
+              <div className="truncate text-xs text-gray-400">{m.title}</div>
+            </div>
+            {isActive && (
+              <span className="ml-auto h-2 w-2 animate-pulse rounded-full" style={{ backgroundColor: m.color }} />
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }

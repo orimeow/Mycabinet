@@ -35,7 +35,7 @@ function ResumeContent() {
 
   if (loading) {
     return (
-      <div className="flex h-[calc(100vh-60px)] items-center justify-center">
+      <div className="flex h-[calc(100dvh-56px)] items-center justify-center">
         <div className="text-sm text-gray-400">正在连接讨论...</div>
       </div>
     );
@@ -68,7 +68,7 @@ function ResumeContent() {
 
 export default function ResumeDiscussionPage() {
   return (
-    <Suspense fallback={<div className="flex h-[calc(100vh-60px)] items-center justify-center"><div className="text-sm text-gray-400">加载中...</div></div>}>
+    <Suspense fallback={<div className="flex h-[calc(100dvh-56px)] items-center justify-center"><div className="text-sm text-gray-400">加载中...</div></div>}>
       <ResumeContent />
     </Suspense>
   );

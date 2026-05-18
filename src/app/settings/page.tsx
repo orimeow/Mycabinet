@@ -147,7 +147,7 @@ export default function SettingsPage() {
         <div className="absolute -right-40 top-1/3 h-[500px] w-[500px] rounded-full bg-gradient-to-br from-teal-200/30 to-cyan-200/30 blur-3xl" />
       </div>
 
-      <main className="relative mx-auto max-w-3xl px-6 py-6">
+      <main className="relative mx-auto max-w-3xl px-4 py-4 md:px-6 md:py-6">
         {/* Title */}
         <div className="mb-6">
           <h1 className="text-xl font-semibold">设置</h1>

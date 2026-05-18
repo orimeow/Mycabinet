@@ -70,7 +70,7 @@ export default function MessageBubble({ message, isActive }: Props) {
       </div>
 
       {/* Content */}
-      <div className="ml-10 text-sm leading-relaxed text-gray-700 markdown-content">
+      <div className="ml-0 md:ml-10 text-sm leading-relaxed text-gray-700 markdown-content">
         {message.content ? (
           <ReactMarkdown>{message.content}</ReactMarkdown>
         ) : (
@@ -80,7 +80,7 @@ export default function MessageBubble({ message, isActive }: Props) {
 
       {/* Typing dots */}
       {isActive && !message.content && (
-        <div className="ml-10 mt-2 flex items-center gap-1.5">
+        <div className="ml-0 md:ml-10 mt-2 flex items-center gap-1.5">
           <span className="inline-block h-1.5 w-1.5 animate-bounce rounded-full"
             style={{ backgroundColor: color, animationDelay: "0ms" }} />
           <span className="inline-block h-1.5 w-1.5 animate-bounce rounded-full"

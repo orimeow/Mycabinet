@@ -231,7 +231,7 @@ export default function Home() {
         <div className="absolute bottom-0 left-1/3 h-[400px] w-[400px] rounded-full bg-gradient-to-br from-purple-200/20 to-pink-200/20 blur-3xl" />
       </div>
 
-      <main className="relative mx-auto max-w-4xl px-6 pb-20 pt-10">
+      <main className="relative mx-auto max-w-4xl px-4 pb-20 pt-8 md:px-6 md:pt-10">
         {/* Mode toggle - capsule tab */}
         <div className="mb-6 flex justify-center">
           <div
@@ -261,7 +261,7 @@ export default function Home() {
         <div className="rounded-md border bg-white/60 backdrop-blur-sm"
           style={{ borderColor: 'rgba(0,0,0,0.08)' }}
         >
-          <div className="px-4 pt-3">
+          <div className="px-3 pt-3 md:px-4">
             <textarea
               ref={textareaRef}
               id="question"
@@ -277,7 +277,7 @@ export default function Home() {
               maxLength={2000}
             />
           </div>
-          <div className="mt-2 flex items-center justify-end px-4 py-2">
+          <div className="mt-2 flex items-center justify-end px-3 py-2 md:px-4">
             <button
               onClick={handleSubmit}
               disabled={!canSubmit}
@@ -316,36 +316,38 @@ export default function Home() {
         </div>
 
         {/* Member avatars */}
-        <div className="flex justify-center gap-10">
-          {cabinetMembers.map((member) => (
-            <button
-              key={member.id}
-              onClick={() => router.push(`/members?id=${member.id}`)}
-              className="group flex flex-col items-center gap-2"
-            >
-              <div
-                className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border transition-all group-hover:scale-105"
-                style={{
-                  backgroundColor: 'rgba(0,0,0,0.03)',
-                  borderColor: 'rgba(0,0,0,0.15)',
-                }}
+        <div className="overflow-x-auto pb-4">
+          <div className="flex justify-center gap-6 md:gap-10">
+            {cabinetMembers.map((member) => (
+              <button
+                key={member.id}
+                onClick={() => router.push(`/members?id=${member.id}`)}
+                className="group flex flex-col items-center gap-1.5 shrink-0"
               >
-                {member.avatar ? (
-                  <img
-                    src={member.avatar}
-                    alt={member.nameZh}
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <span className="text-2xl font-bold text-gray-400">
-                    {member.nameZh.charAt(0)}
-                  </span>
-                )}
-              </div>
-              <span className="text-sm font-medium text-gray-700">{member.nameZh}</span>
-              <span className="text-xs text-gray-400">{member.title}</span>
-            </button>
-          ))}
+                <div
+                  className="flex h-16 w-16 md:h-24 md:w-24 items-center justify-center overflow-hidden rounded-full border transition-all group-hover:scale-105"
+                  style={{
+                    backgroundColor: 'rgba(0,0,0,0.03)',
+                    borderColor: 'rgba(0,0,0,0.15)',
+                  }}
+                >
+                  {member.avatar ? (
+                    <img
+                      src={member.avatar}
+                      alt={member.nameZh}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-lg md:text-2xl font-bold text-gray-400">
+                      {member.nameZh.charAt(0)}
+                    </span>
+                  )}
+                </div>
+                <span className="text-xs md:text-sm font-medium text-gray-700 text-center whitespace-nowrap">{member.nameZh}</span>
+                <span className="hidden md:block text-xs text-gray-400">{member.title}</span>
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Member Picker Overlay */}
