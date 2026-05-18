@@ -21,13 +21,23 @@ body {
 
 ::-webkit-scrollbar {
   width: 6px;
+  height: 4px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(0,0,0,0.15);
-  border-radius: 3px;
+  background: rgba(0,0,0,0.12);
+  border-radius: 2px;
+}
+
+/* Hide native scrollbar for scrollable tabs */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }
 
 /* Markdown content styling */

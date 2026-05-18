@@ -316,13 +316,12 @@ export default function Home() {
         </div>
 
         {/* Member avatars */}
-        <div className="overflow-x-auto pb-4">
-          <div className="flex justify-center gap-6 md:gap-10">
+        <div className="grid grid-cols-4 gap-6 md:gap-10">
             {cabinetMembers.map((member) => (
               <button
                 key={member.id}
                 onClick={() => router.push(`/members?id=${member.id}`)}
-                className="group flex flex-col items-center gap-1.5 shrink-0"
+                className="group flex flex-col items-center gap-1.5"
               >
                 <div
                   className="flex h-16 w-16 md:h-24 md:w-24 items-center justify-center overflow-hidden rounded-full border transition-all group-hover:scale-105"
@@ -347,7 +346,6 @@ export default function Home() {
                 <span className="hidden md:block text-xs text-gray-400">{member.title}</span>
               </button>
             ))}
-          </div>
         </div>
 
         {/* Member Picker Overlay */}

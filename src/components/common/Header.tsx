@@ -69,7 +69,7 @@ export default function Header() {
         >
           <div className="absolute inset-0 bg-black/20" />
           <div
-            className="absolute right-0 top-[52px] w-40 rounded-bl-lg rounded-br-lg border bg-white shadow-lg"
+            className="absolute right-0 top-[52px] w-40 rounded-bl-lg rounded-br-lg border bg-white/80 shadow-lg backdrop-blur-xl"
             style={{ borderColor: 'rgba(0,0,0,0.06)' }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -81,7 +81,7 @@ export default function Header() {
                 className={`block px-4 py-3 text-sm font-medium transition-colors ${
                   pathname === item.href
                     ? 'bg-[#1a1a1a] text-white'
-                    : 'text-gray-600 hover:bg-gray-50'
+                    : 'text-gray-500 hover:bg-black/5 hover:text-gray-900'
                 }`}
               >
                 {item.label}
