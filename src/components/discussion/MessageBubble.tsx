@@ -4,6 +4,13 @@ import { getMemberById } from "@/data/personas";
 import { motion } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 
+function formatTime(ts: string): string {
+  return new Date(ts).toLocaleTimeString("zh-CN", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 interface Props {
   message: DiscussionMessage;
   isActive: boolean;
@@ -76,6 +83,11 @@ export default function MessageBubble({ message, isActive }: Props) {
         ) : (
           <span className="animate-pulse text-gray-400">正在思考...</span>
         )}
+      </div>
+
+      {/* Timestamp */}
+      <div className="ml-0 md:ml-10 mt-1.5 text-[10px] text-gray-300">
+        {formatTime(message.timestamp)}
       </div>
 
       {/* Typing dots */}

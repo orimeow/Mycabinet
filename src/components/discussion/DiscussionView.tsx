@@ -389,13 +389,19 @@ export default function DiscussionView({
                 i === state.messages.length - 1;
               if (isUser) {
                 return (
-                  <div key={msg.id} className="flex justify-end">
+                  <div key={msg.id} className="flex flex-col items-end">
                     <div
                       className="max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed"
                       style={{ backgroundColor: "rgba(0,0,0,0.05)" }}
                     >
                       {msg.content}
                     </div>
+                    <span className="mt-0.5 text-[10px] text-gray-300">
+                      {new Date(msg.timestamp).toLocaleTimeString("zh-CN", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </span>
                   </div>
                 );
               }
