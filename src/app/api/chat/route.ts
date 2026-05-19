@@ -125,8 +125,7 @@ async function handleDebate(
           config,
           selectedMemberIds,
           abortCtrl.signal,
-          resumeState.startRound,
-          resumeState.lastSpeakerPerRound
+          existingMessages ?? []
         )) {
           if (event.type === "message_complete" && event.data) {
             const msg = event.data as Partial<DiscussionMessage>;
