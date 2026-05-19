@@ -162,16 +162,12 @@ export async function* runDiscussion(
   const round1SpeakerIds = new Set(messages.filter((m) => m.round === 1).map((m) => m.speakerId));
   const round2SpeakerIds = new Set(messages.filter((m) => m.round === 2).map((m) => m.speakerId));
 
-  // Cross-examination: each member challenges the next one (circular), then that member responds.
-  // Capped at 3 pairs max to prevent excessive API calls (8 members → 16 pairs is too much).
-  const maxCrossExamPairs = 3;
-  const pairCount = Math.min(selectedMembers.length, maxCrossExamPairs);
+  // Cross-examination: circular — member i's statement is challenged by member (i+1)%N.
+  // N members → N pairs → 2N API calls (challenge + respond each).
+  // 2 members = 2 pairs, 3 members = 3 pairs, 8 members = 8 pairs (16 calls).
   const pairs: [number, number][] = [];
-  for (let i = 0; i < pairCount; i++) {
-    const challengerIdx = i;
-    const targetIdx = (i + 1) % selectedMembers.length;
-    // Challenger attacks, then target responds — represented as one pair
-    pairs.push([challengerIdx, targetIdx]);
+  for (let i = 0; i < selectedMembers.length; i++) {
+    pairs.push([i, (i + 1) % selectedMembers.length]);
   }
 
   // ===== Round 1: Opening Statements =====
