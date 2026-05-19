@@ -42,7 +42,7 @@ export default function MemberPicker({ mode, selectedIds, onChange, onClose, onS
       }}
     >
       <div
-        className="w-full max-w-md rounded-xl border bg-white p-6 shadow-xl"
+        className="w-full max-w-lg rounded-xl border bg-white p-5 shadow-xl"
         style={{ borderColor: "rgba(0,0,0,0.06)" }}
       >
         <div className="flex items-center justify-between">
@@ -58,10 +58,10 @@ export default function MemberPicker({ mode, selectedIds, onChange, onClose, onS
 
         <p className="mt-1 text-xs text-gray-400">
           {mode === "debate" ? "辩论至少需要 2 位成员" : "聊天至少需要 1 位成员"}
-          {selectedIds.length > 0 && `（已选 ${selectedIds.length} 位）`}
+          {selectedIds.length > 0 && ` · 已选 ${selectedIds.length} 位`}
         </p>
 
-        <div className="mt-4 grid gap-2.5">
+        <div className="mt-4 grid grid-cols-3 gap-2">
           {cabinetMembers.map((m) => {
             const active = selectedIds.includes(m.id);
             return (
@@ -72,17 +72,17 @@ export default function MemberPicker({ mode, selectedIds, onChange, onClose, onS
                   toggle(m.id);
                   if (!wasActive) onSelect?.(m.id);
                 }}
-                className="flex items-center gap-3 rounded-lg border px-4 py-3 text-left transition-all duration-150"
+                className="group relative flex flex-col items-center gap-1.5 rounded-lg border py-3 px-2 transition-all duration-150"
                 style={{
-                  borderColor: active ? "rgba(0,0,0,0.15)" : "rgba(0,0,0,0.06)",
+                  borderColor: active ? m.color : "rgba(0,0,0,0.06)",
                   backgroundColor: active ? "rgba(0,0,0,0.02)" : "transparent",
                 }}
               >
                 <div
-                  className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border"
+                  className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border transition-all"
                   style={{
-                    backgroundColor: "rgba(0,0,0,0.03)",
-                    borderColor: "rgba(0,0,0,0.15)",
+                    borderColor: active ? m.color : "rgba(0,0,0,0.15)",
+                    borderWidth: active ? 2 : 1,
                   }}
                 >
                   {m.avatar ? (
@@ -91,13 +91,10 @@ export default function MemberPicker({ mode, selectedIds, onChange, onClose, onS
                     <span className="text-sm font-bold text-gray-400">{m.nameZh.charAt(0)}</span>
                   )}
                 </div>
-                <div className="min-w-0 flex-1">
-                  <div className="text-sm font-medium">{m.nameZh}</div>
-                  <div className="truncate text-xs text-gray-400">{m.title}</div>
-                </div>
+                <div className="text-xs font-medium leading-tight text-center">{m.nameZh}</div>
                 {active && (
-                  <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#1a1a1a]">
-                    <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                  <div className="absolute right-1.5 top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#1a1a1a]">
+                    <svg className="h-2.5 w-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
                   </div>
