@@ -68,6 +68,25 @@ async function handleDebate(
     });
   }
 
+  // Reject non-questions: greetings, too short, or common non-substance inputs
+  const q = question.trim();
+  if (q.length < 5 || /^[一-鿿]{1,3}[，。！？!?.]*$/.test(q) || /^(hi|hello|hey|你好|哈喽|hihi|haha|哈哈|helloo|早上好|晚上好|早上好呀)/i.test(q)) {
+    const stream = new ReadableStream({
+      start(controller) {
+        controller.enqueue(encoder.encode(`event: error\ndata: ${JSON.stringify({ message: "请输入一个具体问题开始辩论，如「你好」改为「AI 是否应该拥有法律人格？」" })}\n\n`));
+        controller.close();
+      },
+    });
+    return new Response(stream, {
+      headers: {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        Connection: "keep-alive",
+        "X-Accel-Buffering": "no",
+      },
+    });
+  }
+
   // Compute resume state: which rounds are complete, what's the last completed speaker per round
   const resumeState = computeResumeState(existingMessages ?? []);
 
