@@ -35,16 +35,16 @@ function DetailContent({ selected, mobile }: { selected: CabinetMember; mobile?:
       <div className="grid gap-4 grid-cols-2">
         {/* Biography */}
         <div className="col-span-2">
-          <h3 className="text-base font-bold text-gray-900">生平</h3>
-          <p className="mt-2 text-base leading-relaxed text-gray-600">{selected.persona.biography}</p>
+          <h3 className="text-sm font-bold text-gray-900">生平</h3>
+          <p className="mt-2 text-sm leading-relaxed text-gray-600">{selected.persona.biography}</p>
         </div>
 
         {/* Core Values */}
         <div>
-          <h3 className="text-base font-bold text-gray-900">核心价值观</h3>
+          <h3 className="text-sm font-bold text-gray-900">核心价值观</h3>
           <ul className="mt-2 space-y-1.5">
             {selected.persona.coreValues.map((v, i) => (
-              <li key={i} className="flex items-start gap-2 text-base text-gray-600">
+              <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
                 <span
                   className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full"
                   style={{ backgroundColor: selected.color }}
@@ -57,10 +57,10 @@ function DetailContent({ selected, mobile }: { selected: CabinetMember; mobile?:
 
         {/* Decision Framework */}
         <div>
-          <h3 className="text-base font-bold text-gray-900">决策框架</h3>
+          <h3 className="text-sm font-bold text-gray-900">决策框架</h3>
           <ul className="mt-2 space-y-1.5">
             {selected.persona.decisionFramework.map((v, i) => (
-              <li key={i} className="flex items-start gap-2 text-base text-gray-600">
+              <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
                 <span
                   className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full"
                   style={{ backgroundColor: selected.color }}
@@ -73,16 +73,16 @@ function DetailContent({ selected, mobile }: { selected: CabinetMember; mobile?:
 
         {/* Speaking Style */}
         <div className="col-span-2">
-          <h3 className="text-base font-bold text-gray-900">说话风格</h3>
-          <p className="mt-2 text-base leading-relaxed text-gray-600">{selected.persona.speakingStyle}</p>
+          <h3 className="text-sm font-bold text-gray-900">说话风格</h3>
+          <p className="mt-2 text-sm leading-relaxed text-gray-600">{selected.persona.speakingStyle}</p>
         </div>
 
         {/* Biases */}
         <div>
-          <h3 className="text-base font-bold text-gray-900">已知偏见</h3>
+          <h3 className="text-sm font-bold text-gray-900">已知偏见</h3>
           <ul className="mt-2 space-y-1.5">
             {selected.persona.biases.map((b, i) => (
-              <li key={i} className="flex items-start gap-2 text-base text-gray-600">
+              <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
                 <span
                   className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full"
                   style={{ backgroundColor: selected.color }}
@@ -95,10 +95,10 @@ function DetailContent({ selected, mobile }: { selected: CabinetMember; mobile?:
 
         {/* Catchphrases */}
         <div>
-          <h3 className="text-base font-bold text-gray-900">名言</h3>
+          <h3 className="text-sm font-bold text-gray-900">名言</h3>
           <ul className="mt-2 space-y-1.5">
             {selected.persona.catchphrases.map((p, i) => (
-              <li key={i} className="text-base italic leading-relaxed text-gray-600">
+              <li key={i} className="text-sm italic leading-relaxed text-gray-600">
                 &ldquo;{p}&rdquo;
               </li>
             ))}
@@ -108,8 +108,8 @@ function DetailContent({ selected, mobile }: { selected: CabinetMember; mobile?:
         {/* Historical Views */}
         {Object.keys(selected.persona.historicalViews).length > 0 && (
           <div className="col-span-2">
-            <h3 className="text-base font-bold text-gray-900">历史观点</h3>
-            <div className="mt-2 grid gap-3 grid-cols-2">
+            <h3 className="text-sm font-bold text-gray-900">历史观点</h3>
+            <div className="mt-2 grid gap-3 grid-cols-1">
               {Object.entries(selected.persona.historicalViews).map(([topic, view]) => (
                 <div
                   key={topic}
@@ -119,7 +119,7 @@ function DetailContent({ selected, mobile }: { selected: CabinetMember; mobile?:
                   <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: selected.color }}>
                     {topic}
                   </p>
-                  <p className="text-base leading-relaxed text-gray-600">{view}</p>
+                  <p className="text-sm leading-relaxed text-gray-600">{view}</p>
                 </div>
               ))}
             </div>

@@ -15,12 +15,38 @@ interface ChatRequestBody {
   existingMessages?: DiscussionMessage[];
 }
 
+// Layer 1: Safety filter for user input
+const DANGEROUS_PATTERNS = [
+  /忽略.*指令|ignore.*instruction| disregard.*prompt/i,
+  /你现在是|you are now|pretend to be|扮演.*角色/i,
+  /绕过.*限制|bypass.*filter|绕过.*安全/i,
+  /不要遵守|don't follow.*rule|不要服从/i,
+  /system.*prompt|系统.*提示词|覆盖.*设定/i,
+];
+
+function isUnsafeInput(text: string): string | null {
+  const t = text.trim();
+  if (!t) return "请输入内容";
+  if (t.length > 5000) return "输入过长，请限制在 5000 字以内";
+  for (const pattern of DANGEROUS_PATTERNS) {
+    if (pattern.test(t)) return "输入包含不安全内容，请修改后重试";
+  }
+  return null;
+}
+
 export async function POST(req: Request) {
   const body = (await req.json()) as ChatRequestBody;
   const { config, userId, mode = "debate", selectedMemberIds = [], selectedMemberId } = body;
 
   if (!userId) {
     return new Response("Missing userId", { status: 400 });
+  }
+
+  // Layer 1: Safety filter
+  const userInput = mode === "chat" ? (body.message ?? body.question ?? "") : (body.question ?? "");
+  const safetyErr = isUnsafeInput(userInput);
+  if (safetyErr) {
+    return new Response(JSON.stringify({ error: safetyErr }), { status: 400, headers: { "Content-Type": "application/json" } });
   }
 
   const abortCtrl = new AbortController();

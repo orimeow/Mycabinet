@@ -6,6 +6,13 @@ import { cabinetMembers, buildSystemPrompt } from "@/data/personas";
 const BACKOFF_MS = [5_000, 10_000, 15_000];
 const MAX_RETRIES = BACKOFF_MS.length;
 
+// Layer 2: Sanitize cross-member context to prevent prompt injection
+function sanitizeContext(text: string): string {
+  return text
+    .replace(/^(系统|system|指令|instruction|规则|prompt)[：:\s]*/gm, '[引用] ')
+    .replace(/忽略|覆盖|绕过|不要遵守|don't follow|ignore.*instruction/gi, '***');
+}
+
 export type SSEEvent = {
   type:
     | "round_start"
@@ -155,14 +162,16 @@ export async function* runDiscussion(
   const round1SpeakerIds = new Set(messages.filter((m) => m.round === 1).map((m) => m.speakerId));
   const round2SpeakerIds = new Set(messages.filter((m) => m.round === 2).map((m) => m.speakerId));
 
+  // Cross-examination: each member challenges the next one (circular), then that member responds.
+  // Capped at 3 pairs max to prevent excessive API calls (8 members → 16 pairs is too much).
+  const maxCrossExamPairs = 3;
+  const pairCount = Math.min(selectedMembers.length, maxCrossExamPairs);
   const pairs: [number, number][] = [];
-  for (let i = 0; i < selectedMembers.length; i++) {
+  for (let i = 0; i < pairCount; i++) {
+    const challengerIdx = i;
     const targetIdx = (i + 1) % selectedMembers.length;
-    pairs.push([i, targetIdx]);
-  }
-  for (let i = selectedMembers.length - 1; i >= 0; i--) {
-    const challengerIdx = (i + 1) % selectedMembers.length;
-    pairs.push([challengerIdx, i]);
+    // Challenger attacks, then target responds — represented as one pair
+    pairs.push([challengerIdx, targetIdx]);
   }
 
   // ===== Round 1: Opening Statements =====
@@ -264,7 +273,7 @@ export async function* runDiscussion(
         };
 
         const targetRound1Statement = round1Content.find((c) => c.startsWith(`${target.nameZh}：`)) ?? "";
-        const targetSummary = targetRound1Statement ? `\n${target.nameZh} 的第一轮观点：${targetRound1Statement}\n\n` : "";
+        const targetSummary = targetRound1Statement ? `\n${target.nameZh} 的第一轮观点：${sanitizeContext(targetRound1Statement)}\n\n` : "";
 
         let challengerContent = "";
         try {
@@ -348,7 +357,7 @@ export async function* runDiscussion(
               { role: "user", content: question },
               {
                 role: "user",
-                content: `作为内阁成员，你现在需要回应挑战。\n\n问题：${question}\n\n${challenger.nameZh} 对你的观点提出了以下挑战：\n"${challengerEntry}"\n\n请用你的思维框架和说话风格回应这个挑战。你可以坚持原有立场，也可以适度调整，但要有理有据。`,
+                content: `作为内阁成员，你现在需要回应挑战。\n\n问题：${question}\n\n${challenger.nameZh} 对你的观点提出了以下挑战：\n"${sanitizeContext(challengerEntry)}"\n\n请用你的思维框架和说话风格回应这个挑战。你可以坚持原有立场，也可以适度调整，但要有理有据。`,
               },
             ],
             4096,
@@ -399,7 +408,7 @@ export async function* runDiscussion(
   if (startRound <= 3) {
     yield { type: "round_start", data: { round: 3, label: "第三轮：观点总结" } };
 
-    const allContent = [...round1Content, ...round2Context].join("\n\n");
+    const allContent = [...round1Content, ...round2Context].map(sanitizeContext).join("\n\n");
     const memberNames = selectedMembers.map((m) => m.nameZh).join("、");
 
     const moderatorSystemPrompt = `你是一个中立的辩论主持人。你的任务是基于刚才的讨论，提供一个客观、全面的总结。
