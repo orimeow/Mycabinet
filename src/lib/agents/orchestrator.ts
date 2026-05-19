@@ -479,7 +479,8 @@ export async function* runChatSession(
   config: AIProviderConfig,
   conversationHistory: AIMessage[],
   selectedMemberId: string,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  responseContext?: { index: number; total: number }
 ): AsyncIterable<SSEEvent> {
   const member = cabinetMembers.find((m) => m.id === selectedMemberId);
   if (!member) return;
@@ -511,13 +512,19 @@ export async function* runChatSession(
   };
   const antiDefault = ANTI_DEFAULTS[member.id] ?? "";
 
+  // Response context: inject a unique cue so each member gets differentiated instructions
+  // even for identical short inputs like "hi". This prevents duplicate/similar outputs.
+  const responseContextHint = responseContext
+    ? responseContext.total > 1
+      ? `你是第 ${responseContext.index + 1} 位回复者（共 ${responseContext.total} 位）。你是第一个发言者时请从你的核心视角切入话题；你是后续发言者时不要重复前面人的内容，请从你独特的角度补充或展开新的维度。`
+      : ""
+    : "";
+
   // Cache-busting nonce: Gemini free tier deduplicates on user message content.
   // Appending at the END of the user message — putting it first caused the LLM
   // to treat the nonce as the main content and ignore the actual question.
   const cacheNonce = `[req:${Date.now()}-${Math.random().toString(36).slice(2, 8)}]`;
-  const userContent = personalizedMessage
-    ? `${personalizedMessage}\n\n${cacheNonce}`
-    : cacheNonce;
+  const userContent = [personalizedMessage, responseContextHint, cacheNonce].filter(Boolean).join("\n");
 
   console.log(`[runChatSession] Member: ${member.nameZh}, message:`, userContent?.slice(0, 100));
   console.log(`[runChatSession] System prompt preview:`, `你是 ${member.nameZh}（${member.nameEn}），${member.title}`);

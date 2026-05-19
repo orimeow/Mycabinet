@@ -330,7 +330,8 @@ async function handleChat(
               config,
               sessionHistory,
               memberId,
-              abortCtrl.signal
+              abortCtrl.signal,
+              { index: memberIds.indexOf(memberId), total: memberIds.length }
             )) {
               if (event.type === "message_complete" && event.data) {
                 const msg = event.data as Partial<DiscussionMessage>;
@@ -374,7 +375,8 @@ async function handleChat(
               config,
               sessionHistory,
               memberId,
-              abortCtrl.signal
+              abortCtrl.signal,
+              { index: targetIds.indexOf(memberId), total: targetIds.length }
             )) {
               if (event.type === "message_complete" && event.data) {
                 const msg = event.data as Partial<DiscussionMessage>;
