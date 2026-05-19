@@ -12,6 +12,7 @@ interface ChatRequestBody {
   selectedMemberId?: string; // chat mode: current speaking member
   discussionId?: string;
   conversationHistory?: AIMessage[];
+  existingMessages?: DiscussionMessage[];
 }
 
 export async function POST(req: Request) {
@@ -45,7 +46,7 @@ async function handleDebate(
   encoder: TextEncoder,
   clientAbortSignal: AbortSignal
 ) {
-  const { question } = body;
+  const { question, existingMessages, discussionId } = body;
   if (!question?.trim()) {
     return new Response("Missing question", { status: 400 });
   }
@@ -67,30 +68,66 @@ async function handleDebate(
     });
   }
 
-  const discussionId = `d-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-  const createdAt = new Date().toISOString();
+  // Compute resume state: which rounds are complete, what's the last completed speaker per round
+  const resumeState = computeResumeState(existingMessages ?? []);
 
-  const discussion: Discussion = {
-    id: discussionId,
-    question,
-    userId,
-    mode: "debate",
-    selectedMemberIds,
-    messages: [],
-    status: "running",
-    createdAt,
-    provider: config.provider,
-  };
+  // When resuming, try to find and reuse the existing discussion record
+  let discussion: Discussion;
+  let existingDiscussion: Discussion | null = null;
+  if (discussionId) {
+    existingDiscussion = getDiscussion(userId, discussionId);
+  }
+  if (!existingDiscussion) {
+    // Fallback: find by status=running for this userId with matching question
+    const { listDiscussions } = await import("@/lib/db/database");
+    const allDiscussions = listDiscussions(userId, 100);
+    existingDiscussion = allDiscussions.find(
+      (d) => d.status === "running" && d.question === question && d.mode === "debate"
+    ) ?? null;
+  }
 
-  saveDiscussion(discussion);
+  if (existingDiscussion) {
+    discussion = existingDiscussion;
+    discussion.status = "running";
+    saveDiscussion(discussion);
+  } else {
+    const newId = `d-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    discussion = {
+      id: newId,
+      question,
+      userId,
+      mode: "debate",
+      selectedMemberIds,
+      messages: [...(existingMessages ?? [])],
+      status: "running",
+      createdAt: new Date().toISOString(),
+      provider: config.provider,
+    };
+    saveDiscussion(discussion);
+  }
 
   const stream = new ReadableStream({
     async start(controller) {
       try {
-        // Send discussion ID immediately so client knows it started
-        controller.enqueue(encoder.encode(`event: discussion_started\ndata: ${JSON.stringify({ discussionId })}\n\n`));
+        // Send discussion ID immediately
+        controller.enqueue(encoder.encode(`event: discussion_started\ndata: ${JSON.stringify({ discussionId: discussion.id })}\n\n`));
 
-        for await (const event of runDiscussion(question, config, selectedMemberIds, abortCtrl.signal)) {
+        // If resuming, mark completed rounds as active so UI shows correct state
+        if (resumeState.startRound > 1) {
+          for (let r = 1; r < resumeState.startRound; r++) {
+            controller.enqueue(encoder.encode(`event: round_start\ndata: ${JSON.stringify({ round: r })}\n\n`));
+            controller.enqueue(encoder.encode(`event: round_complete\ndata: ${JSON.stringify({ round: r })}\n\n`));
+          }
+        }
+
+        for await (const event of runDiscussion(
+          question,
+          config,
+          selectedMemberIds,
+          abortCtrl.signal,
+          resumeState.startRound,
+          resumeState.lastSpeakerPerRound
+        )) {
           if (event.type === "message_complete" && event.data) {
             const msg = event.data as Partial<DiscussionMessage>;
             discussion.messages.push(msg as DiscussionMessage);
@@ -135,6 +172,37 @@ async function handleDebate(
       "X-Accel-Buffering": "no",
     },
   });
+}
+
+/**
+ * Compute resume state from existing messages.
+ * Returns: startRound (1-4, where 4 means done) and lastSpeakerId per round.
+ */
+function computeResumeState(
+  messages: DiscussionMessage[]
+): { startRound: number; lastSpeakerPerRound: Record<number, string> } {
+  const lastSpeakerPerRound: Record<number, string> = {};
+  let maxRound = 0;
+
+  for (const msg of messages) {
+    if (msg.round > maxRound) maxRound = msg.round;
+    lastSpeakerPerRound[msg.round] = msg.speakerId;
+  }
+
+  // Round 1: all members have round=1 messages → round 1 complete
+  // Round 2: has messages with round=2 → round 2 complete (or in progress)
+  // Round 3: has moderator message → round 3 complete
+
+  const hasRound3 = messages.some((m) => m.round === 3);
+  const hasRound2 = messages.some((m) => m.round === 2);
+  const hasRound1 = messages.some((m) => m.round === 1);
+
+  let startRound = 1;
+  if (hasRound3) startRound = 4; // all done
+  else if (hasRound2) startRound = 3; // start from summary
+  else if (hasRound1) startRound = 2; // start from cross-exam
+
+  return { startRound, lastSpeakerPerRound };
 }
 
 async function handleChat(

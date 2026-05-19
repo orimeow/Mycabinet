@@ -50,6 +50,7 @@ interface SSEParams {
   selectedMemberId?: string;
   discussionId?: string;
   conversationHistory?: Array<{ role: string; content: string }>;
+  existingMessages?: DiscussionMessage[];
 }
 
 export function useDiscussion() {
@@ -353,6 +354,7 @@ export function useDiscussion() {
           userId,
           mode,
           selectedMemberIds,
+          existingMessages,
         });
       } catch (err) {
         if ((err as Error).name === "AbortError") return;
