@@ -8,6 +8,9 @@ import RoundDivider from "./RoundDivider";
 import { AIProviderConfig } from "@/lib/types";
 import { useEffect, useRef, useState, useCallback } from "react";
 
+const PLACEHOLDER_DESKTOP = "输入消息，@成员 定向提问，或留空让所有成员回复";
+const PLACEHOLDER_MOBILE = "输入消息，@成员 定向提问";
+
 // Module-level: survives across StrictMode double-mounts.
 // Prevents StrictMode from triggering the same component's effect twice.
 // Cleared on unmount so new discussions can start normally.
@@ -47,6 +50,14 @@ export default function DiscussionView({
   const [mentionState, setMentionState] = useState<MentionState | null>(null);
   const [mentionNavIndex, setMentionNavIndex] = useState(0);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    setIsMobile(window.innerWidth < 768);
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   // Members available for @mention — only participants
   const availableMembers = selectedMemberIds.length > 0
@@ -480,7 +491,11 @@ export default function DiscussionView({
                   }
                 }}
                 placeholder={
-                  state.isRunning ? "AI 正在回复..." : "输入消息，@成员 定向提问，或留空让所有成员回复"
+                  state.isRunning
+                    ? "AI 正在回复..."
+                    : isMobile
+                      ? "输入消息，@成员 提问"
+                      : "输入消息，@成员 定向提问，或留空让所有成员回复"
                 }
                 disabled={state.isRunning}
                 rows={1}

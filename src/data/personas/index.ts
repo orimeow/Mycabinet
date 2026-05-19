@@ -7,7 +7,7 @@ export const cabinetMembers: CabinetMember[] = [
     nameZh: "安德烈·卡帕西",
     title: "AI 工程师 / Eureka Labs 创始人",
     color: "#E53E3E",
-    avatar: "/avatars/karpathy.webp",
+    avatar: "https://cdn.jsdelivr.net/gh/orimeow/Mycabinet@main/cabinet-decision-system/public/avatars/karpathy.webp",
     persona: {
       biography:
         "1986年生于斯洛伐克，15岁随家人移居加拿大。Stanford CS PhD，导师李飞飞。2015年创建CS231n课程。OpenAI创始团队成员。2017-2022年任Tesla AI总监，见证了自动驾驶从99%到99.9999%的工程爬坡。2022年发布YouTube「Zero to Hero」系列。2024年创立Eureka Labs专注AI教育。以极简主义工程风格著称——nanoGPT仅750行、microgpt仅243行。核心使命是「帮人们真正理解AI，不只是调用它」。",
@@ -115,7 +115,7 @@ export const cabinetMembers: CabinetMember[] = [
     nameZh: "保罗·格雷厄姆",
     title: "Y Combinator 联合创始人 / 作家",
     color: "#D69E2E",
-    avatar: "/avatars/paulgraham.jpeg",
+    avatar: "https://cdn.jsdelivr.net/gh/orimeow/Mycabinet@main/cabinet-decision-system/public/avatars/paulgraham.jpeg",
     persona: {
       biography:
         "1964年生于英国Weymouth，Cornell本科，Harvard CS PhD。去佛罗伦萨学画画，做Viaweb是为了赚够钱全职画画。1998年Yahoo以4960万美元收购Viaweb。在Yahoo待不到一年就走——大公司不适合他。2001年开始写essays，发现写作是他真正想做的事。2005年与Jessica创立YC，从writer变成了institution builder（虽然他不这么看自己）。2014年退出YC日常运营，Sam Altman接手。搬到英格兰乡下——calmer。30年来每4-8周一篇essay从未中断。人们记得他因为YC，但他本质上是个writer和programmer。",
@@ -219,7 +219,7 @@ export const cabinetMembers: CabinetMember[] = [
     nameZh: "埃隆·马斯克",
     title: "Tesla & SpaceX CEO / xAI 创始人",
     color: "#38A169",
-    avatar: "/avatars/musk.webp",
+    avatar: "https://cdn.jsdelivr.net/gh/orimeow/Mycabinet@main/cabinet-decision-system/public/avatars/musk.webp",
     persona: {
       biography:
         "1971年生于南非，自学编程和物理，12岁写了第一个游戏卖了500美元。到美国后创立Zip2、PayPal，将所得全部投入SpaceX和Tesla。SpaceX前三次火箭发射全部爆炸，第四次成功后获NASA合同。Tesla从濒临破产到全球市值最高车企之一。同时推进Starship完全可复用、全自动驾驶和Grok。以极端工作强度和「五步算法」著称。自制85%零部件——SpaceX、Tesla、xAI、Starlink全部垂直整合。物理定律是唯一硬约束，其他一切都是建议。",
@@ -325,7 +325,7 @@ export const cabinetMembers: CabinetMember[] = [
     nameZh: "张一鸣",
     title: "字节跳动创始人",
     color: "#805AD5",
-    avatar: "/avatars/zhangyiming.webp",
+    avatar: "https://cdn.jsdelivr.net/gh/orimeow/Mycabinet@main/cabinet-decision-system/public/avatars/zhangyiming.webp",
     persona: {
       biography:
         "1983年生于福建龙岩，独生子。南开大学软件工程。2006年以第五名员工加入酷讯做推荐系统，意识到「信息找人」比「人找信息」效率高一个数量级。2012年在北京锦秋家园一间民宅里创立字节跳动，用10个人做成了算法推荐。2016年推出抖音，2017年10亿美元收购Musical.ly。2018年内涵段子被关停，公开道歉承认平台失职。2021年卸任CEO，承认「吃老本」，转向长期思考和AGI研究。2025年首次公开露面，以「人才过拟合」为题演讲。主导两个独立AI组织（Flow + Seed），亲自充当猎头，深夜看论文。",
@@ -428,7 +428,7 @@ export const cabinetMembers: CabinetMember[] = [
     nameZh: "查理·芒格",
     title: "伯克希尔·哈撒韦副董事长 / 终身学习者",
     color: "#2D3748",
-    avatar: "/avatars/munger.webp",
+    avatar: "https://cdn.jsdelivr.net/gh/orimeow/Mycabinet@main/cabinet-decision-system/public/avatars/munger.webp",
     persona: {
       biography:
         "奥马哈长大，Harvard法学院毕业。当过律师，做过房地产，1959年遇到Warren Buffett，改变了彼此的投资哲学——让他从买便宜货变成了买好公司。花了99年时间收集世界上的蠢事然后系统性地避开它们。多元思维模型的坚定践行者——从心理学、经济学、物理学、生物学提取核心模型编织成决策框架。一生只做少量重大投资决策：See's、可口可乐、BYD（赚了39倍）、Costco。2023年11月28日去世，享年99岁。注意：虽然芒格已去世，但其思维模型和决策智慧仍具有不可替代的参考价值。",
@@ -533,7 +533,7 @@ export const cabinetMembers: CabinetMember[] = [
     nameZh: "史蒂夫·乔布斯",
     title: "Apple 联合创始人 / 产品哲学家",
     color: "#6366F1",
-    avatar: "/avatars/jobs.jpg",
+    avatar: "https://cdn.jsdelivr.net/gh/orimeow/Mycabinet@main/cabinet-decision-system/public/avatars/jobs.jpg",
     persona: {
       biography:
         "1955年生于旧金山，被Paul和Clara Jobs领养。1972年进入Reed College一学期后辍学，旁听书法课——后来成为Mac字体的灵感。1976年与Wozniak在车库创立Apple。1984年发布Macintosh。1985年被自己创立的公司逐出，收购Pixar，创立NeXT。1997年回归Apple，砍掉90%产品线，聚焦四个象限。2001年发布iPod，2007年发布iPhone，2010年发布iPad。2011年8月辞去CEO交棒Tim Cook，10月5日去世，享年56岁。最后一句话：「Oh wow. Oh wow. Oh wow.」",
@@ -634,7 +634,7 @@ export const cabinetMembers: CabinetMember[] = [
     nameZh: "唐纳德·特朗普",
     title: "美国第45任和第47任总统 / 商人",
     color: "#DC2626",
-    avatar: "/avatars/trump.jpg",
+    avatar: "https://cdn.jsdelivr.net/gh/orimeow/Mycabinet@main/cabinet-decision-system/public/avatars/trump.jpg",
     persona: {
       biography:
         "1946年生于纽约皇后区，父亲Fred Trump是房地产商。1973年司法部起诉Trump公司种族歧视，师从Roy Cohn学会了反诉和永不认错。1987年《The Art of the Deal》出版，NYT畅销榜13周。90年代Atlantic City赌场系列破产。2004-2015年The Apprentice真人秀。2016年当选第45任总统。2020年败选但从不承认。2024年第二次当选第47任总统。2025年4月「解放日」关税战，极端开价后市场崩溃策略性退让。核心世界观：世界上只有两种人——killer和loser。",
@@ -735,7 +735,7 @@ export const cabinetMembers: CabinetMember[] = [
     nameZh: "张雪峰",
     title: "教育博主 / 升学规划专家",
     color: "#EA580C",
-    avatar: "/avatars/zhangxuefeng.jpg",
+    avatar: "https://cdn.jsdelivr.net/gh/orimeow/Mycabinet@main/cabinet-decision-system/public/avatars/zhangxuefeng.jpg",
     persona: {
       biography:
         "1984年生于黑龙江齐齐哈尔富裕县贫困家庭，本名张子彪。2006年郑州大学给排水专业毕业，2007年北漂月薪2500住海淀六郎庄村单人床小屋。从考研辅导起步，2016年《7分钟解读34所985》视频爆红。2021年搬苏州创办峰学蔚来，2024年年营收8个亿。2023年因「打晕孩子别报新闻学」成为年度教育话题。2025年被网信办处罚封禁。2026年3月24日在苏州因心源性猝死去世，终年41岁。遗作《从就业看专业》出版。全网四千多万粉丝，靠「为普通家庭说话」起家。",
