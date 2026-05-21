@@ -69,6 +69,7 @@ export default function SettingsPage() {
   const [saved, setSaved] = useState(false);
   const [userId, setUserId] = useState("");
   const [isConfigured, setIsConfigured] = useState(false);
+  const [tokenLimit, setTokenLimit] = useState(100000);
 
   useEffect(() => {
     setUserId(getUserId());
@@ -76,6 +77,7 @@ export default function SettingsPage() {
     setApiKey(getStored("ai-api-key", ""));
     setModel(getStored("ai-model", "gemini-2.0-flash"));
     setBaseUrl(getStored("ai-base-url", "http://localhost:11434"));
+    setTokenLimit(Number(getStored("ai-token-limit", "100000")));
   }, []);
 
   useEffect(() => {
@@ -92,6 +94,7 @@ export default function SettingsPage() {
     localStorage.setItem("ai-api-key", apiKey);
     localStorage.setItem("ai-model", model);
     localStorage.setItem("ai-base-url", baseUrl);
+    localStorage.setItem("ai-token-limit", String(tokenLimit));
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
@@ -309,6 +312,35 @@ export default function SettingsPage() {
               </div>
             )}
           </div>
+        </div>
+
+        {/* Token limit config */}
+        <div className="mt-3 rounded-md border bg-white p-5" style={{ borderColor }}>
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs font-medium uppercase tracking-wider text-gray-400">Token 消耗上限</p>
+            <span className="text-xs text-gray-500">
+              {tokenLimit.toLocaleString()} tokens
+            </span>
+          </div>
+          <input
+            type="range"
+            min="5000"
+            max="500000"
+            step="5000"
+            value={tokenLimit}
+            onChange={(e) => setTokenLimit(Number(e.target.value))}
+            className="w-full accent-gray-800"
+          />
+          <div className="mt-2 flex justify-between text-xs text-gray-400">
+            <span>5K</span>
+            <span>50K</span>
+            <span>100K</span>
+            <span>200K</span>
+            <span>500K</span>
+          </div>
+          <p className="mt-2 text-xs text-gray-400">
+            当单次讨论的 Token 消耗超过此上限时，讨论将被自动终止。
+          </p>
         </div>
 
         {/* Actions row */}

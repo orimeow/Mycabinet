@@ -63,12 +63,14 @@ export interface AIProviderConfig {
   baseUrl?: string; // for Ollama or custom OpenAI-compatible endpoints
 }
 
+export interface TokenUsage {
+  inputTokens: number;
+  outputTokens: number;
+}
+
 export interface ProviderResponse {
   text: string;
-  usage?: {
-    inputTokens: number;
-    outputTokens: number;
-  };
+  usage?: TokenUsage;
 }
 
 export type RoundType = "opening" | "cross_exam" | "refined" | "summary";

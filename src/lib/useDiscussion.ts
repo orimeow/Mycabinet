@@ -19,6 +19,7 @@ interface DiscussionState {
   loadingMember: string | null;
   retrying: { message: string; attempt: number } | null;
   discussionId: string | null;
+  tokenUsage: { inputTokens: number; outputTokens: number } | null;
 }
 
 function initialRounds(): RoundState[] {
@@ -37,6 +38,7 @@ function initialState(): DiscussionState {
     loadingMember: null,
     retrying: null,
     discussionId: null,
+    tokenUsage: null,
   };
 }
 
@@ -283,6 +285,17 @@ export function useDiscussion() {
                 }
                 break;
               }
+              case "usage_update": {
+                const inputTokens = (data.inputTokens as number) ?? 0;
+                const outputTokens = (data.outputTokens as number) ?? 0;
+                if (!newState.tokenUsage) {
+                  newState.tokenUsage = { inputTokens, outputTokens };
+                } else {
+                  newState.tokenUsage.inputTokens += inputTokens;
+                  newState.tokenUsage.outputTokens += outputTokens;
+                }
+                break;
+              }
             }
 
             return newState;
@@ -330,6 +343,7 @@ export function useDiscussion() {
         loadingMember: "正在连接 AI...",
         retrying: null,
         discussionId: null,
+        tokenUsage: null,
       });
 
       clearActivityTimeout();

@@ -22,7 +22,8 @@ export type SSEEvent = {
     | "round_complete"
     | "discussion_complete"
     | "error"
-    | "retrying";
+    | "retrying"
+    | "usage_update";
   data: Record<string, unknown>;
 };
 
@@ -66,7 +67,7 @@ async function* streamChat(
   signal?: AbortSignal,
   speakerId?: string,
   speakerName?: string
-): AsyncIterable<{ chunk?: string; retries?: SSEEvent[]; done?: boolean }> {
+): AsyncIterable<{ chunk?: string; retries?: SSEEvent[]; done?: boolean; usage?: { inputTokens: number; outputTokens: number } }> {
   let lastError: unknown;
 
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
@@ -103,9 +104,10 @@ async function* streamChat(
         stream: true,
       });
 
-      for await (const chunk of stream) {
+      for await (const item of stream) {
         if (signal?.aborted) return;
-        yield { chunk };
+        if (item.text) yield { chunk: item.text };
+        if (item.usage) yield { usage: item.usage };
       }
       yield { done: true };
       return;
@@ -194,6 +196,7 @@ export async function* runDiscussion(
       const userPrompt = `作为内阁成员，请就以下问题发表你的初始观点：\n\n"${question}"\n\n请完全基于你自己的思维框架、价值观和决策逻辑独立发言，不要提及或复述其他成员的观点。请用你的身份特有的思维方式和说话风格来表达。`;
 
       let fullContent = "";
+      let memberUsage: { inputTokens: number; outputTokens: number } | null = null;
       try {
         for await (const result of streamChat(
           config,
@@ -212,6 +215,10 @@ export async function* runDiscussion(
           if (result.chunk) {
             fullContent += result.chunk;
             yield { type: "message_delta", data: { round: 1, speakerId: member.id, delta: result.chunk } };
+          }
+          if (result.usage) {
+            memberUsage = result.usage;
+            yield { type: "usage_update", data: { speakerId: member.id, ...result.usage } };
           }
           if (result.done) break;
         }
@@ -297,6 +304,9 @@ export async function* runDiscussion(
               challengerContent += result.chunk;
               yield { type: "message_delta", data: { round: 2, speakerId: challenger.id, delta: result.chunk } };
             }
+            if (result.usage) {
+              yield { type: "usage_update", data: { speakerId: challenger.id, ...result.usage } };
+            }
             if (result.done) break;
           }
         } catch (err) {
@@ -369,6 +379,9 @@ export async function* runDiscussion(
             if (result.chunk) {
               targetContent += result.chunk;
               yield { type: "message_delta", data: { round: 2, speakerId: target.id, delta: result.chunk } };
+            }
+            if (result.usage) {
+              yield { type: "usage_update", data: { speakerId: target.id, ...result.usage } };
             }
             if (result.done) break;
           }
@@ -444,6 +457,9 @@ export async function* runDiscussion(
         if (result.chunk) {
           summaryContent += result.chunk;
           yield { type: "message_delta", data: { round: 3, speakerId: "moderator", delta: result.chunk } };
+        }
+        if (result.usage) {
+          yield { type: "usage_update", data: { speakerId: "moderator", ...result.usage } };
         }
         if (result.done) break;
       }
@@ -557,6 +573,9 @@ export async function* runChatSession(
       if (result.chunk) {
         fullContent += result.chunk;
         yield { type: "message_delta", data: { round: 0, speakerId: member.id, delta: result.chunk } };
+      }
+      if (result.usage) {
+        yield { type: "usage_update", data: { speakerId: member.id, ...result.usage } };
       }
       if (result.done) break;
     }

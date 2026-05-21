@@ -531,6 +531,11 @@ export default function DiscussionView({
                 {state.discussionId && !externalDiscussionId && (
                   <span className="ml-2 text-gray-300">#{state.discussionId.slice(-6)}</span>
                 )}
+                {state.tokenUsage && (
+                  <span className="ml-2 text-gray-500">
+                    ≈ {(state.tokenUsage.inputTokens + state.tokenUsage.outputTokens).toLocaleString()} tokens
+                  </span>
+                )}
               </div>
               <div className="flex items-center gap-2">
                 {state.isRunning && (

@@ -1,7 +1,12 @@
-import { AIProviderConfig, AIMessage, ProviderResponse } from "@/lib/types";
+import { AIProviderConfig, AIMessage, ProviderResponse, TokenUsage } from "@/lib/types";
 import Anthropic from "@anthropic-ai/sdk";
 import OpenAI from "openai";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+
+export interface StreamChunk {
+  text?: string;
+  usage?: TokenUsage;
+}
 
 export interface AIProvider {
   name: string;
@@ -11,7 +16,7 @@ export interface AIProvider {
     temperature?: number;
     maxTokens?: number;
     stream: true;
-  }): AsyncIterable<string>;
+  }): AsyncIterable<StreamChunk>;
 }
 
 export class ClaudeProvider implements AIProvider {
@@ -33,7 +38,7 @@ export class ClaudeProvider implements AIProvider {
     temperature?: number;
     maxTokens?: number;
     stream: true;
-  }): AsyncIterable<string> {
+  }): AsyncIterable<StreamChunk> {
     const systemMessage = messages.find((m) => m.role === "system");
     const userMessages = messages.filter((m) => m.role !== "system");
 
@@ -62,11 +67,28 @@ export class ClaudeProvider implements AIProvider {
       stream: true,
     });
 
+    let inputTokens = 0;
+    let outputTokens = 0;
+    let outputText = "";
+
     for await (const chunk of stream) {
+      if (chunk.type === "message_start" && (chunk as any).message?.usage) {
+        inputTokens = (chunk as any).message.usage.input_tokens || 0;
+      }
+      if (chunk.type === "message_delta" && (chunk as any).delta?.usage) {
+        outputTokens = (chunk as any).delta.usage.output_tokens || 0;
+      }
       if (chunk.type === "content_block_delta" && chunk.delta?.type === "text_delta") {
-        yield chunk.delta.text;
+        outputText += chunk.delta.text;
+        yield { text: chunk.delta.text };
       }
     }
+
+    // Fallback: estimate output tokens if not provided by API
+    if (outputTokens === 0 && outputText) {
+      outputTokens = Math.ceil(outputText.length / 3.5);
+    }
+    yield { usage: { inputTokens, outputTokens } };
   }
 }
 
@@ -93,21 +115,39 @@ export class OpenAIProvider implements AIProvider {
     temperature?: number;
     maxTokens?: number;
     stream: true;
-  }): AsyncIterable<string> {
+  }): AsyncIterable<StreamChunk> {
     const stream = await this.client.chat.completions.create({
       model: model || "gpt-4o",
       messages: messages as OpenAI.ChatCompletionMessageParam[],
       max_tokens: maxTokens,
       temperature,
       stream: true,
+      stream_options: { include_usage: true },
     });
+
+    let inputTokens = 0;
+    let outputTokens = 0;
+    let outputText = "";
 
     for await (const chunk of stream) {
       const delta = chunk.choices[0]?.delta?.content;
       if (delta) {
-        yield delta;
+        outputText += delta;
+        yield { text: delta };
+      }
+      // OpenAI sends usage in the final chunk when stream_options.include_usage is true
+      const usage = (chunk as any).usage;
+      if (usage) {
+        inputTokens = usage.prompt_tokens || 0;
+        outputTokens = usage.completion_tokens || 0;
       }
     }
+
+    // Fallback: estimate if API didn't return usage
+    if (inputTokens === 0 && outputTokens === 0 && outputText) {
+      outputTokens = Math.ceil(outputText.length / 3.5);
+    }
+    yield { usage: { inputTokens, outputTokens } };
   }
 }
 
@@ -146,7 +186,7 @@ export class OpenRouterProvider implements AIProvider {
     temperature?: number;
     maxTokens?: number;
     stream: true;
-  }): AsyncIterable<string> {
+  }): AsyncIterable<StreamChunk> {
     // Build fallback chain: requested model first, then free models that differ
     const modelChain = [model, ...OPENROUTER_FREE_MODELS.filter((m) => m !== model)];
 
@@ -159,31 +199,46 @@ export class OpenRouterProvider implements AIProvider {
           max_tokens: maxTokens,
           temperature,
           stream: true,
+          stream_options: { include_usage: true },
         });
 
         let prevText = "";
+        let inputTokens = 0;
+        let outputTokens = 0;
+        let outputText = "";
+
         for await (const chunk of stream) {
           const fullText = chunk.choices[0]?.delta?.content || "";
-          if (!fullText) continue;
-          // Some OpenRouter models return cumulative text instead of delta
-          const delta = fullText.startsWith(prevText)
-            ? fullText.slice(prevText.length)
-            : fullText;
-          prevText = fullText.startsWith(prevText) ? fullText : prevText + fullText;
-          if (delta) {
-            yield delta;
+          if (fullText) {
+            // Some OpenRouter models return cumulative text instead of delta
+            const delta = fullText.startsWith(prevText)
+              ? fullText.slice(prevText.length)
+              : fullText;
+            prevText = fullText.startsWith(prevText) ? fullText : prevText + fullText;
+            if (delta) {
+              outputText += delta;
+              yield { text: delta };
+            }
+          }
+          const usage = (chunk as any).usage;
+          if (usage) {
+            inputTokens = usage.prompt_tokens || 0;
+            outputTokens = usage.completion_tokens || 0;
           }
         }
+
+        if (inputTokens === 0 && outputTokens === 0 && outputText) {
+          outputTokens = Math.ceil(outputText.length / 3.5);
+        }
+        yield { usage: { inputTokens, outputTokens } };
         return; // success, exit generator
       } catch (err) {
         lastError = err as Error;
-        // Continue to next model on 500/503 errors
-        // Retry on server errors (500/503) and model not found (404)
         const errMsg = lastError.message.toLowerCase();
         if (errMsg.includes("500") || errMsg.includes("503") || errMsg.includes("404")) {
           continue;
         }
-        throw lastError; // auth/other errors are not model issues
+        throw lastError;
       }
     }
     throw lastError ?? new Error("All OpenRouter free models are unavailable");
@@ -208,7 +263,7 @@ export class OllamaProvider implements AIProvider {
     temperature?: number;
     maxTokens?: number;
     stream: true;
-  }): AsyncIterable<string> {
+  }): AsyncIterable<StreamChunk> {
     const response = await fetch(`${this.baseUrl}/api/chat`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -229,6 +284,7 @@ export class OllamaProvider implements AIProvider {
 
     const decoder = new TextDecoder();
     let buffer = "";
+    let outputText = "";
 
     while (true) {
       const { done, value } = await reader.read();
@@ -243,7 +299,8 @@ export class OllamaProvider implements AIProvider {
           try {
             const parsed = JSON.parse(line);
             if (parsed.message?.content) {
-              yield parsed.message.content;
+              outputText += parsed.message.content;
+              yield { text: parsed.message.content };
             }
           } catch {
             // Skip malformed JSON lines
@@ -251,6 +308,10 @@ export class OllamaProvider implements AIProvider {
         }
       }
     }
+
+    // Ollama doesn't return usage in streaming mode; estimate
+    const outputTokens = outputText ? Math.ceil(outputText.length / 3.5) : 0;
+    yield { usage: { inputTokens: 0, outputTokens } };
   }
 }
 
@@ -273,7 +334,7 @@ export class GeminiProvider implements AIProvider {
     temperature?: number;
     maxTokens?: number;
     stream: true;
-  }): AsyncIterable<string> {
+  }): AsyncIterable<StreamChunk> {
     const systemMessage = messages.find((m) => m.role === "system");
     const userMessages = messages.filter((m) => m.role !== "system");
 
@@ -293,13 +354,36 @@ export class GeminiProvider implements AIProvider {
     });
 
     const result = await genModel.generateContentStream(parts);
+    let outputText = "";
 
     for await (const chunk of result.stream) {
       const text = chunk.text();
       if (text) {
-        yield text;
+        outputText += text;
+        yield { text };
       }
     }
+
+    // After stream ends, try to get usage metadata
+    try {
+      const response = await result.response;
+      const usage = (response as any).usageMetadata;
+      if (usage) {
+        yield {
+          usage: {
+            inputTokens: usage.promptTokenCount || 0,
+            outputTokens: usage.candidatesTokenCount || 0,
+          },
+        };
+        return;
+      }
+    } catch {
+      // ignore
+    }
+
+    // Fallback estimate
+    const outputTokens = outputText ? Math.ceil(outputText.length / 3.5) : 0;
+    yield { usage: { inputTokens: 0, outputTokens } };
   }
 }
 
