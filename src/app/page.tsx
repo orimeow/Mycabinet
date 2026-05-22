@@ -277,15 +277,18 @@ export default function Home() {
               maxLength={2000}
             />
           </div>
-          <div className="mt-2 flex items-center justify-end px-3 py-2 md:px-4">
+          <div className="mt-2 flex items-center justify-between px-3 py-2 md:px-4">
+            <span className="text-xs text-gray-400 md:hidden">
+              {selectedIds.length > 0 ? `已选 ${selectedIds.length} 人` : "点击头像选择成员"}
+            </span>
             <button
               onClick={handleSubmit}
               disabled={!canSubmit}
-              className="shrink-0 rounded-md bg-[#1a1a1a] px-6 py-2 text-sm font-semibold text-white
+              className="ml-auto shrink-0 rounded-md bg-[#1a1a1a] px-5 py-2 text-sm font-semibold text-white
                 transition-all hover:bg-[#333] active:scale-[0.98]
-                disabled:cursor-not-allowed disabled:opacity-100"
+                disabled:cursor-not-allowed disabled:opacity-40 md:px-6"
             >
-              {mode === "debate" ? "开始辩论" : "发起聊天"} →
+              {mode === "debate" ? "开始辩论" : "发起聊天"}
             </button>
           </div>
         </div>
@@ -316,7 +319,7 @@ export default function Home() {
         </div>
 
         {/* Member avatars */}
-        <div className="grid grid-cols-4 gap-6 md:gap-10">
+        <div className="grid grid-cols-3 gap-4 sm:grid-cols-4 sm:gap-6 md:gap-10">
             {cabinetMembers.map((member) => (
               <button
                 key={member.id}

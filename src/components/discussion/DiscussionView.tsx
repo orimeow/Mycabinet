@@ -51,6 +51,7 @@ export default function DiscussionView({
   const [mentionNavIndex, setMentionNavIndex] = useState(0);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [showExportMenu, setShowExportMenu] = useState(false);
 
   useEffect(() => {
     setIsMobile(window.innerWidth < 768);
@@ -103,6 +104,14 @@ export default function DiscussionView({
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [state.messages, autoScroll]);
+
+  // Close export menu on outside click
+  useEffect(() => {
+    if (!showExportMenu) return;
+    const handleClick = () => setShowExportMenu(false);
+    setTimeout(() => document.addEventListener("click", handleClick), 0);
+    return () => document.removeEventListener("click", handleClick);
+  }, [showExportMenu]);
 
   const handleScroll = useCallback(() => {
     if (!scrollRef.current) return;
@@ -232,6 +241,67 @@ export default function DiscussionView({
     : [];
 
   const isDebate = mode === "debate";
+
+  const exportAsMarkdown = useCallback(() => {
+    const memberMap = new Map(cabinetMembers.map((m) => [m.id, m]));
+    const lines: string[] = [];
+    lines.push(`# 讨论：${state.question || question}`);
+    lines.push("");
+    lines.push(`**模式**：${isDebate ? "辩论" : "聊天"}`);
+    const participantNames = sidebarMembers.map((m) => m.nameZh).join("、");
+    lines.push(`**成员**：${participantNames}`);
+    lines.push(`**时间**：${new Date().toLocaleString("zh-CN")}`);
+    if (state.tokenUsage) {
+      const total = state.tokenUsage.inputTokens + state.tokenUsage.outputTokens;
+      lines.push(`**Token 消耗**：≈ ${total.toLocaleString()} tokens`);
+    }
+    lines.push("");
+    lines.push("---");
+    lines.push("");
+
+    if (isDebate) {
+      for (const round of state.rounds) {
+        const roundMessages = state.messages.filter((m) => m.round === round.id);
+        if (roundMessages.length === 0) continue;
+        lines.push(`## ${round.label}`);
+        lines.push("");
+        for (const msg of roundMessages) {
+          const member = memberMap.get(msg.speakerId);
+          const name = member?.nameZh || (msg.speakerId === "moderator" ? "主持人" : msg.speakerId);
+          lines.push(`### ${name}`);
+          if (msg.challengeTarget) {
+            const target = memberMap.get(msg.challengeTarget)?.nameZh || msg.challengeTarget;
+            lines.push(`> 挑战 ${target}`);
+          }
+          lines.push(msg.content);
+          lines.push("");
+        }
+        lines.push("---");
+        lines.push("");
+      }
+    } else {
+      for (const msg of state.messages) {
+        if (msg.sender === "user") {
+          lines.push(`**用户**：${msg.content}`);
+        } else {
+          const member = memberMap.get(msg.speakerId);
+          const name = member?.nameZh || msg.speakerId;
+          lines.push(`**${name}**：${msg.content}`);
+        }
+        lines.push("");
+      }
+    }
+    return lines.join("\n");
+  }, [state, question, isDebate, sidebarMembers]);
+
+  const copyToClipboard = useCallback(async (text: string, label: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      alert(`已复制${label}到剪贴板`);
+    } catch {
+      alert("复制失败，请手动复制");
+    }
+  }, []);
 
   return (
     <div className="relative flex h-[calc(100dvh-56px)]">
@@ -521,36 +591,74 @@ export default function DiscussionView({
               </button>
             </div>
           ) : (
-            <div className="flex items-center justify-between">
-              <div className="text-xs text-gray-400">
-                {config.provider === "openrouter" ? "OpenRouter" : config.provider} ·{" "}
-                {config.model || "默认模型"}
+            <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-400">
+                <span className="hidden sm:inline">
+                  {config.provider === "openrouter" ? "OpenRouter" : config.provider} ·{" "}
+                  {config.model || "默认模型"}
+                </span>
                 {externalDiscussionId && (
-                  <span className="ml-2 text-gray-300">#{externalDiscussionId.slice(-6)}</span>
+                  <span className="text-gray-300">#{externalDiscussionId.slice(-6)}</span>
                 )}
                 {state.discussionId && !externalDiscussionId && (
-                  <span className="ml-2 text-gray-300">#{state.discussionId.slice(-6)}</span>
+                  <span className="text-gray-300">#{state.discussionId.slice(-6)}</span>
                 )}
                 {state.tokenUsage && (
-                  <span className="ml-2 text-gray-500">
+                  <span className="text-gray-500">
                     ≈ {(state.tokenUsage.inputTokens + state.tokenUsage.outputTokens).toLocaleString()} tokens
                   </span>
                 )}
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 md:gap-2">
+                {!state.isRunning && state.messages.length > 0 && (
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowExportMenu((v) => !v)}
+                      className="rounded-lg px-2.5 py-1.5 text-xs text-gray-500 transition-colors hover:bg-black/5 md:px-3"
+                      title="导出讨论"
+                    >
+                      导出
+                    </button>
+                    {showExportMenu && (
+                      <div
+                        className="absolute bottom-full right-0 mb-1 w-36 overflow-hidden rounded-lg border bg-white shadow-lg"
+                        style={{ borderColor: "rgba(0,0,0,0.08)" }}
+                      >
+                        <button
+                          onClick={() => {
+                            copyToClipboard(exportAsMarkdown(), "Markdown");
+                            setShowExportMenu(false);
+                          }}
+                          className="flex w-full items-center px-3 py-2 text-left text-xs text-gray-600 transition-colors hover:bg-black/[0.04]"
+                        >
+                          复制为 Markdown
+                        </button>
+                        <button
+                          onClick={() => {
+                            copyToClipboard(JSON.stringify(state.messages, null, 2), "JSON");
+                            setShowExportMenu(false);
+                          }}
+                          className="flex w-full items-center px-3 py-2 text-left text-xs text-gray-600 transition-colors hover:bg-black/[0.04]"
+                        >
+                          复制为 JSON
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
                 {state.isRunning && (
                   <button
                     onClick={terminateDiscussion}
-                    className="rounded-lg px-3 py-1.5 text-xs text-red-500 transition-colors hover:bg-red-50"
+                    className="rounded-lg px-2.5 py-1.5 text-xs text-red-500 transition-colors hover:bg-red-50 md:px-3"
                   >
-                    终止讨论
+                    终止
                   </button>
                 )}
                 <button
                   onClick={() => setAutoScroll(!autoScroll)}
-                  className="rounded-lg px-3 py-1.5 text-xs text-gray-400 transition-colors hover:bg-black/5"
+                  className="rounded-lg px-2.5 py-1.5 text-xs text-gray-400 transition-colors hover:bg-black/5 md:px-3"
                 >
-                  {autoScroll ? "暂停滚动" : "恢复滚动"}
+                  {autoScroll ? "暂停" : "滚动"}
                 </button>
               </div>
             </div>
