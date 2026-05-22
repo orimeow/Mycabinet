@@ -324,7 +324,7 @@ export default function Home() {
             {allMembers.map((member) => (
               <button
                 key={member.id}
-                onClick={() => router.push(`/members?id=${member.id}`)}
+                onClick={() => setSelectedIds((prev) => prev.includes(member.id) ? prev.filter((x) => x !== member.id) : [...prev, member.id])}
                 className="group flex flex-col items-center gap-1.5"
               >
                 <div

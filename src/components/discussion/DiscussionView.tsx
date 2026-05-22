@@ -601,25 +601,27 @@ export default function DiscussionView({
               </button>
             </div>
           ) : (
-            <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-400">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-xs text-gray-400">
                 <span className="hidden sm:inline">
                   {config.provider === "openrouter" ? "OpenRouter" : config.provider} ·{" "}
                   {config.model || "默认模型"}
                 </span>
-                {externalDiscussionId && (
-                  <span className="text-gray-300">#{externalDiscussionId.slice(-6)}</span>
-                )}
-                {state.discussionId && !externalDiscussionId && (
-                  <span className="text-gray-300">#{state.discussionId.slice(-6)}</span>
-                )}
+                <span className="hidden md:inline">
+                  {externalDiscussionId && (
+                    <span className="text-gray-300">#{externalDiscussionId.slice(-6)}</span>
+                  )}
+                  {state.discussionId && !externalDiscussionId && (
+                    <span className="text-gray-300">#{state.discussionId.slice(-6)}</span>
+                  )}
+                </span>
                 {state.tokenUsage && (
                   <span className="text-gray-500">
                     ≈ {(state.tokenUsage.inputTokens + state.tokenUsage.outputTokens).toLocaleString()} tokens
                   </span>
                 )}
               </div>
-              <div className="flex items-center gap-1.5 md:gap-2">
+              <div className="flex items-center gap-1.5">
                 {!state.isRunning && state.messages.length > 0 && (
                   <div className="relative">
                     <button
