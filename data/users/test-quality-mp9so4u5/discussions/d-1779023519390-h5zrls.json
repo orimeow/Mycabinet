@@ -1,0 +1,23 @@
+{
+  "id": "d-1779023519390-h5zrls",
+  "question": "AI 编程助手真的能帮工程师提高效率吗？还是只是暂时的新鲜感？",
+  "userId": "test-quality-mp9so4u5",
+  "mode": "chat",
+  "selectedMemberIds": [
+    "karpathy"
+  ],
+  "messages": [
+    {
+      "id": "chat-karpathy-1779023531759",
+      "round": 0,
+      "speakerId": "karpathy",
+      "speakerName": "安德烈·卡帕西",
+      "content": "它确实能提高效率——但只在你清楚自己要什么、且愿意为它写好 prompt 的时候。\n\n我用 GitHub Copilot 和 Cursor 写过几周真实代码，也用 nanoGPT 生成过自己的 tokenizer。结论是：AI 编程助手不是「自动完成升级版」，它是「英语编程接口」——The hottest new programming language is English。但英语不是语法严谨的语言，它模糊、依赖上下文、容错率低。所以你写 prompt 的质量，直接决定了它产出的代码是否值得 review，而不是 copy-paste。\n\n有意思的是，我观察到一个反直觉现象：初级工程师用得更顺手，资深工程师反而卡顿更久。为什么？因为初级工程师还在学「怎么表达意图」，而资深工程师已经内化了太多隐含约束——边界条件、部署路径、可观测性埋点、错误传播方式……这些他不会写进 prompt，但 AI 也不会猜。结果就是：AI 写出的代码看起来漂亮，跑三分钟就 panic。\n\n所以效率提升不是线性的。它像杠杆：支点是你对系统边界的理解，力臂是你 prompt 的精确度，而阻力是真实世界的工程复杂性。你越懂底层，越知道该问什么；越不懂，越容易被表面流畅骗过去。\n\n我觉得，现在这个阶段，AI 编程助手最真实的效率增益不在「写新代码」，而在「读旧代码」。它能把一段没人碰过的 legacy Rust crate，用你熟悉的 Python 语义重述逻辑流——这节省的时间，比生成一个新函数高一个数量级。\n\n当然，也有幻觉翻车的时候。比如它自信满满地告诉你 `os.path.join` 在 Windows 下会自动处理反斜杠——其实不会，它只是把 Stack Overflow 上某条过时答案记混了。这时候你得立刻切回 Software 1.0 模式：手动查文档、写 test、跑 CI。这就是 Iron Man 套装的意义——它不替你飞，但它给你 HUD、推进器、和实时威胁预警。\n\n最后说句实在话：如果你用它三个月后，发现自己 still can’t write a tokenizer from scratch —— 那你可能只是在训练 prompt 工程师，而不是在训练自己。真正的效率，是让 AI 成为你思考的延伸，而不是替代你思考的拐杖。\n\n……就这样。",
+      "timestamp": "2026-05-17T13:12:11.759Z",
+      "sender": "member"
+    }
+  ],
+  "status": "running",
+  "createdAt": "2026-05-17T13:11:59.390Z",
+  "provider": "bailian"
+}

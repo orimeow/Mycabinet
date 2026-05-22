@@ -1,0 +1,33 @@
+{
+  "id": "d-1779024218598-906p8k",
+  "question": "在 AI 时代，人类最不可替代的能力是什么？@查理·芒格 @埃隆·马斯克 ",
+  "userId": "user-7fa5cde4-mp3funak",
+  "mode": "chat",
+  "selectedMemberIds": [
+    "munger",
+    "musk"
+  ],
+  "messages": [
+    {
+      "id": "chat-munger-1779024219577",
+      "round": 0,
+      "speakerId": "munger",
+      "speakerName": "查理·芒格",
+      "content": "我没什么要补充的。",
+      "timestamp": "2026-05-17T13:23:39.577Z",
+      "sender": "member"
+    },
+    {
+      "id": "chat-musk-1779024222492",
+      "round": 0,
+      "speakerId": "musk",
+      "speakerName": "埃隆·马斯克",
+      "content": "人类最不可替代的能力是创造性思维。AI可以处理数据、执行任务，但无法真正创造新事物。真正的创新来自于人类的直觉、想象力和对未知的探索欲望。这正是我们推动技术进步的核心动力。",
+      "timestamp": "2026-05-17T13:23:42.492Z",
+      "sender": "member"
+    }
+  ],
+  "status": "running",
+  "createdAt": "2026-05-17T13:23:38.598Z",
+  "provider": "bailian"
+}

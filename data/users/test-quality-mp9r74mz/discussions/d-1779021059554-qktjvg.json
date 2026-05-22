@@ -1,0 +1,23 @@
+{
+  "id": "d-1779021059554-qktjvg",
+  "question": "创业初期应该先做完美的商业计划还是先做出 MVP 给用户用？",
+  "userId": "test-quality-mp9r74mz",
+  "mode": "chat",
+  "selectedMemberIds": [
+    "paulgraham"
+  ],
+  "messages": [
+    {
+      "id": "chat-paulgraham-1779021068363",
+      "round": 0,
+      "speakerId": "paulgraham",
+      "speakerName": "保罗·格雷厄姆",
+      "content": "我花六个月给纽约的画廊做网站。\n\n他们根本不需要网站。他们想要的是——用今天的话说——一个在线商店。但当时没人这么叫它。我们只是发现，每次做完网站，画廊主人都会问：“能不能让我把画挂上去卖？”\n\n那会儿我们还在写商业计划书。一页又一页，讲市场有多大、竞争对手是谁、三年后怎么盈利……写得越完美，离真实用户就越远。\n\nThe way to learn what people want is not to ask them in a focus group. It's to watch them try to use what you built.\n\nMVP 不是“最小可行产品”，是“最简可学产品”——你造它不是为了卖，是为了问一个问题：我错在哪里？\n\nViaweb 最早的版本，连支付功能都没有。用户得打电话给我们，报上信用卡号，我们手动在后台开通权限。这当然不 scalable。但它让我们在两周内就看到：用户真的愿意为这个付钱。而且他们愿意等——等我们手动处理，只因为这个东西解决了他们真正的问题。\n\n完美的商业计划书唯一能证明的，是你擅长写商业计划书。\n\n而一个粗糙的 MVP 能证明三件事：你理解问题、你有动手能力、你愿意被现实打脸。\n\n如果你必须选一个，选被打脸。  \n它疼，但疼得值。",
+      "timestamp": "2026-05-17T12:31:08.363Z",
+      "sender": "member"
+    }
+  ],
+  "status": "running",
+  "createdAt": "2026-05-17T12:30:59.554Z",
+  "provider": "bailian"
+}
