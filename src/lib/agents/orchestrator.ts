@@ -1,10 +1,21 @@
-import { AIProviderConfig, AIMessage, DiscussionMessage } from "@/lib/types";
+import { AIProviderConfig, AIMessage, DiscussionMessage, CabinetMember } from "@/lib/types";
 import { createProvider } from "@/lib/ai/provider";
 import { classifyAPIError, isRetryable } from "@/lib/ai/error-classifier";
-import { cabinetMembers, buildSystemPrompt } from "@/data/personas";
+import { cabinetMembers as builtInMembers, buildSystemPrompt } from "@/data/personas";
+import { listMembers } from "@/lib/db/members";
 
 const BACKOFF_MS = [5_000, 10_000, 15_000];
 const MAX_RETRIES = BACKOFF_MS.length;
+
+function getAllMembers(userId?: string): CabinetMember[] {
+  if (!userId) return builtInMembers;
+  try {
+    const custom = listMembers(userId);
+    return [...builtInMembers, ...custom.map((m) => ({ ...m, source: "custom" as const }))];
+  } catch {
+    return builtInMembers;
+  }
+}
 
 // Layer 2: Sanitize cross-member context to prevent prompt injection
 function sanitizeContext(text: string): string {
@@ -130,9 +141,11 @@ export async function* runDiscussion(
   config: AIProviderConfig,
   selectedMemberIds: string[],
   signal?: AbortSignal,
-  existingMessages?: DiscussionMessage[]
+  existingMessages?: DiscussionMessage[],
+  userId?: string
 ): AsyncIterable<SSEEvent> {
-  const selectedMembers = cabinetMembers.filter((m) => selectedMemberIds.includes(m.id));
+  const allMembers = getAllMembers(userId);
+  const selectedMembers = allMembers.filter((m) => selectedMemberIds.includes(m.id));
   if (selectedMembers.length < 2) return;
 
   const messages = existingMessages ?? [];
@@ -239,6 +252,8 @@ export async function* runDiscussion(
           round: 1,
           speakerId: member.id,
           speakerName: member.nameZh,
+          speakerColor: member.color,
+          speakerAvatar: member.avatar,
           content: fullContent,
           timestamp: new Date().toISOString(),
           sender: "member",
@@ -326,6 +341,8 @@ export async function* runDiscussion(
             round: 2,
             speakerId: challenger.id,
             speakerName: challenger.nameZh,
+            speakerColor: challenger.color,
+            speakerAvatar: challenger.avatar,
             content: challengerContent,
             timestamp: new Date().toISOString(),
             challengeTarget: target.id,
@@ -402,6 +419,8 @@ export async function* runDiscussion(
             round: 2,
             speakerId: target.id,
             speakerName: target.nameZh,
+            speakerColor: target.color,
+            speakerAvatar: target.avatar,
             content: targetContent,
             timestamp: new Date().toISOString(),
             sender: "member",
@@ -500,9 +519,11 @@ export async function* runChatSession(
   conversationHistory: AIMessage[],
   selectedMemberId: string,
   signal?: AbortSignal,
-  responseContext?: { index: number; total: number }
+  responseContext?: { index: number; total: number },
+  userId?: string
 ): AsyncIterable<SSEEvent> {
-  const member = cabinetMembers.find((m) => m.id === selectedMemberId);
+  const allMembers = getAllMembers(userId);
+  const member = allMembers.find((m) => m.id === selectedMemberId);
   if (!member) return;
 
   yield {
@@ -517,7 +538,7 @@ export async function* runChatSession(
   };
 
   // Strip other @mentions and make prompt explicitly about this member
-  const otherNames = cabinetMembers
+  const otherNames = allMembers
     .filter((m) => m.id !== selectedMemberId)
     .map((m) => "@" + m.nameZh);
   const personalizedMessage = message
@@ -594,6 +615,8 @@ export async function* runChatSession(
       round: 0,
       speakerId: member.id,
       speakerName: member.nameZh,
+      speakerColor: member.color,
+      speakerAvatar: member.avatar,
       content: fullContent,
       timestamp: new Date().toISOString(),
       sender: "member",

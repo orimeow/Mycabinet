@@ -170,7 +170,8 @@ async function handleDebate(
           config,
           selectedMemberIds,
           abortCtrl.signal,
-          existingMessages ?? []
+          existingMessages ?? [],
+          userId
         )) {
           if (event.type === "message_complete" && event.data) {
             const msg = event.data as Partial<DiscussionMessage>;
@@ -357,7 +358,8 @@ async function handleChat(
               sessionHistory,
               memberId,
               abortCtrl.signal,
-              { index: memberIds.indexOf(memberId), total: memberIds.length }
+              { index: memberIds.indexOf(memberId), total: memberIds.length },
+              userId
             )) {
               if (event.type === "message_complete" && event.data) {
                 const msg = event.data as Partial<DiscussionMessage>;
@@ -402,7 +404,8 @@ async function handleChat(
               sessionHistory,
               memberId,
               abortCtrl.signal,
-              { index: targetIds.indexOf(memberId), total: targetIds.length }
+              { index: targetIds.indexOf(memberId), total: targetIds.length },
+              userId
             )) {
               if (event.type === "message_complete" && event.data) {
                 const msg = event.data as Partial<DiscussionMessage>;

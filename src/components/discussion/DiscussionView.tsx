@@ -1,8 +1,9 @@
 "use client";
 
-import { DiscussionMessage } from "@/lib/types";
+import { DiscussionMessage, CabinetMember } from "@/lib/types";
 import { useDiscussion } from "@/lib/useDiscussion";
-import { cabinetMembers } from "@/data/personas";
+import { cabinetMembers as builtInMembers } from "@/data/personas";
+import { loadCustomMembers } from "@/lib/members";
 import MessageBubble from "./MessageBubble";
 import RoundDivider from "./RoundDivider";
 import { AIProviderConfig } from "@/lib/types";
@@ -52,6 +53,9 @@ export default function DiscussionView({
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [showExportMenu, setShowExportMenu] = useState(false);
+  const [customMembers, setCustomMembers] = useState<CabinetMember[]>([]);
+
+  const allMembers = [...builtInMembers, ...customMembers];
 
   useEffect(() => {
     setIsMobile(window.innerWidth < 768);
@@ -60,10 +64,16 @@ export default function DiscussionView({
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  useEffect(() => {
+    if (userId) {
+      loadCustomMembers(userId).then(setCustomMembers);
+    }
+  }, [userId]);
+
   // Members available for @mention — only participants
   const availableMembers = selectedMemberIds.length > 0
-    ? cabinetMembers.filter((m) => selectedMemberIds.includes(m.id))
-    : cabinetMembers;
+    ? allMembers.filter((m) => selectedMemberIds.includes(m.id))
+    : allMembers;
 
   const terminateDiscussion = useCallback(async () => {
     if (externalDiscussionId && userId) {
@@ -133,7 +143,7 @@ export default function DiscussionView({
       targetIds = mentions
         .map((m) => m.slice(1))
         .map((name) => {
-          const member = cabinetMembers.find((c) => c.nameZh === name || c.nameEn === name);
+          const member = allMembers.find((c) => c.nameZh === name || c.nameEn === name);
           return member?.id ?? null;
         })
         .filter(Boolean) as string[];
@@ -155,8 +165,8 @@ export default function DiscussionView({
 
   // Filter sidebar members — only show participating members
   const sidebarMembers = selectedMemberIds.length > 0
-    ? cabinetMembers.filter((m) => selectedMemberIds.includes(m.id))
-    : cabinetMembers;
+    ? allMembers.filter((m) => selectedMemberIds.includes(m.id))
+    : allMembers;
 
   // ===== @mention autocomplete =====
   const closeMention = useCallback(() => {
@@ -184,7 +194,7 @@ export default function DiscussionView({
   }, [closeMention]);
 
   const selectMention = useCallback((memberId: string) => {
-    const member = cabinetMembers.find((m) => m.id === memberId);
+    const member = allMembers.find((m) => m.id === memberId);
     if (!member || !chatInputRef.current) return;
 
     const value = chatInput;
@@ -243,7 +253,7 @@ export default function DiscussionView({
   const isDebate = mode === "debate";
 
   const exportAsMarkdown = useCallback(() => {
-    const memberMap = new Map(cabinetMembers.map((m) => [m.id, m]));
+    const memberMap = new Map(allMembers.map((m) => [m.id, m]));
     const lines: string[] = [];
     lines.push(`# 讨论：${state.question || question}`);
     lines.push("");
@@ -677,7 +687,7 @@ function SidebarMembers({
   onMemberClick,
   chatInput,
 }: {
-  members: typeof cabinetMembers;
+  members: CabinetMember[];
   state: ReturnType<typeof useDiscussion>["state"];
   isDebate: boolean;
   onMemberClick: (id: string) => void;

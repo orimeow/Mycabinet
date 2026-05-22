@@ -2,10 +2,11 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Discussion, AIProviderConfig } from "@/lib/types";
+import { Discussion, AIProviderConfig, CabinetMember } from "@/lib/types";
 import DiscussionView from "@/components/discussion/DiscussionView";
 import { getUserId } from "@/lib/user";
-import { cabinetMembers } from "@/data/personas";
+import { cabinetMembers as builtInMembers } from "@/data/personas";
+import { loadCustomMembers } from "@/lib/members";
 import ReactMarkdown from "react-markdown";
 
 export default function DiscussionDetailPage() {
@@ -16,9 +17,13 @@ export default function DiscussionDetailPage() {
   const [discussion, setDiscussion] = useState<Discussion | null>(null);
   const [loading, setLoading] = useState(true);
   const [resuming, setResuming] = useState(false);
+  const [customMembers, setCustomMembers] = useState<CabinetMember[]>([]);
+
+  const allMembers = [...builtInMembers, ...customMembers];
 
   useEffect(() => {
     const userId = getUserId();
+    loadCustomMembers(userId).then(setCustomMembers);
     fetch(`/api/discussions?id=${id}&userId=${userId}`)
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
@@ -118,9 +123,9 @@ export default function DiscussionDetailPage() {
       {/* Messages - read-only */}
       <div className="flex-1 space-y-2 overflow-y-auto px-3 py-4 md:px-6">
         {discussion.mode === "chat" ? (
-          <ChatReadOnlyMessages messages={discussion.messages} />
+          <ChatReadOnlyMessages messages={discussion.messages} allMembers={allMembers} />
         ) : (
-          <DebateReadOnlyMessages messages={discussion.messages} />
+          <DebateReadOnlyMessages messages={discussion.messages} allMembers={allMembers} />
         )}
       </div>
 
@@ -152,10 +157,13 @@ function StatusBadge({ status }: { status: Discussion["status"] }) {
   );
 }
 
-function ChatReadOnlyMessages({ messages }: { messages: Discussion["messages"] }) {
+function ChatReadOnlyMessages({ messages, allMembers }: { messages: Discussion["messages"]; allMembers: CabinetMember[] }) {
   return messages.map((msg) => {
     const isUser = msg.sender === "user";
-    const member = cabinetMembers.find((m) => m.id === msg.speakerId);
+    const member = allMembers.find((m) => m.id === msg.speakerId);
+    const color = msg.speakerColor || member?.color || "#6b7280";
+    const avatar = msg.speakerAvatar || member?.avatar;
+    const name = msg.speakerName || member?.nameZh || msg.speakerId;
     if (isUser) {
       return (
         <div key={msg.id} className="flex justify-end">
@@ -173,23 +181,23 @@ function ChatReadOnlyMessages({ messages }: { messages: Discussion["messages"] }
         <div
           className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full border"
           style={{
-            backgroundColor: member?.color ?? "rgba(0,0,0,0.03)",
+            backgroundColor: color,
             borderColor: "rgba(0,0,0,0.15)",
           }}
         >
-          {member?.avatar ? (
-            <img src={member.avatar} alt={member.nameZh} className="h-full w-full object-cover" />
+          {avatar ? (
+            <img src={avatar} alt={name} className="h-full w-full object-cover" />
           ) : (
             <span className="text-xs font-bold text-white">
-              {(member?.nameZh ?? msg.speakerName ?? "?").charAt(0)}
+              {name.charAt(0)}
             </span>
           )}
         </div>
         <div className="min-w-0 max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed"
           style={{ backgroundColor: "rgba(0,0,0,0.02)" }}
         >
-          <span className="mb-1 block text-xs font-semibold" style={{ color: member?.color ?? "#6b7280" }}>
-            {msg.speakerName || msg.speakerId}
+          <span className="mb-1 block text-xs font-semibold" style={{ color }}>
+            {name}
           </span>
           <ReactMarkdown>{msg.content}</ReactMarkdown>
         </div>
@@ -198,9 +206,12 @@ function ChatReadOnlyMessages({ messages }: { messages: Discussion["messages"] }
   });
 }
 
-function DebateReadOnlyMessages({ messages }: { messages: Discussion["messages"] }) {
+function DebateReadOnlyMessages({ messages, allMembers }: { messages: Discussion["messages"]; allMembers: CabinetMember[] }) {
   return messages.map((msg) => {
-    const member = cabinetMembers.find((m) => m.id === msg.speakerId);
+    const member = allMembers.find((m) => m.id === msg.speakerId);
+    const color = msg.speakerId === "moderator" ? "#6b7280" : (msg.speakerColor || member?.color || "#6b7280");
+    const avatar = msg.speakerId === "moderator" ? null : (msg.speakerAvatar || member?.avatar);
+    const name = msg.speakerId === "moderator" ? "主持人" : (msg.speakerName || member?.nameZh || msg.speakerId);
     return (
       <div
         key={msg.id}
@@ -208,22 +219,22 @@ function DebateReadOnlyMessages({ messages }: { messages: Discussion["messages"]
         style={{ borderColor: "rgba(0,0,0,0.06)" }}
       >
         <div className="flex items-center gap-2">
-          {member?.avatar ? (
+          {avatar ? (
             <img
-              src={member.avatar}
-              alt={member.nameZh}
+              src={avatar}
+              alt={name}
               className="h-5 w-5 rounded-full object-cover"
             />
           ) : (
             <div
               className="flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold text-white"
-              style={{ backgroundColor: member?.color ?? "#6b7280" }}
+              style={{ backgroundColor: color }}
             >
-              {(member?.nameZh ?? "?").charAt(0)}
+              {name.charAt(0)}
             </div>
           )}
           <span className="text-xs font-semibold text-gray-900">
-            {msg.speakerId === "moderator" ? "主持人" : msg.speakerName || msg.speakerId}
+            {name}
           </span>
           {msg.round > 0 && (
             <span className="text-xs text-gray-400">第{msg.round}轮</span>

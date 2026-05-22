@@ -1,6 +1,7 @@
 "use client";
 
-import { cabinetMembers } from "@/data/personas";
+import { cabinetMembers as builtInMembers } from "@/data/personas";
+import type { CabinetMember } from "@/lib/types";
 import { useEffect, useRef } from "react";
 
 interface Props {
@@ -10,9 +11,11 @@ interface Props {
   onClose: () => void;
   onConfirm?: () => void;
   onSelect?: (memberId: string) => void;
+  members?: CabinetMember[];
 }
 
-export default function MemberPicker({ mode, selectedIds, onChange, onClose, onSelect }: Props) {
+export default function MemberPicker({ mode, selectedIds, onChange, onClose, onSelect, members }: Props) {
+  const allMembers = members ?? builtInMembers;
   const overlayRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -62,7 +65,7 @@ export default function MemberPicker({ mode, selectedIds, onChange, onClose, onS
         </p>
 
         <div className="mt-4 grid grid-cols-3 gap-2">
-          {cabinetMembers.map((m) => {
+          {allMembers.map((m) => {
             const active = selectedIds.includes(m.id);
             return (
               <button

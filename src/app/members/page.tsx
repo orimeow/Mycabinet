@@ -1,35 +1,59 @@
 "use client";
 
-import { cabinetMembers } from "@/data/personas";
+import { cabinetMembers as builtInMembers } from "@/data/personas";
 import type { CabinetMember } from "@/lib/types";
 import { useState, useEffect, Suspense, useRef, useCallback } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
+import { loadCustomMembers, invalidateCache } from "@/lib/members";
+import { getUserId } from "@/lib/user";
 
-function DetailContent({ selected, mobile }: { selected: CabinetMember; mobile?: boolean }) {
+function DetailContent({ selected, mobile, onEdit, onDelete }: { selected: CabinetMember; mobile?: boolean; onEdit?: () => void; onDelete?: () => void }) {
+  const isCustom = selected.source === "custom";
   return (
     <div className={mobile ? "rounded-md border bg-white/80 p-4 backdrop-blur-sm" : "rounded-md border bg-white/80 p-4 md:p-8 backdrop-blur-sm"}
       style={{ borderColor: 'rgba(0,0,0,0.06)' }}
     >
       {/* Header */}
-      <div className={mobile ? "mb-5 flex items-start gap-3" : "mb-5 md:mb-8 flex items-start gap-3"}>
-        <div
-          className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border"
-          style={{
-            backgroundColor: 'rgba(0,0,0,0.03)',
-            borderColor: 'rgba(0,0,0,0.15)',
-          }}
-        >
-          {selected.avatar ? (
-            <img src={selected.avatar} alt={selected.nameZh} className="h-full w-full object-cover" />
-          ) : (
-            <span className="text-lg font-bold text-gray-400">{selected.nameZh.charAt(0)}</span>
-          )}
+      <div className={mobile ? "mb-5 flex items-start justify-between gap-3" : "mb-5 md:mb-8 flex items-start justify-between gap-3"}>
+        <div className="flex items-start gap-3">
+          <div
+            className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border"
+            style={{
+              backgroundColor: 'rgba(0,0,0,0.03)',
+              borderColor: 'rgba(0,0,0,0.15)',
+            }}
+          >
+            {selected.avatar ? (
+              <img src={selected.avatar} alt={selected.nameZh} className="h-full w-full object-cover" />
+            ) : (
+              <span className="text-lg font-bold text-gray-400">{selected.nameZh.charAt(0)}</span>
+            )}
+          </div>
+          <div>
+            <h2 className="text-xl font-bold tracking-tight">{selected.nameZh}</h2>
+            <p className="text-sm text-gray-400">{selected.nameEn}</p>
+            <p className="mt-0.5 text-xs text-gray-400">{selected.title}</p>
+            {isCustom && (
+              <span className="mt-1 inline-block rounded-full bg-gray-100 px-2 py-0.5 text-[10px] text-gray-500">自定义</span>
+            )}
+          </div>
         </div>
-        <div>
-          <h2 className="text-xl font-bold tracking-tight">{selected.nameZh}</h2>
-          <p className="text-sm text-gray-400">{selected.nameEn}</p>
-          <p className="mt-0.5 text-xs text-gray-400">{selected.title}</p>
-        </div>
+        {isCustom && (
+          <div className="flex shrink-0 gap-1">
+            <button
+              onClick={onEdit}
+              className="rounded-md px-2 py-1 text-xs text-gray-500 transition-colors hover:bg-black/5"
+            >
+              编辑
+            </button>
+            <button
+              onClick={onDelete}
+              className="rounded-md px-2 py-1 text-xs text-red-400 transition-colors hover:bg-red-50"
+            >
+              删除
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="grid gap-4 grid-cols-2">
@@ -132,9 +156,14 @@ function DetailContent({ selected, mobile }: { selected: CabinetMember; mobile?:
 
 function MembersPageContent() {
   const searchParams = useSearchParams();
-  const [selectedId, setSelectedId] = useState(cabinetMembers[0].id);
+  const router = useRouter();
+  const [selectedId, setSelectedId] = useState(builtInMembers[0].id);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [scrollThumb, setScrollThumb] = useState({ left: 0, width: 80 });
+  const [customMembers, setCustomMembers] = useState<CabinetMember[]>([]);
+  const [userId, setUserId] = useState("");
+
+  const allMembers = [...builtInMembers, ...customMembers];
 
   const handleScroll = useCallback(() => {
     const el = scrollRef.current;
@@ -156,16 +185,32 @@ function MembersPageContent() {
 
   useEffect(() => {
     handleScroll();
+    const uid = getUserId();
+    setUserId(uid);
+    loadCustomMembers(uid).then(setCustomMembers);
   }, []);
 
   useEffect(() => {
     const id = searchParams.get("id");
-    if (id && cabinetMembers.some((m) => m.id === id)) {
+    if (id && allMembers.some((m) => m.id === id)) {
       setSelectedId(id);
     }
-  }, [searchParams]);
+  }, [searchParams, allMembers.length]);
 
-  const selected = cabinetMembers.find((m) => m.id === selectedId)!;
+  const selected = allMembers.find((m) => m.id === selectedId) || builtInMembers[0];
+
+  const handleDelete = async (memberId: string) => {
+    if (!confirm("确定要删除这个成员吗？相关的历史讨论仍可正常显示。")) return;
+    try {
+      const res = await fetch(`/api/members?id=${memberId}&userId=${userId}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Delete failed");
+      invalidateCache();
+      setCustomMembers((prev) => prev.filter((m) => m.id !== memberId));
+      if (selectedId === memberId) setSelectedId(builtInMembers[0].id);
+    } catch {
+      alert("删除失败");
+    }
+  };
 
   return (
     <div className="relative min-h-screen">
@@ -177,15 +222,23 @@ function MembersPageContent() {
 
       <main className="relative mx-auto max-w-7xl px-4 py-6 md:px-8 md:py-8">
         {/* Title */}
-        <div className="mb-6 md:mb-8">
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight md:text-4xl">内阁成员</h1>
-          <p className="mt-2 text-sm text-gray-400">了解每位成员的思想与决策框架</p>
+        <div className="mb-6 md:mb-8 flex items-start justify-between">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight md:text-4xl">内阁成员</h1>
+            <p className="mt-2 text-sm text-gray-400">了解每位成员的思想与决策框架</p>
+          </div>
+          <button
+            onClick={() => router.push("/members/edit")}
+            className="shrink-0 rounded-md bg-[#1a1a1a] px-4 py-2 text-sm font-medium text-white transition-all hover:bg-[#333] active:scale-[0.98]"
+          >
+            + 创建成员
+          </button>
         </div>
 
         {/* Mobile: horizontal avatar tabs */}
         <div className="md:hidden mb-3">
           <div ref={scrollRef} className="flex gap-3 overflow-x-auto scrollbar-hide" onScroll={handleScroll}>
-            {cabinetMembers.map((m) => {
+            {allMembers.map((m) => {
               const active = m.id === selectedId;
               return (
                 <button
@@ -227,14 +280,19 @@ function MembersPageContent() {
 
         {/* Mobile: detail panel */}
         <div className="md:hidden">
-          <DetailContent selected={selected} mobile />
+          <DetailContent
+            selected={selected}
+            mobile
+            onEdit={() => router.push(`/members/edit?id=${selected.id}`)}
+            onDelete={() => handleDelete(selected.id)}
+          />
         </div>
 
         <div className="hidden md:grid md:grid-cols-12 gap-6">
           {/* Sidebar - member list (desktop only) */}
           <div className="hidden md:col-span-3 md:block">
             <div className="space-y-2">
-              {cabinetMembers.map((m) => {
+              {allMembers.map((m) => {
                 const active = m.id === selectedId;
                 return (
                   <button
@@ -276,25 +334,46 @@ function MembersPageContent() {
               style={{ borderColor: 'rgba(0,0,0,0.06)' }}
             >
               {/* Header */}
-              <div className="mb-5 md:mb-8 flex items-start gap-3">
-                <div
-                  className="flex h-12 w-12 md:h-16 md:w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border"
-                  style={{
-                    backgroundColor: 'rgba(0,0,0,0.03)',
-                    borderColor: 'rgba(0,0,0,0.15)',
-                  }}
-                >
-                  {selected.avatar ? (
-                    <img src={selected.avatar} alt={selected.nameZh} className="h-full w-full object-cover" />
-                  ) : (
-                    <span className="text-lg md:text-2xl font-bold text-gray-400">{selected.nameZh.charAt(0)}</span>
-                  )}
+              <div className="mb-5 md:mb-8 flex items-start justify-between gap-3">
+                <div className="flex items-start gap-3">
+                  <div
+                    className="flex h-12 w-12 md:h-16 md:w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border"
+                    style={{
+                      backgroundColor: 'rgba(0,0,0,0.03)',
+                      borderColor: 'rgba(0,0,0,0.15)',
+                    }}
+                  >
+                    {selected.avatar ? (
+                      <img src={selected.avatar} alt={selected.nameZh} className="h-full w-full object-cover" />
+                    ) : (
+                      <span className="text-lg md:text-2xl font-bold text-gray-400">{selected.nameZh.charAt(0)}</span>
+                    )}
+                  </div>
+                  <div>
+                    <h2 className="text-xl md:text-2xl font-bold tracking-tight">{selected.nameZh}</h2>
+                    <p className="text-sm text-gray-400">{selected.nameEn}</p>
+                    <p className="mt-0.5 md:mt-1 text-xs text-gray-400">{selected.title}</p>
+                    {selected.source === "custom" && (
+                      <span className="mt-1 inline-block rounded-full bg-gray-100 px-2 py-0.5 text-[10px] text-gray-500">自定义</span>
+                    )}
+                  </div>
                 </div>
-                <div>
-                  <h2 className="text-xl md:text-2xl font-bold tracking-tight">{selected.nameZh}</h2>
-                  <p className="text-sm text-gray-400">{selected.nameEn}</p>
-                  <p className="mt-0.5 md:mt-1 text-xs text-gray-400">{selected.title}</p>
-                </div>
+                {selected.source === "custom" && (
+                  <div className="flex shrink-0 gap-1">
+                    <button
+                      onClick={() => router.push(`/members/edit?id=${selected.id}`)}
+                      className="rounded-md px-2 py-1 text-xs text-gray-500 transition-colors hover:bg-black/5"
+                    >
+                      编辑
+                    </button>
+                    <button
+                      onClick={() => handleDelete(selected.id)}
+                      className="rounded-md px-2 py-1 text-xs text-red-400 transition-colors hover:bg-red-50"
+                    >
+                      删除
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div className="grid gap-4 md:gap-6 md:grid-cols-2">

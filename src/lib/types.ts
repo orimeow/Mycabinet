@@ -6,6 +6,7 @@ export interface CabinetMember {
   color: string;
   avatar: string;
   persona: PersonaDoc;
+  source?: "built-in" | "custom";
 }
 
 export interface PersonaDoc {
@@ -34,6 +35,8 @@ export interface DiscussionMessage {
   speakerId: string | "moderator";
   speakerName?: string;
   speakerNameEn?: string;
+  speakerColor?: string;
+  speakerAvatar?: string;
   content: string;
   timestamp: string;
   sender?: "user" | "member" | "moderator";

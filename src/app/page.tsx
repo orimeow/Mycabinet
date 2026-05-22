@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { cabinetMembers } from "@/data/personas";
-import { AIProviderConfig } from "@/lib/types";
+import { cabinetMembers as builtInMembers } from "@/data/personas";
+import { AIProviderConfig, CabinetMember } from "@/lib/types";
 import { getUserId } from "@/lib/user";
+import { loadCustomMembers } from "@/lib/members";
 import MemberPicker from "@/components/common/MemberPicker";
 
 const debateQuestions = [
@@ -63,15 +64,6 @@ function getRandomQuestions(pool: string[], count: number, seed: number): string
   return shuffled.slice(0, count);
 }
 
-function buildMentionPrefix(ids: string[]): string {
-  return ids
-    .map((id) => {
-      const m = cabinetMembers.find((c) => c.id === id);
-      return m ? "@" + m.nameZh + " " : "";
-    })
-    .join("");
-}
-
 export default function Home() {
   const router = useRouter();
   const [mode, setMode] = useState<"debate" | "chat">("debate");
@@ -79,6 +71,7 @@ export default function Home() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [showPicker, setShowPicker] = useState(false);
   const [showApiSetupModal, setShowApiSetupModal] = useState(false);
+  const [customMembers, setCustomMembers] = useState<CabinetMember[]>([]);
   // SSR: show first 3 questions (deterministic). Client: randomize after mount.
   const [displayedQuestions, setDisplayedQuestions] = useState<string[]>(
     () => debateQuestions.slice(0, 3)
@@ -87,8 +80,11 @@ export default function Home() {
   const didSelectInSession = useRef(false);
   const activeAtPos = useRef<number | null>(null);
 
+  const allMembers = [...builtInMembers, ...customMembers];
+
   useEffect(() => {
-    getUserId();
+    const uid = getUserId();
+    loadCustomMembers(uid).then(setCustomMembers);
     // Randomize questions only on client
     setDisplayedQuestions(getRandomQuestions(debateQuestions, 3, Math.floor(Math.random() * 10000)));
 
@@ -139,7 +135,7 @@ export default function Home() {
     (memberId: string) => {
       const textarea = textareaRef.current;
       if (!textarea) return;
-      const member = cabinetMembers.find((m) => m.id === memberId);
+      const member = allMembers.find((m) => m.id === memberId);
       const displayName = member ? member.nameZh : memberId;
 
       const value = textarea.value;
@@ -299,7 +295,12 @@ export default function Home() {
             <button
               key={i}
               onClick={() => {
-                const prefix = selectedIds.length > 0 ? buildMentionPrefix(selectedIds) : "";
+                const prefix = selectedIds.length > 0
+                  ? selectedIds.map((id) => {
+                      const m = allMembers.find((c) => c.id === id);
+                      return m ? "@" + m.nameZh + " " : "";
+                    }).join("")
+                  : "";
                 setQuestion(prefix + q);
               }}
               className="rounded-md px-3 py-1.5 text-xs text-gray-400 transition-all hover:bg-white/50 hover:text-gray-600"
@@ -320,7 +321,7 @@ export default function Home() {
 
         {/* Member avatars */}
         <div className="grid grid-cols-3 gap-4 sm:grid-cols-4 sm:gap-6 md:gap-10">
-            {cabinetMembers.map((member) => (
+            {allMembers.map((member) => (
               <button
                 key={member.id}
                 onClick={() => router.push(`/members?id=${member.id}`)}
@@ -360,6 +361,7 @@ export default function Home() {
             onClose={handleClosePicker}
             onConfirm={handleSubmit}
             onSelect={handleSelectMember}
+            members={allMembers}
           />
         )}
 
