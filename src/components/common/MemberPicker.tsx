@@ -3,6 +3,7 @@
 import { cabinetMembers as builtInMembers } from "@/data/personas";
 import type { CabinetMember } from "@/lib/types";
 import { useEffect, useRef } from "react";
+import Avatar from "@/components/common/Avatar";
 
 interface Props {
   mode: "debate" | "chat";
@@ -81,19 +82,7 @@ export default function MemberPicker({ mode, selectedIds, onChange, onClose, onS
                   backgroundColor: active ? "rgba(0,0,0,0.02)" : "transparent",
                 }}
               >
-                <div
-                  className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border transition-all"
-                  style={{
-                    borderColor: active ? m.color : "rgba(0,0,0,0.15)",
-                    borderWidth: active ? 2 : 1,
-                  }}
-                >
-                  {m.avatar ? (
-                    <img src={m.avatar} alt={m.nameZh} className="h-full w-full object-cover" />
-                  ) : (
-                    <span className="text-sm font-bold text-gray-400">{m.nameZh.charAt(0)}</span>
-                  )}
-                </div>
+                <Avatar src={m.avatar} name={m.nameZh} color={m.color} size={48} className="transition-all" />
                 <div className="text-xs font-medium leading-tight text-center">{m.nameZh}</div>
                 {active && (
                   <div className="absolute right-1.5 top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#1a1a1a]">

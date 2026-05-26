@@ -6,6 +6,7 @@ import { useState, useEffect, Suspense, useRef, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { loadCustomMembers, invalidateCache } from "@/lib/members";
 import { getUserId } from "@/lib/user";
+import Avatar from "@/components/common/Avatar";
 
 function DetailContent({ selected, mobile, onEdit, onDelete }: { selected: CabinetMember; mobile?: boolean; onEdit?: () => void; onDelete?: () => void }) {
   const isCustom = selected.source === "custom";
@@ -16,19 +17,7 @@ function DetailContent({ selected, mobile, onEdit, onDelete }: { selected: Cabin
       {/* Header */}
       <div className={mobile ? "mb-5 flex items-start justify-between gap-3" : "mb-5 md:mb-8 flex items-start justify-between gap-3"}>
         <div className="flex items-start gap-3">
-          <div
-            className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border"
-            style={{
-              backgroundColor: 'rgba(0,0,0,0.03)',
-              borderColor: 'rgba(0,0,0,0.15)',
-            }}
-          >
-            {selected.avatar ? (
-              <img src={selected.avatar} alt={selected.nameZh} className="h-full w-full object-cover" />
-            ) : (
-              <span className="text-lg font-bold text-gray-400">{selected.nameZh.charAt(0)}</span>
-            )}
-          </div>
+          <Avatar src={selected.avatar} name={selected.nameZh} color={selected.color} size={48} />
           <div>
             <h2 className="text-xl font-bold tracking-tight">{selected.nameZh}</h2>
             <p className="text-sm text-gray-400">{selected.nameEn}</p>
@@ -246,20 +235,7 @@ function MembersPageContent() {
                   onClick={() => setSelectedId(m.id)}
                   className="flex flex-col items-center gap-1.5 shrink-0"
                 >
-                  <div
-                    className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-full border transition-all"
-                    style={{
-                      backgroundColor: active ? 'rgba(0,0,0,0.03)' : 'rgba(0,0,0,0.02)',
-                      borderColor: active ? m.color : 'rgba(0,0,0,0.15)',
-                      borderWidth: active ? 2 : 1,
-                    }}
-                  >
-                    {m.avatar ? (
-                      <img src={m.avatar} alt={m.nameZh} className="h-full w-full object-cover" />
-                    ) : (
-                      <span className="text-sm font-bold text-gray-400">{m.nameZh.charAt(0)}</span>
-                    )}
-                  </div>
+                  <Avatar src={m.avatar} name={m.nameZh} color={m.color} size={56} className="transition-all" />
                   <span className={`text-xs whitespace-nowrap ${active ? 'font-semibold text-gray-900' : 'text-gray-400'}`}>
                     {m.nameZh}
                   </span>
@@ -305,19 +281,7 @@ function MembersPageContent() {
                       borderWidth: 1,
                     }}
                   >
-                    <div
-                      className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border"
-                      style={{
-                        backgroundColor: 'rgba(0,0,0,0.03)',
-                        borderColor: 'rgba(0,0,0,0.15)',
-                      }}
-                    >
-                      {m.avatar ? (
-                        <img src={m.avatar} alt={m.nameZh} className="h-full w-full object-cover" />
-                      ) : (
-                        <span className="text-sm font-bold text-gray-400">{m.nameZh.charAt(0)}</span>
-                      )}
-                    </div>
+                    <Avatar src={m.avatar} name={m.nameZh} color={m.color} size={40} />
                     <div className="min-w-0 flex-1">
                       <div className={`text-sm font-semibold ${active ? 'text-white' : ''}`}>{m.nameZh}</div>
                       <div className={`truncate text-xs ${active ? 'text-white/50' : 'text-gray-400'}`}>{m.title.split('/')[0]}</div>
@@ -336,19 +300,7 @@ function MembersPageContent() {
               {/* Header */}
               <div className="mb-5 md:mb-8 flex items-start justify-between gap-3">
                 <div className="flex items-start gap-3">
-                  <div
-                    className="flex h-12 w-12 md:h-16 md:w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border"
-                    style={{
-                      backgroundColor: 'rgba(0,0,0,0.03)',
-                      borderColor: 'rgba(0,0,0,0.15)',
-                    }}
-                  >
-                    {selected.avatar ? (
-                      <img src={selected.avatar} alt={selected.nameZh} className="h-full w-full object-cover" />
-                    ) : (
-                      <span className="text-lg md:text-2xl font-bold text-gray-400">{selected.nameZh.charAt(0)}</span>
-                    )}
-                  </div>
+                  <Avatar src={selected.avatar} name={selected.nameZh} color={selected.color} size={48} className="md:!h-16 md:!w-16" />
                   <div>
                     <h2 className="text-xl md:text-2xl font-bold tracking-tight">{selected.nameZh}</h2>
                     <p className="text-sm text-gray-400">{selected.nameEn}</p>

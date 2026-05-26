@@ -8,6 +8,7 @@ import { getUserId } from "@/lib/user";
 import { cabinetMembers as builtInMembers } from "@/data/personas";
 import { loadCustomMembers } from "@/lib/members";
 import ReactMarkdown from "react-markdown";
+import Avatar from "@/components/common/Avatar";
 
 export default function DiscussionDetailPage() {
   const params = useParams();
@@ -178,21 +179,7 @@ function ChatReadOnlyMessages({ messages, allMembers }: { messages: Discussion["
     }
     return (
       <div key={msg.id} className="flex gap-2.5">
-        <div
-          className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full border"
-          style={{
-            backgroundColor: color,
-            borderColor: "rgba(0,0,0,0.15)",
-          }}
-        >
-          {avatar ? (
-            <img src={avatar} alt={name} className="h-full w-full object-cover" />
-          ) : (
-            <span className="text-xs font-bold text-white">
-              {name.charAt(0)}
-            </span>
-          )}
-        </div>
+        <Avatar src={avatar || undefined} name={name} color={color} size={32} />
         <div className="min-w-0 max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed"
           style={{ backgroundColor: "rgba(0,0,0,0.02)" }}
         >
@@ -219,20 +206,7 @@ function DebateReadOnlyMessages({ messages, allMembers }: { messages: Discussion
         style={{ borderColor: "rgba(0,0,0,0.06)" }}
       >
         <div className="flex items-center gap-2">
-          {avatar ? (
-            <img
-              src={avatar}
-              alt={name}
-              className="h-5 w-5 rounded-full object-cover"
-            />
-          ) : (
-            <div
-              className="flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold text-white"
-              style={{ backgroundColor: color }}
-            >
-              {name.charAt(0)}
-            </div>
-          )}
+          <Avatar src={avatar || undefined} name={name} color={color} size={20} />
           <span className="text-xs font-semibold text-gray-900">
             {name}
           </span>

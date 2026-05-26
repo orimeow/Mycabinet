@@ -8,7 +8,7 @@ Return ONLY a valid JSON object with no markdown formatting, no code fences, and
   "nameEn": "English name",
   "title": "Concise title/role (e.g., 'Tesla / SpaceX CEO')",
   "color": "#HEX color that matches their brand/personality (e.g., '#3B82F6')",
-  "avatar": "A plausible avatar URL or empty string",
+  "avatar": "", // MUST be empty string — do not fabricate image URLs",
   "biography": "300-500 word biography covering background, key experiences, and core mission",
   "coreValues": ["3-5 core values, each as a concise statement"],
   "decisionFramework": ["3-5 decision principles they use"],

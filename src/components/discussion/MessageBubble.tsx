@@ -1,6 +1,7 @@
 import React from "react";
 import { DiscussionMessage, CabinetMember } from "@/lib/types";
 import { getMemberById } from "@/data/personas";
+import Avatar from "@/components/common/Avatar";
 import { motion } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 
@@ -49,21 +50,21 @@ export default function MessageBubble({ message, isActive, member }: Props) {
     >
       {/* Avatar + name row */}
       <div className="flex items-baseline gap-2.5 mb-2">
-        <div
-          className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full border text-xs"
-          style={{
-            backgroundColor: isModerator ? "transparent" : `${color}10`,
-            borderColor: "rgba(0,0,0,0.15)",
-          }}
-        >
-          {isModerator ? (
+        {isModerator ? (
+          <div
+            className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full border text-xs"
+            style={{ borderColor: "rgba(0,0,0,0.15)" }}
+          >
             <span>🎤</span>
-          ) : resolvedMember?.avatar ? (
-            <img src={resolvedMember.avatar} alt={name} className="h-full w-full object-cover" />
-          ) : (
-            <span style={{ backgroundColor: color }} className="font-bold text-white">{name.charAt(0)}</span>
-          )}
-        </div>
+          </div>
+        ) : (
+          <Avatar
+            src={resolvedMember?.avatar}
+            name={name}
+            color={color}
+            size={28}
+          />
+        )}
         <span className="text-sm font-semibold text-gray-900">
           {name}
         </span>

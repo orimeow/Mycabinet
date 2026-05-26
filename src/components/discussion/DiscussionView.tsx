@@ -8,6 +8,7 @@ import MessageBubble from "./MessageBubble";
 import RoundDivider from "./RoundDivider";
 import { AIProviderConfig } from "@/lib/types";
 import { useEffect, useRef, useState, useCallback } from "react";
+import Avatar from "@/components/common/Avatar";
 
 const PLACEHOLDER_DESKTOP = "输入消息，@成员 定向提问，或留空让所有成员回复";
 const PLACEHOLDER_MOBILE = "输入消息，@成员 定向提问";
@@ -332,18 +333,7 @@ export default function DiscussionView({
                   i === mentionNavIndex ? "bg-black/[0.04]" : "hover:bg-black/[0.02]"
                 }`}
               >
-                <div
-                  className="flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-full border"
-                  style={{ backgroundColor: "rgba(0,0,0,0.03)", borderColor: "rgba(0,0,0,0.15)" }}
-                >
-                  {m.avatar ? (
-                    <img src={m.avatar} alt={m.nameZh} className="h-full w-full object-cover" />
-                  ) : (
-                    <span className="text-[10px] font-bold text-white" style={{ backgroundColor: m.color }}>
-                      {m.nameZh.charAt(0)}
-                    </span>
-                  )}
-                </div>
+                <Avatar src={m.avatar} name={m.nameZh} color={m.color} size={24} />
                 <div className="min-w-0">
                   <div className="font-medium">{m.nameZh}</div>
                   <div className="truncate text-xs text-gray-400">{m.title}</div>
@@ -710,23 +700,7 @@ function SidebarMembers({
               isActive ? "bg-black/5" : "hover:bg-black/[0.03]"
             } ${!isDebate && chatInput.trim() && !state.isRunning ? "cursor-pointer" : ""}`}
           >
-            <div
-              className={`flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full border transition-all ${
-                isActive ? "scale-110 shadow-lg" : ""
-              }`}
-              style={{
-                backgroundColor: "rgba(0,0,0,0.03)",
-                borderColor: "rgba(0,0,0,0.15)",
-              }}
-            >
-              {m.avatar ? (
-                <img src={m.avatar} alt={m.nameZh} className="h-full w-full object-cover" />
-              ) : (
-                <span className="text-xs font-bold text-white" style={{ backgroundColor: m.color }}>
-                  {m.nameZh.charAt(0)}
-                </span>
-              )}
-            </div>
+            <Avatar src={m.avatar} name={m.nameZh} color={m.color} size={32} className={`transition-all ${isActive ? "scale-110 shadow-lg" : ""}`} />
             <div className="min-w-0">
               <div className="text-sm font-medium">{m.nameZh}</div>
               <div className="truncate text-xs text-gray-400">{m.title}</div>
