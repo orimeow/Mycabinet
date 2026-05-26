@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { CabinetMember, PersonaDoc } from "@/lib/types";
+import { CabinetMember, PersonaDoc, AIProviderConfig } from "@/lib/types";
 import { getUserId } from "@/lib/user";
 import { loadCustomMembers } from "@/lib/members";
 
@@ -48,6 +48,20 @@ function parseArrayInput(text: string): string[] {
   return text.split("\n").map((s) => s.trim()).filter(Boolean);
 }
 
+function getStoredConfig(): AIProviderConfig | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const provider = localStorage.getItem("ai-provider") || "gemini";
+    const apiKey = localStorage.getItem("ai-api-key") || "";
+    const model = localStorage.getItem("ai-model") || "gemini-2.0-flash";
+    const baseUrl = localStorage.getItem("ai-base-url") || "http://localhost:11434";
+    if (!apiKey && provider !== "ollama") return null;
+    return { provider: provider as AIProviderConfig["provider"], apiKey, model, baseUrl };
+  } catch {
+    return null;
+  }
+}
+
 export default function EditMemberPageClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -63,9 +77,17 @@ export default function EditMemberPageClient() {
     meta: false,
   });
 
+  // Distillation states
+  const [creationMode, setCreationMode] = useState<"distill" | "manual">("distill");
+  const [distillName, setDistillName] = useState("");
+  const [distilling, setDistilling] = useState(false);
+  const [distillError, setDistillError] = useState("");
+  const [aiConfig, setAiConfig] = useState<AIProviderConfig | null>(null);
+
   useEffect(() => {
     const uid = getUserId();
     setUserId(uid);
+    setAiConfig(getStoredConfig());
     if (editId) {
       loadCustomMembers(uid).then((members) => {
         const found = members.find((m) => m.id === editId);
@@ -87,6 +109,47 @@ export default function EditMemberPageClient() {
   const updatePersona = useCallback((patch: Partial<PersonaDoc>) => {
     setMember((prev) => ({ ...prev, persona: { ...prev.persona, ...patch } }));
   }, []);
+
+  const handleDistill = async () => {
+    if (!distillName.trim()) {
+      setDistillError("请输入名人名字");
+      return;
+    }
+    const config = getStoredConfig();
+    if (!config) {
+      setDistillError("请先配置 AI Provider（设置页面）");
+      return;
+    }
+    setDistilling(true);
+    setDistillError("");
+    try {
+      const res = await fetch("/api/members/distill", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: distillName.trim(), config }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "蒸馏失败");
+      }
+      const distilled: CabinetMember = data.member;
+      setMember({
+        ...distilled,
+        persona: {
+          ...DEFAULT_PERSONA,
+          ...distilled.persona,
+          mentalModels: distilled.persona.mentalModels?.length
+            ? distilled.persona.mentalModels
+            : [{ name: "", summary: "" }],
+        },
+      });
+      setCreationMode("manual");
+    } catch (err) {
+      setDistillError(err instanceof Error ? err.message : "蒸馏失败，请重试");
+    } finally {
+      setDistilling(false);
+    }
+  };
 
   const handleSave = async () => {
     if (!member.nameZh || !member.nameEn) {
@@ -124,6 +187,106 @@ export default function EditMemberPageClient() {
     return (
       <div className="flex h-[calc(100dvh-56px)] items-center justify-center">
         <div className="text-sm text-gray-400">加载中...</div>
+      </div>
+    );
+  }
+
+  // Distillation mode UI (only for new members)
+  if (!editId && creationMode === "distill") {
+    return (
+      <div className="relative min-h-screen">
+        <main className="relative mx-auto max-w-2xl px-4 py-6 md:px-8 md:py-8">
+          <div className="mb-6 flex items-center justify-between">
+            <div>
+              <h1 className="text-xl md:text-2xl font-bold tracking-tight">创建成员</h1>
+              <p className="mt-1 text-sm text-gray-400">自定义你的内阁成员，赋予其独特的思维框架</p>
+            </div>
+            <button
+              onClick={() => router.push("/members")}
+              className="rounded-md px-3 py-1.5 text-sm text-gray-500 transition-colors hover:bg-black/5"
+            >
+              取消
+            </button>
+          </div>
+
+          {/* Mode switcher */}
+          <div className="mb-6 flex rounded-lg border p-1" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
+            <button
+              onClick={() => setCreationMode("distill")}
+              className="flex-1 rounded-md py-2 text-sm font-medium transition-all bg-[#1a1a1a] text-white"
+            >
+              自动蒸馏
+            </button>
+            <button
+              onClick={() => setCreationMode("manual")}
+              className="flex-1 rounded-md py-2 text-sm font-medium text-gray-500 transition-all hover:bg-black/5"
+            >
+              手动录入
+            </button>
+          </div>
+
+          <div className="rounded-xl border bg-white/60 p-6 backdrop-blur-sm" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
+            <div className="mb-4">
+              <h2 className="text-lg font-semibold text-gray-900">AI 自动蒸馏</h2>
+              <p className="mt-1 text-sm text-gray-400">
+                输入一个真实人物的名字，AI 会自动调研并生成完整的思维框架画像。
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1.5">名人名字</label>
+                <input
+                  type="text"
+                  value={distillName}
+                  onChange={(e) => setDistillName(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && !distilling && handleDistill()}
+                  placeholder="如：埃隆·马斯克、Charlie Munger、张一鸣..."
+                  className="w-full rounded-md border bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-gray-300"
+                  style={{ borderColor: "rgba(0,0,0,0.08)" }}
+                  disabled={distilling}
+                />
+                <p className="mt-1 text-xs text-gray-400">支持中文或英文名字</p>
+              </div>
+
+              {aiConfig ? (
+                <div className="rounded-md bg-gray-50 px-3 py-2 text-xs text-gray-500">
+                  当前使用：{aiConfig.provider} / {aiConfig.model}
+                </div>
+              ) : (
+                <div className="rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-600">
+                  尚未配置 AI Provider，请先前往
+                  <button onClick={() => router.push("/settings")} className="ml-1 underline">设置页面</button>
+                  配置
+                </div>
+              )}
+
+              {distillError && (
+                <div className="rounded-md bg-red-50 px-3 py-2 text-xs text-red-500">
+                  {distillError}
+                </div>
+              )}
+
+              <button
+                onClick={handleDistill}
+                disabled={distilling || !aiConfig}
+                className="w-full rounded-md bg-[#1a1a1a] px-4 py-3 text-sm font-semibold text-white transition-all hover:bg-[#333] active:scale-[0.98] disabled:opacity-50"
+              >
+                {distilling ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    正在蒸馏中，请稍候...
+                  </span>
+                ) : (
+                  "开始蒸馏"
+                )}
+              </button>
+            </div>
+          </div>
+        </main>
       </div>
     );
   }
@@ -200,6 +363,24 @@ export default function EditMemberPageClient() {
             取消
           </button>
         </div>
+
+        {/* Mode switcher (only for new members) */}
+        {!editId && (
+          <div className="mb-6 flex rounded-lg border p-1" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
+            <button
+              onClick={() => setCreationMode("distill")}
+              className={`flex-1 rounded-md py-2 text-sm font-medium transition-all ${creationMode === "distill" ? "bg-[#1a1a1a] text-white" : "text-gray-500 hover:bg-black/5"}`}
+            >
+              自动蒸馏
+            </button>
+            <button
+              onClick={() => setCreationMode("manual")}
+              className={`flex-1 rounded-md py-2 text-sm font-medium transition-all ${creationMode === "manual" ? "bg-[#1a1a1a] text-white" : "text-gray-500 hover:bg-black/5"}`}
+            >
+              手动录入
+            </button>
+          </div>
+        )}
 
         <div className="space-y-4">
           <Section title="基本信息" keyName="basic">
