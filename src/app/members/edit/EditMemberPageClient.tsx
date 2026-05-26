@@ -82,6 +82,7 @@ export default function EditMemberPageClient() {
   const [distillName, setDistillName] = useState("");
   const [distilling, setDistilling] = useState(false);
   const [distillError, setDistillError] = useState("");
+  const [distillWarning, setDistillWarning] = useState("");
   const [aiConfig, setAiConfig] = useState<AIProviderConfig | null>(null);
 
   useEffect(() => {
@@ -122,6 +123,7 @@ export default function EditMemberPageClient() {
     }
     setDistilling(true);
     setDistillError("");
+    setDistillWarning("");
     try {
       const res = await fetch("/api/members/distill", {
         method: "POST",
@@ -143,6 +145,9 @@ export default function EditMemberPageClient() {
             : [{ name: "", summary: "" }],
         },
       });
+      if (data.warning) {
+        setDistillWarning(data.warning);
+      }
       setCreationMode("manual");
     } catch (err) {
       setDistillError(err instanceof Error ? err.message : "蒸馏失败，请重试");
@@ -246,7 +251,11 @@ export default function EditMemberPageClient() {
                   style={{ borderColor: "rgba(0,0,0,0.08)" }}
                   disabled={distilling}
                 />
-                <p className="mt-1 text-xs text-gray-400">支持中文或英文名字</p>
+                <p className="mt-1.5 text-xs text-gray-400 leading-relaxed">
+                  适合：有较多公开资料的真实人物（企业家、学者、艺术家等）
+                  <br />
+                  不适合：虚构角色、普通人、名字有误的人物
+                </p>
               </div>
 
               {aiConfig ? (
@@ -379,6 +388,31 @@ export default function EditMemberPageClient() {
             >
               手动录入
             </button>
+          </div>
+        )}
+
+        {!editId && creationMode === "manual" && (
+          <div className="mb-4 rounded-md border border-amber-200 bg-amber-50 px-4 py-3">
+            <div className="flex items-start gap-2">
+              <svg className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M12 17.25a5.25 5.25 0 100-10.5 5.25 5.25 0 000 10.5z" />
+              </svg>
+              <div className="text-sm text-amber-800">
+                <p className="font-medium">以下内容由 AI 自动生成</p>
+                <p className="mt-0.5 text-xs text-amber-700">AI 生成的内容可能存在不准确之处，请仔细核对后再保存。核心字段已标为必填。</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {distillWarning && (
+          <div className="mb-4 rounded-md border border-amber-200 bg-amber-50 px-4 py-3">
+            <div className="flex items-start gap-2">
+              <svg className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M12 17.25a5.25 5.25 0 100-10.5 5.25 5.25 0 000 10.5z" />
+              </svg>
+              <p className="text-sm text-amber-800">{distillWarning}</p>
+            </div>
           </div>
         )}
 

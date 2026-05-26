@@ -81,6 +81,22 @@ function parseDistillResult(raw: string): DistillResult {
   };
 }
 
+function checkQuality(result: DistillResult): { ok: boolean; warning?: string } {
+  if (!result.nameZh && !result.nameEn) {
+    return { ok: false, warning: "无法识别该人物，请确认名字是否正确" };
+  }
+  if (!result.biography || result.biography.length < 50) {
+    return { ok: false, warning: "该人物公开信息较少，生成的画像可能不够完整" };
+  }
+  if (!result.coreValues?.length) {
+    return { ok: false, warning: "无法提取有效的人格特征，建议手动录入" };
+  }
+  if (result.mentalModels?.length < 2) {
+    return { ok: false, warning: "心智模型提取不足，建议补充完善" };
+  }
+  return { ok: true };
+}
+
 function toCabinetMember(result: DistillResult): CabinetMember {
   const persona: PersonaDoc = {
     biography: result.biography,
@@ -133,9 +149,12 @@ export async function POST(req: NextRequest) {
     const result = parseDistillResult(text);
     const member = toCabinetMember(result);
 
+    const quality = checkQuality(result);
+
     return NextResponse.json({
       member,
       usage,
+      warning: quality.ok ? undefined : quality.warning,
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
