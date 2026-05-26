@@ -56,6 +56,7 @@ export default function DiscussionView({
   const [customMembers, setCustomMembers] = useState<CabinetMember[]>([]);
 
   const allMembers = [...builtInMembers, ...customMembers];
+  const memberMap = new Map(allMembers.map((m) => [m.id, m]));
 
   useEffect(() => {
     setIsMobile(window.innerWidth < 768);
@@ -490,6 +491,7 @@ export default function DiscussionView({
                   key={msg.id || `${msg.round}-${msg.speakerId}-${i}`}
                   message={msg}
                   isActive={isActive}
+                  member={memberMap.get(msg.speakerId)}
                 />
               );
             })}
@@ -526,6 +528,7 @@ export default function DiscussionView({
                           key={msg.id || `${msg.round}-${msg.speakerId}-${i}`}
                           message={msg}
                           isActive={isActive}
+                          member={memberMap.get(msg.speakerId)}
                         />
                       );
                     })}

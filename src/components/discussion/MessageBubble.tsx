@@ -1,5 +1,5 @@
 import React from "react";
-import { DiscussionMessage } from "@/lib/types";
+import { DiscussionMessage, CabinetMember } from "@/lib/types";
 import { getMemberById } from "@/data/personas";
 import { motion } from "framer-motion";
 import ReactMarkdown from "react-markdown";
@@ -14,17 +14,20 @@ function formatTime(ts: string): string {
 interface Props {
   message: DiscussionMessage;
   isActive: boolean;
+  member?: CabinetMember | null;
 }
 
-export default function MessageBubble({ message, isActive }: Props) {
-  const member =
+export default function MessageBubble({ message, isActive, member }: Props) {
+  const resolvedMember =
     message.speakerId === "moderator"
       ? null
-      : getMemberById(message.speakerId);
+      : member !== undefined
+        ? member
+        : getMemberById(message.speakerId);
 
-  const name = member?.nameZh || "主持人";
-  const nameEn = member?.nameEn || "";
-  const color = member?.color || "#6B7280";
+  const name = resolvedMember?.nameZh || "主持人";
+  const nameEn = resolvedMember?.nameEn || "";
+  const color = resolvedMember?.color || "#6B7280";
 
   const isModerator = message.speakerId === "moderator";
 
@@ -55,8 +58,8 @@ export default function MessageBubble({ message, isActive }: Props) {
         >
           {isModerator ? (
             <span>🎤</span>
-          ) : member?.avatar ? (
-            <img src={member.avatar} alt={name} className="h-full w-full object-cover" />
+          ) : resolvedMember?.avatar ? (
+            <img src={resolvedMember.avatar} alt={name} className="h-full w-full object-cover" />
           ) : (
             <span style={{ backgroundColor: color }} className="font-bold text-white">{name.charAt(0)}</span>
           )}
