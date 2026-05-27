@@ -14,8 +14,26 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://mycabinet.up.railway.app"),
   title: "我的智囊团",
-  description: "六位在世知名人士，六种思维框架，为你的问题提供多角度深度分析",
+  description: "汇聚多元思维框架，为你的问题提供多角度深度分析",
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: "/favicon.ico",
+  },
+  openGraph: {
+    title: "我的智囊团",
+    description: "汇聚多元思维框架，为你的问题提供多角度深度分析",
+    type: "website",
+    locale: "zh_CN",
+    siteName: "我的智囊团",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "我的智囊团",
+    description: "汇聚多元思维框架，为你的问题提供多角度深度分析",
+  },
 };
 
 export default function RootLayout({
