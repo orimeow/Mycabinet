@@ -65,9 +65,6 @@ export async function DELETE(req: NextRequest) {
   if (!id || !userId) {
     return NextResponse.json({ error: "Missing id or userId" }, { status: 400 });
   }
-  const success = deleteMember(userId, id);
-  if (!success) {
-    return NextResponse.json({ error: "Member not found" }, { status: 404 });
-  }
+  deleteMember(userId, id);
   return NextResponse.json({ success: true });
 }

@@ -37,7 +37,8 @@ function DetailContent({ selected, mobile, onEdit, onDelete }: { selected: Cabin
             </button>
             <button
               onClick={onDelete}
-              className="rounded-md px-2 py-1 text-xs text-red-400 transition-colors hover:bg-red-50"
+              disabled={!onDelete}
+              className="rounded-md px-2 py-1 text-xs text-red-400 transition-colors hover:bg-red-50 disabled:opacity-40"
             >
               删除
             </button>
@@ -151,6 +152,7 @@ function MembersPageContent() {
   const [scrollThumb, setScrollThumb] = useState({ left: 0, width: 80 });
   const [customMembers, setCustomMembers] = useState<CabinetMember[]>([]);
   const [userId, setUserId] = useState("");
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const allMembers = [...builtInMembers, ...customMembers];
 
@@ -190,14 +192,21 @@ function MembersPageContent() {
 
   const handleDelete = async (memberId: string) => {
     if (!confirm("确定要删除这个成员吗？相关的历史讨论仍可正常显示。")) return;
+    if (deletingId) return;
+    setDeletingId(memberId);
     try {
       const res = await fetch(`/api/members?id=${memberId}&userId=${userId}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Delete failed");
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "删除失败");
+      }
       invalidateCache();
       setCustomMembers((prev) => prev.filter((m) => m.id !== memberId));
       if (selectedId === memberId) setSelectedId(builtInMembers[0].id);
-    } catch {
-      alert("删除失败");
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "删除失败");
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -320,9 +329,10 @@ function MembersPageContent() {
                     </button>
                     <button
                       onClick={() => handleDelete(selected.id)}
-                      className="rounded-md px-2 py-1 text-xs text-red-400 transition-colors hover:bg-red-50"
+                      disabled={deletingId === selected.id}
+                      className="rounded-md px-2 py-1 text-xs text-red-400 transition-colors hover:bg-red-50 disabled:opacity-40"
                     >
-                      删除
+                      {deletingId === selected.id ? "删除中..." : "删除"}
                     </button>
                   </div>
                 )}
