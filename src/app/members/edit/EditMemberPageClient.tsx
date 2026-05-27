@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { CabinetMember, PersonaDoc, AIProviderConfig } from "@/lib/types";
 import { getUserId } from "@/lib/user";
 import { loadCustomMembers } from "@/lib/members";
+import Avatar from "@/components/common/Avatar";
 
 const DEFAULT_PERSONA: PersonaDoc = {
   biography: "",
@@ -85,6 +86,10 @@ export default function EditMemberPageClient() {
   const [distillWarning, setDistillWarning] = useState("");
   const [aiConfig, setAiConfig] = useState<AIProviderConfig | null>(null);
 
+  // Avatar upload states
+  const [avatarFileName, setAvatarFileName] = useState("");
+  const [useUrlAvatar, setUseUrlAvatar] = useState(false);
+
   useEffect(() => {
     const uid = getUserId();
     setUserId(uid);
@@ -101,6 +106,12 @@ export default function EditMemberPageClient() {
               mentalModels: found.persona.mentalModels?.length ? found.persona.mentalModels : [{ name: "", summary: "" }],
             },
           });
+          if (found.avatar && found.avatar.startsWith("data:")) {
+            setAvatarFileName("已上传图片");
+          } else if (found.avatar) {
+            setAvatarFileName("外部链接");
+            setUseUrlAvatar(true);
+          }
         }
         setLoading(false);
       });
@@ -109,6 +120,27 @@ export default function EditMemberPageClient() {
 
   const updatePersona = useCallback((patch: Partial<PersonaDoc>) => {
     setMember((prev) => ({ ...prev, persona: { ...prev.persona, ...patch } }));
+  }, []);
+
+  const handleAvatarFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      alert("图片大小不能超过 2MB");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const dataUrl = ev.target?.result as string;
+      setMember((prev) => ({ ...prev, avatar: dataUrl }));
+      setAvatarFileName(file.name);
+    };
+    reader.readAsDataURL(file);
+  }, []);
+
+  const clearAvatar = useCallback(() => {
+    setMember((prev) => ({ ...prev, avatar: "" }));
+    setAvatarFileName("");
   }, []);
 
   const handleDistill = async () => {
@@ -447,8 +479,48 @@ export default function EditMemberPageClient() {
                 </div>
               </div>
               <div>
-                <Label>头像 URL</Label>
-                <TextInput value={member.avatar} onChange={(v) => setMember((p) => ({ ...p, avatar: v }))} placeholder="https://..." />
+                <Label>头像</Label>
+                <div className="flex items-center gap-3">
+                  <Avatar src={member.avatar} name={member.nameZh || "?"} color={member.color} size={48} />
+                  <div className="flex-1 space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <label className="cursor-pointer rounded-md border px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
+                        选择图片
+                        <input
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp"
+                          className="hidden"
+                          onChange={handleAvatarFileChange}
+                        />
+                      </label>
+                      {member.avatar && (
+                        <button
+                          onClick={clearAvatar}
+                          className="text-xs text-gray-400 hover:text-red-500 transition-colors"
+                        >
+                          清除
+                        </button>
+                      )}
+                    </div>
+                    <p className="text-[10px] text-gray-400">支持 JPG / PNG / WEBP，最大 2MB</p>
+                    {avatarFileName && (
+                      <p className="text-[10px] text-gray-500">{avatarFileName}</p>
+                    )}
+                    <button
+                      onClick={() => setUseUrlAvatar((p) => !p)}
+                      className="text-[10px] text-gray-400 underline hover:text-gray-600"
+                    >
+                      {useUrlAvatar ? "使用图片上传" : "使用图片链接"}
+                    </button>
+                    {useUrlAvatar && (
+                      <TextInput
+                        value={member.avatar}
+                        onChange={(v) => setMember((p) => ({ ...p, avatar: v }))}
+                        placeholder="https://..."
+                      />
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           </Section>

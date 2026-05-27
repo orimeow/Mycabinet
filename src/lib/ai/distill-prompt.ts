@@ -55,6 +55,12 @@ Return ONLY a valid JSON object with no markdown formatting, no code fences, and
    - Don't fabricate quotes or positions
    - If information is scarce on a dimension, make it brief rather than inventing
 
+## Language
+- All output fields (biography, coreValues, mentalModels, decisionHeuristics, speakingStyle, expressionDNA, biases, innerTensions, antiPatterns, catchphrases, historicalViews) MUST be written in Chinese (简体中文).
+- nameZh must be the Chinese name; nameEn must be the English name.
+- Exception: If the user's input name contains primarily English/Latin characters (e.g., "Elon Musk", "Charlie Munger"), output ALL content in English instead.
+- Do NOT mix languages within a single field. Each field should be entirely in one language.
+
 ## Quality Standards
 - Biography must be factual and specific (dates, companies, roles)
 - Mental models must be distinctive (not generic advice dressed up)
@@ -63,7 +69,17 @@ Return ONLY a valid JSON object with no markdown formatting, no code fences, and
 - All catchphrases must be verifiable things they actually said`;
 
 export function buildDistillUserPrompt(name: string): string {
+  const hasChinese = /[\u4e00-\u9fa5]/.test(name);
+  const hasEnglish = /[a-zA-Z]/.test(name);
+  const isEnglishInput = hasEnglish && !hasChinese;
+
+  const langHint = isEnglishInput
+    ? "Output ALL content in English."
+    : "Output ALL content in Chinese (简体中文).";
+
   return `Distill a comprehensive persona for: ${name}
+
+${langHint}
 
 Research this person thoroughly and generate the complete JSON persona document following the system instructions. Be thorough but concise — quality over quantity. Every field should reveal something distinctive about this person's thinking style.`;
 }
