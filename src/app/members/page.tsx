@@ -124,18 +124,27 @@ function DetailContent({ selected, mobile, onEdit, onDelete }: { selected: Cabin
           <div className="col-span-2">
             <h3 className="text-sm font-bold text-gray-900">历史观点</h3>
             <div className="mt-2 grid gap-3 grid-cols-1">
-              {Object.entries(selected.persona.historicalViews).map(([topic, view]) => (
-                <div
-                  key={topic}
-                  className="rounded-md p-3"
-                  style={{ backgroundColor: `${selected.color}06` }}
-                >
-                  <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: selected.color }}>
-                    {topic}
-                  </p>
-                  <p className="text-sm leading-relaxed text-gray-600">{view}</p>
-                </div>
-              ))}
+              {Object.entries(selected.persona.historicalViews).map(([topic, view]) => {
+                const topicLabels: Record<string, string> = {
+                  ai: "人工智能",
+                  education: "教育",
+                  climate: "气候",
+                  government: "政府与监管",
+                  wealth: "财富与投资",
+                };
+                return (
+                  <div
+                    key={topic}
+                    className="rounded-md p-3"
+                    style={{ backgroundColor: `${selected.color}06` }}
+                  >
+                    <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: selected.color }}>
+                      {topicLabels[topic] || topic}
+                    </p>
+                    <p className="text-sm leading-relaxed text-gray-600">{view}</p>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
@@ -416,18 +425,27 @@ function MembersPageContent() {
                   <div className="md:col-span-2">
                     <h3 className="text-sm md:text-base font-bold text-gray-900">历史观点</h3>
                     <div className="mt-2 md:mt-3 grid gap-3 md:grid-cols-2">
-                      {Object.entries(selected.persona.historicalViews).map(([topic, view]) => (
-                        <div
-                          key={topic}
-                          className="rounded-md p-3 md:p-4"
-                          style={{ backgroundColor: `${selected.color}06` }}
-                        >
-                          <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: selected.color }}>
-                            {topic}
-                          </p>
-                          <p className="text-sm md:text-base leading-relaxed text-gray-600">{view}</p>
-                        </div>
-                      ))}
+                      {Object.entries(selected.persona.historicalViews).map(([topic, view]) => {
+                        const topicLabels: Record<string, string> = {
+                          ai: "人工智能",
+                          education: "教育",
+                          climate: "气候",
+                          government: "政府与监管",
+                          wealth: "财富与投资",
+                        };
+                        return (
+                          <div
+                            key={topic}
+                            className="rounded-md p-3 md:p-4"
+                            style={{ backgroundColor: `${selected.color}06` }}
+                          >
+                            <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: selected.color }}>
+                              {topicLabels[topic] || topic}
+                            </p>
+                            <p className="text-sm md:text-base leading-relaxed text-gray-600">{view}</p>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
