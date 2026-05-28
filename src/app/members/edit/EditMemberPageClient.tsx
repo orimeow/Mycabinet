@@ -242,7 +242,7 @@ export default function EditMemberPageClient() {
         <main className="relative mx-auto max-w-2xl px-4 py-6 md:px-8 md:py-8">
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <h1 className="text-xl md:text-2xl font-bold tracking-tight">创建成员</h1>
+              <h1 className="text-lg md:text-xl font-bold tracking-tight">创建成员</h1>
               <p className="mt-1 text-sm text-gray-400">自定义你的内阁成员，赋予其独特的思维框架</p>
             </div>
             <button
@@ -401,7 +401,7 @@ export default function EditMemberPageClient() {
       <main className="relative mx-auto max-w-2xl px-4 py-6 md:px-8 md:py-8">
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <h1 className="text-xl md:text-2xl font-bold tracking-tight">{editId ? "编辑成员" : "创建成员"}</h1>
+            <h1 className="text-lg md:text-xl font-bold tracking-tight">{editId ? "编辑成员" : "创建成员"}</h1>
             <p className="mt-1 text-sm text-gray-400">自定义你的内阁成员，赋予其独特的思维框架</p>
           </div>
           <button

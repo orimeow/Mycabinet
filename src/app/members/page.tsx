@@ -19,7 +19,7 @@ function DetailContent({ selected, mobile, onEdit, onDelete }: { selected: Cabin
         <div className="flex items-start gap-3">
           <Avatar src={selected.avatar} name={selected.nameZh} color={selected.color} size={48} />
           <div>
-            <h2 className="text-xl font-bold tracking-tight">{selected.nameZh}</h2>
+            <h2 className="text-lg md:text-xl font-bold tracking-tight">{selected.nameZh}</h2>
             <p className="text-sm text-gray-400">{selected.nameEn}</p>
             <p className="mt-0.5 text-xs text-gray-400">{selected.title}</p>
             {isCustom && (

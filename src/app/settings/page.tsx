@@ -153,7 +153,7 @@ export default function SettingsPage() {
       <main className="relative mx-auto max-w-3xl px-4 py-4 md:px-6 md:py-6">
         {/* Title */}
         <div className="mb-6">
-          <h1 className="text-xl font-semibold">设置</h1>
+          <h1 className="text-lg md:text-xl font-semibold">设置</h1>
           <p className="mt-1 text-sm text-gray-400">配置 AI 供应商和 API 密钥</p>
         </div>
 
