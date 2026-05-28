@@ -353,7 +353,7 @@ function MembersPageContent() {
                 {/* Biography */}
                 <div className="md:col-span-2">
                   <h3 className="text-sm md:text-base font-bold text-gray-900">生平</h3>
-                  <p className="mt-2 text-sm md:text-base leading-relaxed text-gray-600">{selected.persona.biography}</p>
+                  <p className="mt-2 text-xs md:text-sm leading-relaxed text-gray-600">{selected.persona.biography}</p>
                 </div>
 
                 {/* Core Values */}
@@ -361,7 +361,7 @@ function MembersPageContent() {
                   <h3 className="text-sm md:text-base font-bold text-gray-900">核心价值观</h3>
                   <ul className="mt-2 md:mt-3 space-y-1.5 md:space-y-2">
                     {selected.persona.coreValues.map((v, i) => (
-                      <li key={i} className="flex items-start gap-2 text-sm md:text-base text-gray-600">
+                      <li key={i} className="flex items-start gap-2 text-xs md:text-sm text-gray-600">
                         <span
                           className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full"
                           style={{ backgroundColor: selected.color }}
@@ -377,7 +377,7 @@ function MembersPageContent() {
                   <h3 className="text-sm md:text-base font-bold text-gray-900">决策框架</h3>
                   <ul className="mt-2 md:mt-3 space-y-1.5 md:space-y-2">
                     {selected.persona.decisionFramework.map((v, i) => (
-                      <li key={i} className="flex items-start gap-2 text-sm md:text-base text-gray-600">
+                      <li key={i} className="flex items-start gap-2 text-xs md:text-sm text-gray-600">
                         <span
                           className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full"
                           style={{ backgroundColor: selected.color }}
@@ -391,7 +391,7 @@ function MembersPageContent() {
                 {/* Speaking Style */}
                 <div className="md:col-span-2">
                   <h3 className="text-sm md:text-base font-bold text-gray-900">说话风格</h3>
-                  <p className="mt-2 text-sm md:text-base leading-relaxed text-gray-600">{selected.persona.speakingStyle}</p>
+                  <p className="mt-2 text-xs md:text-sm leading-relaxed text-gray-600">{selected.persona.speakingStyle}</p>
                 </div>
 
                 {/* Biases */}
@@ -399,7 +399,7 @@ function MembersPageContent() {
                   <h3 className="text-sm md:text-base font-bold text-gray-900">已知偏见</h3>
                   <ul className="mt-2 md:mt-3 space-y-1.5 md:space-y-2">
                     {selected.persona.biases.map((b, i) => (
-                      <li key={i} className="flex items-start gap-2 text-sm md:text-base text-gray-600">
+                      <li key={i} className="flex items-start gap-2 text-xs md:text-sm text-gray-600">
                         <span
                           className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full"
                           style={{ backgroundColor: selected.color }}
@@ -415,7 +415,7 @@ function MembersPageContent() {
                   <h3 className="text-sm md:text-base font-bold text-gray-900">名言</h3>
                   <ul className="mt-2 md:mt-3 space-y-1.5 md:space-y-2">
                     {selected.persona.catchphrases.map((p, i) => (
-                      <li key={i} className="text-sm md:text-base italic leading-relaxed text-gray-600">
+                      <li key={i} className="text-xs md:text-sm italic leading-relaxed text-gray-600">
                         &ldquo;{p}&rdquo;
                       </li>
                     ))}
