@@ -189,19 +189,19 @@ async function handleDebate(
           if (event.type === "message_complete" && event.data) {
             const msg = event.data as Partial<DiscussionMessage>;
             discussion.messages.push(msg as DiscussionMessage);
-            saveDiscussion(discussion);
+            try { saveDiscussion(discussion); } catch { /* storage failure — continue streaming */ }
           }
           if (event.type === "discussion_complete") {
             discussion.status = "completed";
             discussion.completedAt = new Date().toISOString();
-            saveDiscussion(discussion);
+            try { saveDiscussion(discussion); } catch { /* storage failure — continue streaming */ }
           }
           if (event.type === "error" && event.data?.message) {
             const msg = String(event.data.message);
             if (!msg.includes("请稍后重试")) {
               discussion.status = "failed";
               discussion.error = msg;
-              saveDiscussion(discussion);
+              try { saveDiscussion(discussion); } catch { /* storage failure — continue streaming */ }
             }
           }
           const data = `event: ${event.type}\ndata: ${JSON.stringify(event.data)}\n\n`;
@@ -212,7 +212,7 @@ async function handleDebate(
         if (!clientAbortSignal.aborted) {
           discussion.status = "failed";
           discussion.error = errMsg;
-          saveDiscussion(discussion);
+          try { saveDiscussion(discussion); } catch { /* storage failure — continue streaming */ }
           const errorEvent = `event: error\ndata: ${JSON.stringify({ message: errMsg })}\n\n`;
           controller.enqueue(encoder.encode(errorEvent));
         }
@@ -336,7 +336,7 @@ async function handleChat(
             timestamp: new Date().toISOString(),
             sender: "user",
           });
-          saveDiscussion(discussion);
+          try { saveDiscussion(discussion); } catch { /* storage failure — continue streaming */ }
         }
 
         // Initial request: all selected members respond to the question
@@ -368,7 +368,7 @@ async function handleChat(
               if (event.type === "message_complete" && event.data) {
                 const msg = event.data as Partial<DiscussionMessage>;
                 discussion.messages.push(msg as DiscussionMessage);
-                saveDiscussion(discussion);
+                try { saveDiscussion(discussion); } catch { /* storage failure — continue streaming */ }
               }
               const data = `event: ${event.type}\ndata: ${JSON.stringify(event.data)}\n\n`;
               controller.enqueue(encoder.encode(data));
@@ -413,7 +413,7 @@ async function handleChat(
               if (event.type === "message_complete" && event.data) {
                 const msg = event.data as Partial<DiscussionMessage>;
                 discussion.messages.push(msg as DiscussionMessage);
-                saveDiscussion(discussion);
+                try { saveDiscussion(discussion); } catch { /* storage failure — continue streaming */ }
               }
               const data = `event: ${event.type}\ndata: ${JSON.stringify(event.data)}\n\n`;
               controller.enqueue(encoder.encode(data));
@@ -425,7 +425,7 @@ async function handleChat(
         if (!clientAbortSignal.aborted) {
           discussion.status = "failed";
           discussion.error = errMsg;
-          saveDiscussion(discussion);
+          try { saveDiscussion(discussion); } catch { /* storage failure — continue streaming */ }
           const errorEvent = `event: error\ndata: ${JSON.stringify({ message: errMsg })}\n\n`;
           controller.enqueue(encoder.encode(errorEvent));
         }

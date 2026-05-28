@@ -29,10 +29,6 @@ export async function loadCustomMembers(userId: string): Promise<CabinetMember[]
   }
 }
 
-export function getAllMembers(customMembers: CabinetMember[]): CabinetMember[] {
-  return [...builtInMembers, ...customMembers];
-}
-
 export function getMemberById(id: string, customMembers: CabinetMember[]): CabinetMember | undefined {
   return builtInMembers.find((m) => m.id === id) || customMembers.find((m) => m.id === id);
 }

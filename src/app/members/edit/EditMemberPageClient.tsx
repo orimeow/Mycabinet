@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CabinetMember, PersonaDoc, AIProviderConfig } from "@/lib/types";
-import { getUserId } from "@/lib/user";
+import { getUserId, DEFAULT_PROVIDER } from "@/lib/user";
 import { loadCustomMembers } from "@/lib/members";
 import Avatar from "@/components/common/Avatar";
 
@@ -52,7 +52,7 @@ function parseArrayInput(text: string): string[] {
 function getStoredConfig(): AIProviderConfig | null {
   if (typeof window === "undefined") return null;
   try {
-    const provider = localStorage.getItem("ai-provider") || "gemini";
+    const provider = localStorage.getItem("ai-provider") || DEFAULT_PROVIDER;
     const apiKey = localStorage.getItem("ai-api-key") || "";
     const model = localStorage.getItem("ai-model") || "gemini-2.0-flash";
     const baseUrl = localStorage.getItem("ai-base-url") || "http://localhost:11434";

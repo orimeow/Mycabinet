@@ -519,7 +519,8 @@ export async function* runDiscussion(
 
   yield {
     type: "discussion_complete",
-    data: { question, totalMessages: selectedMembers.length * 2 + pairs.length * 2 },
+    // N members: Round 1 (N) + Round 2 (2N) + Round 3 (1) = 3N + 1
+    data: { question, totalMessages: selectedMembers.length * 3 + 1 },
   };
 }
 

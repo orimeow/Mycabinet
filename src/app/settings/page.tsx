@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { AIProviderConfig } from "@/lib/types";
-import { getUserId } from "@/lib/user";
+import { getUserId, DEFAULT_PROVIDER } from "@/lib/user";
 
 const PROVIDER_OPTIONS = [
   { value: "gemini", label: "Google Gemini", defaultModel: "gemini-2.0-flash" },
@@ -60,7 +60,7 @@ function getStored(key: string, fallback: string) {
 }
 
 export default function SettingsPage() {
-  const [provider, setProvider] = useState("gemini");
+  const [provider, setProvider] = useState(DEFAULT_PROVIDER);
   const [apiKey, setApiKey] = useState("");
   const [model, setModel] = useState("gemini-2.0-flash");
   const [baseUrl, setBaseUrl] = useState("http://localhost:11434");

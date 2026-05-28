@@ -19,10 +19,10 @@ export function generateDeviceId(): string {
 
 export function getUserId(): string {
   if (typeof window === "undefined") return "";
-  let id = localStorage.getItem("user-id");
+  let id = safeGetItem("user-id");
   if (!id) {
     id = generateDeviceId();
-    localStorage.setItem("user-id", id);
+    safeSetItem("user-id", id);
   }
   return id;
 }
@@ -31,12 +31,12 @@ export function getUserId(): string {
 
 export function getUserName(): string | null {
   if (typeof window === "undefined") return null;
-  return localStorage.getItem("user-name");
+  return safeGetItem("user-name");
 }
 
 export function setUserName(name: string): void {
   if (typeof window === "undefined") return;
-  localStorage.setItem("user-name", name.trim());
+  safeSetItem("user-name", name.trim());
 }
 
 export function hasUserName(): boolean {
@@ -45,23 +45,44 @@ export function hasUserName(): boolean {
 
 // --- API config check (shared across pages) ---
 
+/** Default AI provider — used across all pages that read localStorage */
+export const DEFAULT_PROVIDER = "openrouter";
+
+/** Safe localStorage get — returns null if storage is unavailable */
+function safeGetItem(key: string): string | null {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+/** Safe localStorage set — silently fails if storage is unavailable */
+function safeSetItem(key: string, value: string): void {
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    // Storage unavailable (private mode, quota exceeded, disabled)
+  }
+}
+
 export function checkApiConfig(): boolean {
   if (typeof window === "undefined") return false;
-  const provider = localStorage.getItem("ai-provider") || "openrouter";
+  const provider = safeGetItem("ai-provider") || DEFAULT_PROVIDER;
   if (provider === "ollama") {
-    return !!localStorage.getItem("ai-base-url");
+    return !!safeGetItem("ai-base-url");
   }
-  return !!localStorage.getItem("ai-api-key");
+  return !!safeGetItem("ai-api-key");
 }
 
 // --- Onboarding tracking ---
 
 export function isOnboardingComplete(): boolean {
   if (typeof window === "undefined") return false;
-  return localStorage.getItem("onboarding-complete") === "1";
+  return safeGetItem("onboarding-complete") === "1";
 }
 
 export function markOnboardingComplete(): void {
   if (typeof window === "undefined") return;
-  localStorage.setItem("onboarding-complete", "1");
+  safeSetItem("onboarding-complete", "1");
 }

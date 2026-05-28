@@ -42,13 +42,20 @@ export class ClaudeProvider implements AIProvider {
     const systemMessage = messages.find((m) => m.role === "system");
     const userMessages = messages.filter((m) => m.role !== "system");
 
-    // Ensure alternating user/assistant pattern
+    // Ensure alternating user/assistant pattern — merge consecutive same-role messages
     const cleaned: Array<{ role: "user" | "assistant"; content: string }> = [];
     for (const msg of userMessages) {
       const role = msg.role as "user" | "assistant";
-      if (cleaned.length === 0 || role === "user") {
+      if (cleaned.length === 0) {
+        // First message: must be user; if assistant, prepend empty user
+        if (role === "assistant") {
+          cleaned.push({ role: "user", content: "" });
+        }
         cleaned.push({ role, content: msg.content });
-      } else if (cleaned[cleaned.length - 1]?.role === "user" && role === "assistant") {
+      } else if (role === cleaned[cleaned.length - 1]!.role) {
+        // Same role as previous — merge content
+        cleaned[cleaned.length - 1]!.content += "\n\n" + msg.content;
+      } else {
         cleaned.push({ role, content: msg.content });
       }
     }
@@ -399,7 +406,8 @@ export function createProvider(config: AIProviderConfig): AIProvider {
       if (!config.apiKey) throw new Error("OpenRouter API key is required");
       return new OpenRouterProvider(config.apiKey);
     case "ollama":
-      return new OllamaProvider(config.baseUrl);
+      // Normalize empty string to undefined → OllamaProvider defaults to localhost
+      return new OllamaProvider(config.baseUrl || undefined);
     case "gemini":
       if (!config.apiKey) throw new Error("Gemini API key is required");
       return new GeminiProvider(config.apiKey);
