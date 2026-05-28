@@ -18,10 +18,21 @@ function getAllMembers(userId?: string): CabinetMember[] {
 }
 
 // Layer 2: Sanitize cross-member context to prevent prompt injection
+// This is a defense-in-depth measure — the primary protection is the system prompt
+// instructions in buildSystemPrompt. Sanitization alone cannot guarantee full protection.
 function sanitizeContext(text: string): string {
   return text
-    .replace(/^(系统|system|指令|instruction|规则|prompt)[：:\s]*/gm, '[引用] ')
-    .replace(/忽略|覆盖|绕过|不要遵守|don't follow|ignore.*instruction/gi, '***');
+    // Strip zero-width and invisible characters that could be used for obfuscation
+    .replace(/[\u200B-\u200D\uFEFF\u00AD\u180E]/g, '')
+    // Neutralize command-like patterns (covers full-width, half-width, and mixed CJK/Latin)
+    .replace(/^(系统 |system|指令|instruction|规则|rule|prompt|设置|设定|配置)[\uff1a:：\s]+/gm, '[引用] ')
+    // Replace common override/bypass keywords with neutralized form
+    .replace(/(忽略|覆盖|绕过|不要遵守|忽视|无视|don't follow|ignore.*instruction|disregard|override.*rule)/gi, '***')
+    // Normalize full-width / half-width variants of common bypass words
+    .replace(/[\uff49\uff47\uff4e\uff4f\uff52\uff45]/g, (c) => {
+      const map: Record<string, string> = {'\uff49':'i','\uff47':'g','\uff4e':'n','\uff4f':'o','\uff52':'r','\uff45':'e'};
+      return map[c] || c;
+    });
 }
 
 export type SSEEvent = {
@@ -566,9 +577,6 @@ export async function* runChatSession(
   // to treat the nonce as the main content and ignore the actual question.
   const cacheNonce = `[req:${Date.now()}-${Math.random().toString(36).slice(2, 8)}]`;
   const userContent = [personalizedMessage, responseContextHint, cacheNonce].filter(Boolean).join("\n");
-
-  console.log(`[runChatSession] Member: ${member.nameZh}, message:`, userContent?.slice(0, 100));
-  console.log(`[runChatSession] System prompt preview:`, `你是 ${member.nameZh}（${member.nameEn}），${member.title}`);
 
   // Inject member-specific anti-default-response constraint into system prompt
   const systemPrompt = antiDefault

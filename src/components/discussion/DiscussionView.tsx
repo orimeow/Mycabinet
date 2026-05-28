@@ -7,16 +7,19 @@ import { loadCustomMembers } from "@/lib/members";
 import MessageBubble from "./MessageBubble";
 import RoundDivider from "./RoundDivider";
 import { AIProviderConfig } from "@/lib/types";
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import Avatar from "@/components/common/Avatar";
 
 const PLACEHOLDER_DESKTOP = "输入消息，@成员 定向提问，或留空让所有成员回复";
 const PLACEHOLDER_MOBILE = "输入消息，@成员 定向提问";
 
-// Module-level: survives across StrictMode double-mounts.
-// Prevents StrictMode from triggering the same component's effect twice.
-// Cleared on unmount so new discussions can start normally.
-let discussionStarted = false;
+// Per-discussionId set to prevent StrictMode double-mount from starting the same discussion twice.
+// Uses a Set keyed by discussionId (or a synthetic key) so multiple DiscussionView instances don't interfere.
+const startedDiscussions = new Set<string>();
+
+function makeKey(discussionId?: string, question?: string): string {
+  return discussionId ?? `pending-${question?.slice(0, 50)}`;
+}
 
 interface Props {
   question: string;
@@ -56,8 +59,8 @@ export default function DiscussionView({
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [customMembers, setCustomMembers] = useState<CabinetMember[]>([]);
 
-  const allMembers = [...builtInMembers, ...customMembers];
-  const memberMap = new Map(allMembers.map((m) => [m.id, m]));
+  const allMembers = useMemo(() => [...builtInMembers, ...customMembers], [customMembers]);
+  const memberMap = useMemo(() => new Map(allMembers.map((m) => [m.id, m])), [allMembers]);
 
   useEffect(() => {
     setIsMobile(window.innerWidth < 768);
@@ -72,10 +75,14 @@ export default function DiscussionView({
     }
   }, [userId]);
 
-  // Members available for @mention — only participants
-  const availableMembers = selectedMemberIds.length > 0
-    ? allMembers.filter((m) => selectedMemberIds.includes(m.id))
-    : allMembers;
+  // Members available for @mention and sidebar — only participants (shared computation)
+  const participatingMembers = useMemo(
+    () => selectedMemberIds.length > 0
+      ? allMembers.filter((m) => selectedMemberIds.includes(m.id))
+      : allMembers,
+    [allMembers, selectedMemberIds]
+  );
+  const availableMembers = participatingMembers; // alias for @mention autocomplete
 
   const terminateDiscussion = useCallback(async () => {
     if (externalDiscussionId && userId) {
@@ -94,20 +101,19 @@ export default function DiscussionView({
     if (initialized.current) return;
     initialized.current = true;
 
+    const key = makeKey(externalDiscussionId, question);
+
     // StrictMode double-mount: only the first mount should start the discussion.
-    if (discussionStarted) {
-      console.log("[DiscussionView] Already started by StrictMode sibling, skipping");
+    if (startedDiscussions.has(key)) {
       return;
     }
-    discussionStarted = true;
-
-    console.log("[DiscussionView] Starting discussion. question=", question?.slice(0, 30));
+    startedDiscussions.add(key);
 
     startDiscussion(question, config, userId ?? "", mode, selectedMemberIds, existingMessages);
 
     return () => {
-      console.log("[DiscussionView] cleanup");
-      discussionStarted = false;
+      terminateDiscussion();
+      startedDiscussions.delete(key);
     };
   }, []);
 
@@ -134,8 +140,6 @@ export default function DiscussionView({
   const handleSendChat = useCallback(() => {
     if (!chatInput.trim() || state.isRunning) return;
     closeMention();
-
-    console.log("[handleSendChat] config:", JSON.stringify({ provider: config?.provider, hasApiKey: !!config?.apiKey, apiKeyLen: config?.apiKey?.length }));
 
     // Parse @ mentions from input
     const mentionRegex = /@([^\s]+)/g;
@@ -165,10 +169,8 @@ export default function DiscussionView({
     setChatInput("");
   }, [mode, state.isRunning, chatInput, sendMessage, config, userId]);
 
-  // Filter sidebar members — only show participating members
-  const sidebarMembers = selectedMemberIds.length > 0
-    ? allMembers.filter((m) => selectedMemberIds.includes(m.id))
-    : allMembers;
+  // Sidebar members — same as participatingMembers, no duplicate computation
+  const sidebarMembers = participatingMembers;
 
   // ===== @mention autocomplete =====
   const closeMention = useCallback(() => {

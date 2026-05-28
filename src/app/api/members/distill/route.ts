@@ -44,18 +44,31 @@ function parseDistillResult(raw: string): DistillResult {
   // Try to extract JSON from markdown code fences or raw text
   let jsonStr = raw.trim();
 
-  // Remove markdown code fences if present
-  if (jsonStr.startsWith("```json")) {
-    jsonStr = jsonStr.slice(7);
-  } else if (jsonStr.startsWith("```")) {
-    jsonStr = jsonStr.slice(3);
+  // Remove markdown code fences if present — use regex to handle fences anywhere in the text
+  const fenceMatch = jsonStr.match(/```json\s*\n?([\s\S]*?)\n?\s*```/);
+  if (fenceMatch) {
+    jsonStr = fenceMatch[1].trim();
+  } else {
+    // Try bare fences
+    const bareMatch = jsonStr.match(/```\s*\n?([\s\S]*?)\n?\s*```/);
+    if (bareMatch) {
+      jsonStr = bareMatch[1].trim();
+    } else {
+      // No fences — strip leading/trailing non-JSON text
+      const firstBrace = jsonStr.indexOf('{');
+      const lastBrace = jsonStr.lastIndexOf('}');
+      if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+        jsonStr = jsonStr.slice(firstBrace, lastBrace + 1);
+      }
+    }
   }
-  if (jsonStr.endsWith("```")) {
-    jsonStr = jsonStr.slice(0, -3);
-  }
-  jsonStr = jsonStr.trim();
 
-  const parsed = JSON.parse(jsonStr) as Partial<DistillResult>;
+  let parsed: Partial<DistillResult>;
+  try {
+    parsed = JSON.parse(jsonStr);
+  } catch {
+    throw new Error("AI 返回格式不正确，无法解析 JSON，请重试");
+  }
 
   // Validate and provide defaults
   return {
@@ -126,8 +139,14 @@ function toCabinetMember(result: DistillResult): CabinetMember {
 }
 
 export async function POST(req: NextRequest) {
+  let body: DistillRequest;
   try {
-    const body = (await req.json()) as DistillRequest;
+    body = (await req.json()) as DistillRequest;
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON in request body" }, { status: 400 });
+  }
+
+  try {
     const { name, config } = body;
 
     if (!name || !config) {

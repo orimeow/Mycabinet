@@ -8,10 +8,9 @@ export async function GET(req: Request) {
   const userId = url.searchParams.get("userId");
 
   if (id) {
-    // For single discussion fetch, userId is optional (backwards compat)
-    const discussion = userId
-      ? getDiscussion(userId, id)
-      : getDiscussionFallback(id);
+    // Require userId for authorization — no fallback that scans all user directories
+    if (!userId) return NextResponse.json({ error: "Missing userId" }, { status: 400 });
+    const discussion = getDiscussion(userId, id);
     if (!discussion) return NextResponse.json({ error: "Not found" }, { status: 404 });
     return NextResponse.json(discussion);
   }
@@ -22,15 +21,26 @@ export async function GET(req: Request) {
   return NextResponse.json(listDiscussions(userId, limit));
 }
 
+async function parseJsonBody<T>(req: Request): Promise<T | null> {
+  try {
+    return (await req.json()) as T;
+  } catch {
+    return null;
+  }
+}
+
 export async function DELETE(req: Request) {
-  const { id, userId } = await req.json();
+  const body = await parseJsonBody<{ id: string; userId: string }>(req);
+  if (!body) return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  const { id, userId } = body;
   if (!id || !userId) return NextResponse.json({ error: "Missing id or userId" }, { status: 400 });
   deleteDiscussion(userId, id);
   return NextResponse.json({ ok: true });
 }
 
 export async function PUT(req: Request) {
-  const body = await req.json();
+  const body = await parseJsonBody<{ id: string; userId: string; action: string }>(req);
+  if (!body) return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   const { id, userId, action } = body;
 
   if (!id || !userId) return NextResponse.json({ error: "Missing id or userId" }, { status: 400 });
@@ -48,20 +58,4 @@ export async function PUT(req: Request) {
   }
 
   return NextResponse.json({ error: "Unknown action" }, { status: 400 });
-}
-
-// Backwards compat for fetching without userId
-function getDiscussionFallback(id: string): Discussion | null {
-  const fs = require("fs");
-  const path = require("path");
-  const rootDir = path.join(process.cwd(), "data", "users");
-  if (!fs.existsSync(rootDir)) return null;
-
-  for (const userDir of fs.readdirSync(rootDir)) {
-    const filePath = path.join(rootDir, userDir, "discussions", `${id}.json`);
-    if (fs.existsSync(filePath)) {
-      return JSON.parse(fs.readFileSync(filePath, "utf-8")) as Discussion;
-    }
-  }
-  return null;
 }

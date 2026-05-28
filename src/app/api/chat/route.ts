@@ -35,7 +35,12 @@ function isUnsafeInput(text: string): string | null {
 }
 
 export async function POST(req: Request) {
-  const body = (await req.json()) as ChatRequestBody;
+  let body: ChatRequestBody;
+  try {
+    body = (await req.json()) as ChatRequestBody;
+  } catch {
+    return new Response(JSON.stringify({ error: "Invalid JSON in request body" }), { status: 400, headers: { "Content-Type": "application/json" } });
+  }
   const { config, userId, mode = "debate", selectedMemberIds = [], selectedMemberId } = body;
 
   if (!userId) {
@@ -113,8 +118,9 @@ async function handleDebate(
     });
   }
 
-  // Compute resume state: which rounds are complete, what's the last completed speaker per round
-  const resumeState = computeResumeState(existingMessages ?? []);
+  // Compute resume state from SERVER-SIDE discussion data, NOT client-provided existingMessages.
+  // Client data may be stale or inconsistent — the server record is the source of truth.
+  let resumeStartRound = 1;
 
   // When resuming, try to find and reuse the existing discussion record
   let discussion: Discussion;
@@ -134,9 +140,16 @@ async function handleDebate(
   if (existingDiscussion) {
     discussion = existingDiscussion;
     discussion.status = "running";
+    // Compute resume state from actual server-side messages
+    const hasRound3 = discussion.messages.some((m) => m.round === 3);
+    const hasRound2 = discussion.messages.some((m) => m.round === 2);
+    const hasRound1 = discussion.messages.some((m) => m.round === 1);
+    if (hasRound3) resumeStartRound = 4;
+    else if (hasRound2) resumeStartRound = 3;
+    else if (hasRound1) resumeStartRound = 2;
     saveDiscussion(discussion);
   } else {
-    const newId = `d-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const newId = `d-${Date.now()}-${crypto.randomUUID().slice(0, 6)}`;
     discussion = {
       id: newId,
       question,
@@ -158,10 +171,10 @@ async function handleDebate(
         controller.enqueue(encoder.encode(`event: discussion_started\ndata: ${JSON.stringify({ discussionId: discussion.id })}\n\n`));
 
         // If resuming, mark completed rounds as active so UI shows correct state
-        if (resumeState.startRound > 1) {
-          for (let r = 1; r < resumeState.startRound; r++) {
+        if (resumeStartRound > 1) {
+          for (let r = 1; r < resumeStartRound; r++) {
             controller.enqueue(encoder.encode(`event: round_start\ndata: ${JSON.stringify({ round: r })}\n\n`));
-            controller.enqueue(encoder.encode(`event: round_complete\ndata: ${JSON.stringify({ round: r })}\n\n`));
+            controller.enqueue(encoder.encode(`event: round_complete\data: ${JSON.stringify({ round: r })}\n\n`));
           }
         }
 
@@ -170,7 +183,7 @@ async function handleDebate(
           config,
           selectedMemberIds,
           abortCtrl.signal,
-          existingMessages ?? [],
+          discussion.messages, // pass server-side messages, not client-provided existingMessages
           userId
         )) {
           if (event.type === "message_complete" && event.data) {
@@ -220,8 +233,8 @@ async function handleDebate(
 }
 
 /**
- * Compute resume state from existing messages.
- * Returns: startRound (1-4, where 4 means done) and lastSpeakerId per round.
+ * @deprecated Use server-side discussion.messages for resume state instead.
+ * Kept for reference only.
  */
 function computeResumeState(
   messages: DiscussionMessage[]
@@ -262,9 +275,6 @@ async function handleChat(
   let { selectedMemberId } = body;
   const configFromClient = body.config;
 
-  console.log(`[handleChat] discussionId=${discussionId || 'NULL'}, message=${messageFromClient?.slice(0, 50)}, question=${question?.slice(0, 50)}`);
-  console.log(`[handleChat] config:`, { provider: configFromClient.provider, hasApiKey: !!configFromClient.apiKey, apiKeyLen: configFromClient.apiKey?.length, model: configFromClient.model });
-
   // For chat mode initial requests, use `question` as the message
   const message = messageFromClient ?? question ?? "";
 
@@ -295,7 +305,7 @@ async function handleChat(
       return new Response("Missing selectedMemberIds or selectedMemberId", { status: 400 });
     }
     discussion = {
-      id: `d-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      id: `d-${Date.now()}-${crypto.randomUUID().slice(0, 6)}`,
       question: message ?? "",
       userId,
       mode: "chat",
@@ -332,14 +342,11 @@ async function handleChat(
         // Initial request: all selected members respond to the question
         if (isInitialRequest && discussion.selectedMemberIds && discussion.selectedMemberIds.length > 0) {
           const memberIds = discussion.selectedMemberIds;
-          console.log(`[handleChat] Initial request, ${memberIds.length} members:`, memberIds);
 
           for (const memberId of memberIds) {
             if (clientAbortSignal.aborted) {
-              console.log('[handleChat] Client aborted before member', memberId);
               break;
             }
-            console.log('[handleChat] Starting session for member:', memberId);
 
             // Initial request: include only the user's question, not other members' responses.
             // This prevents the LLM from echoing prior members' exact sentences.
@@ -348,9 +355,6 @@ async function handleChat(
               ...conversationHistory.filter((m) => m.role === "user"),
               ...(message ? [{ role: "user" as const, content: message }] : []),
             ];
-
-            console.log(`[handleChat] Member ${memberId} sessionHistory:`, JSON.stringify(sessionHistory, null, 2).slice(0, 500));
-            console.log(`[handleChat] Member ${memberId} message:`, message?.slice(0, 100));
 
             for await (const event of runChatSession(
               message ?? "",
@@ -369,7 +373,6 @@ async function handleChat(
               const data = `event: ${event.type}\ndata: ${JSON.stringify(event.data)}\n\n`;
               controller.enqueue(encoder.encode(data));
             }
-            console.log('[handleChat] Finished session for member:', memberId);
 
             // Small delay between members to prevent API response caching
             if (memberId !== memberIds[memberIds.length - 1]) {

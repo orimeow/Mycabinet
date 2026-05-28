@@ -105,16 +105,10 @@ export function useDiscussion() {
       const controller = new AbortController();
       controllerRef.current = controller;
 
-      console.log("[readStream] ===== FETCH START =====", params.mode, params.question?.slice(0, 50) || params.message?.slice(0, 50));
-
       // Add a 5-minute timeout so the stream never hangs indefinitely
       const timeoutTimer = setTimeout(() => {
-        console.log("[readStream] TIMEOUT - aborting");
         controller.abort();
       }, 5 * 60 * 1000);
-
-      console.log("[readStream] Calling fetch /api/chat...");
-      console.log("[readStream] params.config:", JSON.stringify({ provider: params.config.provider, hasApiKey: !!params.config.apiKey, apiKeyLen: params.config.apiKey?.length }));
 
       const response = await fetch("/api/chat", {
         method: "POST",
@@ -127,14 +121,11 @@ export function useDiscussion() {
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error("[readStream] HTTP error:", response.status, errorText);
         throw new Error(`API error: ${response.status} ${response.statusText}\n${errorText}`);
       }
 
       const reader = response.body?.getReader();
       if (!reader) throw new Error("No response body");
-
-      console.log("[readStream] Got reader, starting to read events...");
 
       const decoder = new TextDecoder();
       let buffer = "";
@@ -143,7 +134,6 @@ export function useDiscussion() {
       while (true) {
         const { done, value } = await reader.read();
         if (done) {
-          console.log("[readStream] Stream done. Total events:", eventCount);
           break;
         }
         buffer += decoder.decode(value, { stream: true });
@@ -163,14 +153,10 @@ export function useDiscussion() {
           try {
             data = JSON.parse(dataLine.slice(6));
           } catch (e) {
-            console.error("[readStream] Failed to parse event data:", dataLine.slice(6));
             continue;
           }
 
-          console.log(`[readStream] Event #${eventCount}: ${eventType}`, data);
-
           setState((prev) => {
-            console.log(`[readStream] setState triggered by: ${eventType}`, { prevMsgCount: prev.messages.length, prevRunning: prev.isRunning, prevLoading: prev.loadingMember });
             const newState = { ...prev, messages: [...prev.messages] };
 
             // Store discussionId if server sends it — also update ref immediately
@@ -329,7 +315,6 @@ export function useDiscussion() {
       selectedMemberIds: string[],
       existingMessages?: DiscussionMessage[]
     ) => {
-      console.log("[startDiscussion] Called with:", { question: question?.slice(0, 50), mode, members: selectedMemberIds, userId });
       abort();
 
       setState({
@@ -355,11 +340,8 @@ export function useDiscussion() {
           isRunning: false,
           loadingMember: null,
         }));
-        console.log("[startDiscussion] Chat mode resume — restored", existingMessages.length, "messages, skipping SSE");
         return;
       }
-
-      console.log("[startDiscussion] State set, calling readStream...");
 
       try {
         await readStream({
@@ -388,9 +370,6 @@ export function useDiscussion() {
     async (text: string, config: AIProviderConfig, userId: string, memberIds: string[]) => {
       if (memberIds.length === 0) return;
 
-      console.log("[sendMessage] received config:", JSON.stringify({ provider: config.provider, hasApiKey: !!config.apiKey, apiKeyLen: config.apiKey?.length }));
-      console.log("[sendMessage] memberIds:", memberIds, "discussionId:", discussionIdRef.current);
-
       // Add user message immediately
       const newUserMsg: DiscussionMessage = {
         id: `user-msg-${Date.now()}`,
@@ -411,8 +390,11 @@ export function useDiscussion() {
 
       clearActivityTimeout();
 
-      // Build conversation history from current messages (including the one we just added)
-      const conversationHistory = [...state.messages, newUserMsg]
+      // Build conversation history from CURRENT messages (including the one we just added)
+      // Use messagesRef to avoid stale closure — state.messages in the dependency array
+      // may be outdated if multiple sendMessage calls happen in quick succession.
+      const currentMessages = [...messagesRef.current, newUserMsg];
+      const conversationHistory = currentMessages
         .filter((m) => m.sender !== undefined)
         .map((m) => ({
           role: m.sender === "user" ? ("user" as const) : ("assistant" as const),
@@ -439,7 +421,7 @@ export function useDiscussion() {
         }
       }
     },
-    [clearActivityTimeout, readStream, state.messages]
+    [clearActivityTimeout, readStream]
   );
 
   const terminateDiscussion = useCallback(async (userId?: string, discussionId?: string) => {

@@ -53,7 +53,14 @@ export async function PUT(req: NextRequest) {
     if (!member) {
       return NextResponse.json({ error: "Missing member data" }, { status: 400 });
     }
-    const updated: CabinetMember = { ...existing, ...member, id, source: "custom" };
+    const updated: CabinetMember = {
+      ...existing,
+      ...member,
+      id,
+      source: "custom",
+      // Deep merge persona to avoid wiping out fields not included in the update
+      persona: { ...existing.persona, ...member.persona },
+    };
     saveMember(userId, updated);
     return NextResponse.json(updated);
   } catch {

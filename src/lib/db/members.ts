@@ -4,7 +4,17 @@ import path from "path";
 
 const ROOT_DATA_DIR = path.join(process.cwd(), "data", "users");
 
+/** Whitelist validator for userId and member IDs — prevents path traversal */
+const SAFE_ID_RE = /^[a-zA-Z0-9][a-zA-Z0-9._-]{0,127}$/;
+
+function validateId(value: string, label: string): void {
+  if (!SAFE_ID_RE.test(value)) {
+    throw new Error(`Invalid ${label}: must be alphanumeric with dots, hyphens, or underscores`);
+  }
+}
+
 function getUserMembersDir(userId: string): string {
+  validateId(userId, "userId");
   const dir = path.join(ROOT_DATA_DIR, userId, "members");
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });

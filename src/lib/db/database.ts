@@ -5,7 +5,17 @@ import path from "path";
 const ROOT_DATA_DIR = path.join(process.cwd(), "data", "users");
 const MAX_MESSAGES_PER_DISCUSSION = 300;
 
+/** Whitelist validator for userId and discussion IDs — prevents path traversal */
+const SAFE_ID_RE = /^[a-zA-Z0-9][a-zA-Z0-9._-]{0,127}$/;
+
+function validateId(value: string, label: string): void {
+  if (!SAFE_ID_RE.test(value)) {
+    throw new Error(`Invalid ${label}: must be alphanumeric with dots, hyphens, or underscores`);
+  }
+}
+
 function getUserDir(userId: string): string {
+  validateId(userId, "userId");
   const dir = path.join(ROOT_DATA_DIR, userId, "discussions");
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
@@ -20,10 +30,18 @@ function getDiscussionFilePath(userId: string, id: string): string {
 export function saveDiscussion(discussion: Discussion): void {
   if (!discussion.userId) throw new Error("Discussion must have a userId");
   // Trim oldest messages if exceeding limit
-  if (discussion.messages.length > MAX_MESSAGES_PER_DISCUSSION) {
-    discussion.messages = discussion.messages.slice(-MAX_MESSAGES_PER_DISCUSSION);
-  }
-  fs.writeFileSync(getDiscussionFilePath(discussion.userId, discussion.id), JSON.stringify(discussion, null, 2));
+  const trimmed = {
+    ...discussion,
+    messages: discussion.messages.length > MAX_MESSAGES_PER_DISCUSSION
+      ? discussion.messages.slice(-MAX_MESSAGES_PER_DISCUSSION)
+      : discussion.messages,
+  };
+  const filePath = getDiscussionFilePath(trimmed.userId, trimmed.id);
+
+  // Atomic write: write to temp file first, then rename to prevent corruption on crash
+  const tmpPath = filePath + '.tmp';
+  fs.writeFileSync(tmpPath, JSON.stringify(trimmed, null, 2));
+  fs.renameSync(tmpPath, filePath);
 }
 
 export function getDiscussion(userId: string, id: string): Discussion | null {
