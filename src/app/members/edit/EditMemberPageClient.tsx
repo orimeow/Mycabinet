@@ -181,6 +181,29 @@ export default function EditMemberPageClient() {
         setDistillWarning(data.warning);
       }
       setCreationMode("manual");
+
+      // Auto-save distilled member immediately
+      const payload = {
+        ...distilled,
+        persona: {
+          ...DEFAULT_PERSONA,
+          ...distilled.persona,
+          mentalModels: distilled.persona.mentalModels?.length
+            ? distilled.persona.mentalModels
+            : [{ name: "", summary: "" }],
+        },
+      };
+      if (!distilled.id) payload.id = generateId(distilled.nameZh);
+      try {
+        await fetch("/api/members", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId, member: payload }),
+        });
+        router.push("/members");
+      } catch {
+        // Save failed, stay on edit page for user to retry
+      }
     } catch (err) {
       setDistillError(err instanceof Error ? err.message : "蒸馏失败，请重试");
     } finally {
@@ -203,19 +226,21 @@ export default function EditMemberPageClient() {
       payload.id = generateId(member.nameZh);
     }
     try {
-      const res = await fetch("/api/members", {
+      const url = editId
+        ? `/api/members?id=${editId}&userId=${userId}`
+        : "/api/members";
+      const res = await fetch(url, {
         method: editId ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId,
-          member: payload,
-          ...(editId ? { id: editId } : {}),
-        }),
+        body: JSON.stringify(editId ? { member: payload } : { userId, member: payload }),
       });
-      if (!res.ok) throw new Error("Save failed");
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || "Save failed");
+      }
       router.push("/members");
-    } catch {
-      alert("保存失败，请重试");
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "保存失败，请重试");
       setSaving(false);
     }
   };
