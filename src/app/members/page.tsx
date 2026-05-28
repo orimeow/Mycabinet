@@ -50,7 +50,7 @@ function DetailContent({ selected, mobile, onEdit, onDelete }: { selected: Cabin
         {/* Biography */}
         <div className="col-span-2">
           <h3 className="text-sm font-bold text-gray-900">生平</h3>
-          <p className="mt-2 text-sm leading-relaxed text-gray-600">{selected.persona.biography}</p>
+          <p className="mt-2 text-xs leading-relaxed text-gray-600">{selected.persona.biography}</p>
         </div>
 
         {/* Core Values */}
@@ -128,7 +128,7 @@ function DetailContent({ selected, mobile, onEdit, onDelete }: { selected: Cabin
                 const topicLabels: Record<string, string> = {
                   ai: "人工智能",
                   education: "教育",
-                  climate: "气候",
+                  climate: "环境与能源",
                   government: "政府与监管",
                   wealth: "财富与投资",
                 };
@@ -138,10 +138,10 @@ function DetailContent({ selected, mobile, onEdit, onDelete }: { selected: Cabin
                     className="rounded-md p-3"
                     style={{ backgroundColor: `${selected.color}06` }}
                   >
-                    <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: selected.color }}>
+                    <p className="text-sm font-semibold mb-1" style={{ color: selected.color }}>
                       {topicLabels[topic] || topic}
                     </p>
-                    <p className="text-sm leading-relaxed text-gray-600">{view}</p>
+                    <p className="text-xs leading-relaxed text-gray-600">{view}</p>
                   </div>
                 );
               })}
@@ -431,7 +431,7 @@ function MembersPageContent() {
                         const topicLabels: Record<string, string> = {
                           ai: "人工智能",
                           education: "教育",
-                          climate: "气候",
+                          climate: "环境与能源",
                           government: "政府与监管",
                           wealth: "财富与投资",
                         };
@@ -441,10 +441,10 @@ function MembersPageContent() {
                             className="rounded-md p-3 md:p-4"
                             style={{ backgroundColor: `${selected.color}06` }}
                           >
-                            <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: selected.color }}>
+                            <p className="text-sm font-semibold mb-1" style={{ color: selected.color }}>
                               {topicLabels[topic] || topic}
                             </p>
-                            <p className="text-sm md:text-base leading-relaxed text-gray-600">{view}</p>
+                            <p className="text-xs md:text-sm leading-relaxed text-gray-600">{view}</p>
                           </div>
                         );
                       })}
