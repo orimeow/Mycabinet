@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { cabinetMembers as builtInMembers } from "@/data/personas";
 import { AIProviderConfig, CabinetMember } from "@/lib/types";
-import { getUserId, getUserName, hasUserName, setUserName } from "@/lib/user";
+import { getUserId, getUserName, hasUserName, setUserName, checkApiConfig } from "@/lib/user";
 import { loadCustomMembers } from "@/lib/members";
 import MemberPicker from "@/components/common/MemberPicker";
 
@@ -95,10 +95,7 @@ export default function Home() {
     setDisplayedQuestions(getRandomQuestions(debateQuestions, 3, Math.floor(Math.random() * 10000)));
 
     // Check API config
-    const provider = localStorage.getItem("ai-provider") || "openrouter";
-    const configOk = provider === "ollama"
-      ? !!localStorage.getItem("ai-base-url")
-      : !!localStorage.getItem("ai-api-key");
+    const configOk = checkApiConfig();
     setHasApiConfig(configOk);
 
     // Show name modal first (if no name), then API modal (if no config)
@@ -107,6 +104,11 @@ export default function Home() {
     } else if (!configOk) {
       setShowApiSetupModal(true);
     }
+
+    // Listen for config changes from other tabs/pages
+    const onStorage = () => setHasApiConfig(checkApiConfig());
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
   }, []);
 
   useEffect(() => {
@@ -210,11 +212,6 @@ export default function Home() {
 
   const handleSubmit = () => {
     if (!question.trim()) return;
-    if (!hasApiConfig) {
-      setShowApiSetupModal(true);
-      return;
-    }
-
     const config: AIProviderConfig = {
       provider: (localStorage.getItem("ai-provider") as AIProviderConfig["provider"]) || "openrouter",
       apiKey: localStorage.getItem("ai-api-key") || "",

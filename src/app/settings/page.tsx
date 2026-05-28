@@ -84,9 +84,7 @@ export default function SettingsPage() {
     const hasApiKey = localStorage.getItem("ai-api-key");
     const hasBaseUrl = localStorage.getItem("ai-base-url");
     const p = localStorage.getItem("ai-provider") || "gemini";
-    if (p === "ollama" ? hasBaseUrl : hasApiKey) {
-      setIsConfigured(true);
-    }
+    setIsConfigured(p === "ollama" ? !!hasBaseUrl : !!hasApiKey);
   }, [saved]);
 
   const handleSave = () => {
@@ -97,6 +95,8 @@ export default function SettingsPage() {
     localStorage.setItem("ai-token-limit", String(tokenLimit));
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
+    // Notify other pages (e.g. homepage) that config has changed
+    window.dispatchEvent(new StorageEvent("storage", { key: "ai-api-key" }));
   };
 
   const handleTest = async () => {

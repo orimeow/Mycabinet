@@ -42,3 +42,14 @@ export function setUserName(name: string): void {
 export function hasUserName(): boolean {
   return !!getUserName();
 }
+
+// --- API config check (shared across pages) ---
+
+export function checkApiConfig(): boolean {
+  if (typeof window === "undefined") return false;
+  const provider = localStorage.getItem("ai-provider") || "openrouter";
+  if (provider === "ollama") {
+    return !!localStorage.getItem("ai-base-url");
+  }
+  return !!localStorage.getItem("ai-api-key");
+}

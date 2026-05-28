@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { getUserName, setUserName } from "@/lib/user";
+import { getUserName, setUserName, checkApiConfig } from "@/lib/user";
 
 const navItems = [
   { href: "/", label: "首页" },
@@ -15,11 +15,10 @@ const navItems = [
 function useHasAiConfig(): boolean {
   const [has, setHas] = useState(false);
   useEffect(() => {
-    const provider = localStorage.getItem("ai-provider") || "openrouter";
-    const ok = provider === "ollama"
-      ? !!localStorage.getItem("ai-base-url")
-      : !!localStorage.getItem("ai-api-key");
-    setHas(ok);
+    setHas(checkApiConfig());
+    const onStorage = () => setHas(checkApiConfig());
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
   }, []);
   return has;
 }
