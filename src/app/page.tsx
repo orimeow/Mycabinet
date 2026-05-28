@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { cabinetMembers as builtInMembers } from "@/data/personas";
 import { AIProviderConfig, CabinetMember } from "@/lib/types";
@@ -83,7 +83,10 @@ export default function Home() {
   const didSelectInSession = useRef(false);
   const activeAtPos = useRef<number | null>(null);
 
-  const allMembers = [...builtInMembers, ...customMembers];
+  const allMembers = useMemo(
+    () => [...builtInMembers, ...customMembers],
+    [customMembers]
+  );
 
   useEffect(() => {
     const uid = getUserId();
@@ -176,7 +179,7 @@ export default function Home() {
         textarea.setSelectionRange(newCursorPos, newCursorPos);
       }, 0);
     },
-    []
+    [allMembers]
   );
 
   const handleClosePicker = useCallback(() => {

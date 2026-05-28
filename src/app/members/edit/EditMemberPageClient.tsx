@@ -114,6 +114,8 @@ export default function EditMemberPageClient() {
           }
         }
         setLoading(false);
+      }).catch(() => {
+        setLoading(false);
       });
     }
   }, [editId]);
@@ -134,6 +136,9 @@ export default function EditMemberPageClient() {
       const dataUrl = ev.target?.result as string;
       setMember((prev) => ({ ...prev, avatar: dataUrl }));
       setAvatarFileName(file.name);
+    };
+    reader.onerror = () => {
+      alert("图片读取失败，请重试");
     };
     reader.readAsDataURL(file);
   }, []);
@@ -162,7 +167,7 @@ export default function EditMemberPageClient() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: distillName.trim(), config }),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({ error: "服务器响应异常" }));
       if (!res.ok) {
         throw new Error(data.error || "蒸馏失败");
       }
@@ -195,14 +200,19 @@ export default function EditMemberPageClient() {
       };
       if (!distilled.id) payload.id = generateId(distilled.nameZh);
       try {
-        await fetch("/api/members", {
+        const saveRes = await fetch("/api/members", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ userId, member: payload }),
         });
+        if (!saveRes.ok) {
+          throw new Error("自动保存失败");
+        }
         router.push("/members");
       } catch {
-        // Save failed, stay on edit page for user to retry
+        // Auto-save failed — stay on edit page, user can manually save
+        setDistillError("成员已生成但保存失败，请检查网络后点击「创建成员」重试");
+        setCreationMode("manual");
       }
     } catch (err) {
       setDistillError(err instanceof Error ? err.message : "蒸馏失败，请重试");
@@ -572,7 +582,7 @@ export default function EditMemberPageClient() {
               <Label>心智模型</Label>
               <div className="space-y-2">
                 {member.persona.mentalModels.map((m, i) => (
-                  <div key={i} className="flex gap-2">
+                  <div key={m.name + m.summary + i} className="flex gap-2">
                     <input
                       type="text"
                       value={m.name}
