@@ -346,7 +346,7 @@ export default function Home() {
                   : "";
                 setQuestion(prefix + q);
               }}
-              className="rounded-md px-3 py-1.5 text-sm text-gray-500 transition-all hover:bg-white/50 hover:text-gray-700"
+              className="rounded-md px-3 py-1.5 text-left text-sm text-gray-500 transition-all hover:bg-white/50 hover:text-gray-700"
             >
               {q}
             </button>
@@ -437,7 +437,7 @@ export default function Home() {
                 }}
                 placeholder="如：小明"
                 maxLength={12}
-                className="mt-4 w-full rounded-md border bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-gray-300"
+                className="mt-4 w-full rounded-md border bg-white px-3 py-2.5 text-base focus:outline-none focus:ring-1 focus:ring-gray-300"
                 style={{ borderColor: "rgba(0,0,0,0.08)" }}
                 autoFocus
               />

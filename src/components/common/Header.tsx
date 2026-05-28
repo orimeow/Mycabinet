@@ -194,7 +194,7 @@ export default function Header() {
               onKeyDown={(e) => e.key === "Enter" && handleSaveName()}
               placeholder="如：小明"
               maxLength={12}
-              className="mt-4 w-full rounded-md border bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-gray-300"
+              className="mt-4 w-full rounded-md border bg-white px-3 py-2.5 text-base focus:outline-none focus:ring-1 focus:ring-gray-300"
               style={{ borderColor: "rgba(0,0,0,0.08)" }}
               autoFocus
             />
