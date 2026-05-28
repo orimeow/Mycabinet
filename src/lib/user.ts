@@ -26,3 +26,19 @@ export function getUserId(): string {
   }
   return id;
 }
+
+// --- Simple nickname system (zero backend) ---
+
+export function getUserName(): string | null {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem("user-name");
+}
+
+export function setUserName(name: string): void {
+  if (typeof window === "undefined") return;
+  localStorage.setItem("user-name", name.trim());
+}
+
+export function hasUserName(): boolean {
+  return !!getUserName();
+}

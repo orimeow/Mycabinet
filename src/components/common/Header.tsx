@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { getUserName, setUserName } from "@/lib/user";
 
 const navItems = [
   { href: "/", label: "首页" },
@@ -11,9 +12,39 @@ const navItems = [
   { href: "/settings", label: "设置" },
 ];
 
+function useHasAiConfig(): boolean {
+  const [has, setHas] = useState(false);
+  useEffect(() => {
+    const provider = localStorage.getItem("ai-provider") || "openrouter";
+    const ok = provider === "ollama"
+      ? !!localStorage.getItem("ai-base-url")
+      : !!localStorage.getItem("ai-api-key");
+    setHas(ok);
+  }, []);
+  return has;
+}
+
 export default function Header() {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [userName, setUserNameState] = useState<string | null>(null);
+  const [showNameEdit, setShowNameEdit] = useState(false);
+  const [editName, setEditName] = useState("");
+  const hasConfig = useHasAiConfig();
+
+  useEffect(() => {
+    setUserNameState(getUserName());
+  }, []);
+
+  const handleSaveName = () => {
+    const name = editName.trim();
+    if (name) {
+      setUserName(name);
+      setUserNameState(name);
+    }
+    setShowNameEdit(false);
+    setEditName("");
+  };
 
   return (
     <>
@@ -29,20 +60,42 @@ export default function Header() {
           </Link>
 
           {/* Desktop nav */}
-          <nav className="hidden gap-1 md:flex">
+          <nav className="hidden items-center gap-1 md:flex">
             {navItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`rounded-md px-3 py-1 text-sm font-medium transition-all duration-200 ${
+                className={`relative rounded-md px-3 py-1 text-sm font-medium transition-all duration-200 ${
                   pathname === item.href
                     ? 'bg-[#1a1a1a] text-white'
                     : 'text-gray-500 hover:bg-black/5 hover:text-gray-900'
                 }`}
               >
                 {item.label}
+                {item.href === "/settings" && !hasConfig && (
+                  <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-red-500" />
+                )}
               </Link>
             ))}
+            {userName ? (
+              <button
+                onClick={() => { setEditName(userName); setShowNameEdit(true); }}
+                className="ml-2 flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50"
+                style={{ borderColor: "rgba(0,0,0,0.08)" }}
+              >
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#1a1a1a] text-[10px] font-bold text-white">
+                  {userName.charAt(0)}
+                </span>
+                {userName}
+              </button>
+            ) : (
+              <button
+                onClick={() => setShowNameEdit(true)}
+                className="ml-2 rounded-md px-3 py-1 text-xs font-medium text-gray-400 transition-colors hover:bg-black/5 hover:text-gray-600"
+              >
+                设置昵称
+              </button>
+            )}
           </nav>
 
           {/* Mobile hamburger */}
@@ -69,7 +122,7 @@ export default function Header() {
         >
           <div className="absolute inset-0 bg-black/20" />
           <div
-            className="absolute right-0 top-[52px] w-40 rounded-bl-lg rounded-br-lg border bg-white/80 shadow-lg backdrop-blur-xl"
+            className="absolute right-0 top-[52px] w-48 rounded-bl-lg rounded-br-lg border bg-white/80 shadow-lg backdrop-blur-xl"
             style={{ borderColor: 'rgba(0,0,0,0.06)' }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -78,15 +131,72 @@ export default function Header() {
                 key={item.href}
                 href={item.href}
                 onClick={() => setMenuOpen(false)}
-                className={`block px-4 py-3 text-sm font-medium transition-colors ${
+                className={`flex items-center justify-between px-4 py-3 text-sm font-medium transition-colors ${
                   pathname === item.href
                     ? 'bg-[#1a1a1a] text-white'
                     : 'text-gray-500 hover:bg-black/5 hover:text-gray-900'
                 }`}
               >
-                {item.label}
+                <span>{item.label}</span>
+                {item.href === "/settings" && !hasConfig && (
+                  <span className="h-2 w-2 rounded-full bg-red-500" />
+                )}
               </Link>
             ))}
+            <button
+              onClick={() => { setMenuOpen(false); setShowNameEdit(true); }}
+              className="block w-full px-4 py-3 text-left text-sm font-medium text-gray-500 transition-colors hover:bg-black/5 hover:text-gray-900"
+            >
+              {userName ? `修改昵称 (${userName})` : "设置昵称"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Name edit modal */}
+      {showNameEdit && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+          onClick={() => setShowNameEdit(false)}
+        >
+          <div
+            className="w-full max-w-sm rounded-xl border bg-white p-6 shadow-xl mx-4"
+            style={{ borderColor: "rgba(0,0,0,0.08)" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-semibold">{userName ? "修改昵称" : "怎么称呼你？"}</h3>
+            <p className="mt-2 text-sm text-gray-500">
+              {userName
+                ? "你可以随时修改显示的名称。"
+                : "设置一个昵称，让你的智囊团体验更个性化。"}
+            </p>
+            <input
+              type="text"
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSaveName()}
+              placeholder="如：小明"
+              maxLength={12}
+              className="mt-4 w-full rounded-md border bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-gray-300"
+              style={{ borderColor: "rgba(0,0,0,0.08)" }}
+              autoFocus
+            />
+            <div className="mt-5 flex gap-3">
+              <button
+                onClick={handleSaveName}
+                disabled={!editName.trim()}
+                className="flex-1 rounded-md bg-[#1a1a1a] px-4 py-2.5 text-sm font-semibold text-white transition-all hover:bg-[#333] active:scale-[0.98] disabled:opacity-50"
+              >
+                保存
+              </button>
+              <button
+                onClick={() => setShowNameEdit(false)}
+                className="flex-1 rounded-md border px-4 py-2.5 text-sm font-medium text-gray-600 transition-all hover:bg-gray-50"
+                style={{ borderColor: "rgba(0,0,0,0.08)" }}
+              >
+                取消
+              </button>
+            </div>
           </div>
         </div>
       )}

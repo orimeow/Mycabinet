@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { cabinetMembers as builtInMembers } from "@/data/personas";
 import { AIProviderConfig, CabinetMember } from "@/lib/types";
-import { getUserId } from "@/lib/user";
+import { getUserId, getUserName, hasUserName, setUserName } from "@/lib/user";
 import { loadCustomMembers } from "@/lib/members";
 import MemberPicker from "@/components/common/MemberPicker";
 
@@ -72,6 +72,9 @@ export default function Home() {
   const [showPicker, setShowPicker] = useState(false);
   const [showApiSetupModal, setShowApiSetupModal] = useState(false);
   const [customMembers, setCustomMembers] = useState<CabinetMember[]>([]);
+  const [hasApiConfig, setHasApiConfig] = useState(false);
+  const [showNameModal, setShowNameModal] = useState(false);
+  const [nameInput, setNameInput] = useState("");
   // SSR: show first 3 questions (deterministic). Client: randomize after mount.
   const [displayedQuestions, setDisplayedQuestions] = useState<string[]>(
     () => debateQuestions.slice(0, 3)
@@ -88,12 +91,19 @@ export default function Home() {
     // Randomize questions only on client
     setDisplayedQuestions(getRandomQuestions(debateQuestions, 3, Math.floor(Math.random() * 10000)));
 
-    // Check if API is configured — show setup modal for first-time users
+    // Check API config
     const provider = localStorage.getItem("ai-provider") || "openrouter";
-    const hasConfig = provider === "ollama"
-      ? localStorage.getItem("ai-base-url")
-      : localStorage.getItem("ai-api-key");
-    if (!hasConfig) setShowApiSetupModal(true);
+    const configOk = provider === "ollama"
+      ? !!localStorage.getItem("ai-base-url")
+      : !!localStorage.getItem("ai-api-key");
+    setHasApiConfig(configOk);
+
+    // Show name modal first (if no name), then API modal (if no config)
+    if (!hasUserName()) {
+      setShowNameModal(true);
+    } else if (!configOk) {
+      setShowApiSetupModal(true);
+    }
   }, []);
 
   useEffect(() => {
@@ -197,6 +207,10 @@ export default function Home() {
 
   const handleSubmit = () => {
     if (!question.trim()) return;
+    if (!hasApiConfig) {
+      setShowApiSetupModal(true);
+      return;
+    }
 
     const config: AIProviderConfig = {
       provider: (localStorage.getItem("ai-provider") as AIProviderConfig["provider"]) || "openrouter",
@@ -206,8 +220,7 @@ export default function Home() {
     };
 
     if (config.provider !== "ollama" && !config.apiKey) {
-      alert("请先在设置页面配置 API Key");
-      router.push("/settings");
+      setShowApiSetupModal(true);
       return;
     }
 
@@ -228,6 +241,27 @@ export default function Home() {
       </div>
 
       <main className="relative mx-auto max-w-4xl px-4 pb-20 pt-8 md:px-6 md:pt-10">
+        {/* API config banner */}
+        {!hasApiConfig && (
+          <div
+            className="mb-4 flex items-center gap-3 rounded-lg border px-4 py-3 text-sm"
+            style={{ backgroundColor: "#fffbeb", borderColor: "#fcd34d" }}
+          >
+            <svg className="h-5 w-5 flex-shrink-0 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M12 17.25a5.25 5.25 0 100-10.5 5.25 5.25 0 000 10.5z" />
+            </svg>
+            <span className="flex-1 text-amber-800">
+              尚未配置 AI Provider，无法开始讨论。
+            </span>
+            <button
+              onClick={() => router.push("/settings")}
+              className="shrink-0 rounded-md bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white transition-all hover:bg-amber-700"
+            >
+              去设置
+            </button>
+          </div>
+        )}
+
         {/* Mode toggle - capsule tab */}
         <div className="mb-6 flex justify-center">
           <div
@@ -279,12 +313,13 @@ export default function Home() {
             </span>
             <button
               onClick={handleSubmit}
-              disabled={!canSubmit}
+              disabled={!canSubmit || !hasApiConfig}
+              title={!hasApiConfig ? "请先配置 AI Provider" : ""}
               className="ml-auto shrink-0 rounded-md bg-[#1a1a1a] px-5 py-2 text-sm font-semibold text-white
                 transition-all hover:bg-[#333] active:scale-[0.98]
                 disabled:cursor-not-allowed disabled:opacity-40 md:px-6"
             >
-              {mode === "debate" ? "开始辩论" : "发起聊天"}
+              {!hasApiConfig ? "先配置 API" : mode === "debate" ? "开始辩论" : "发起聊天"}
             </button>
           </div>
         </div>
@@ -365,7 +400,56 @@ export default function Home() {
           />
         )}
 
-        {/* API Setup Modal for first-time users */}
+        {/* Name setup modal */}
+        {showNameModal && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+            onClick={() => setShowNameModal(false)}
+          >
+            <div
+              className="w-full max-w-sm rounded-xl border bg-white p-6 shadow-xl mx-4"
+              style={{ borderColor: "rgba(0,0,0,0.06)" }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="text-lg font-semibold">欢迎</h3>
+              <p className="mt-2 text-sm text-gray-500">
+                怎么称呼你？设置一个昵称，让你的智囊团体验更个性化。
+              </p>
+              <input
+                type="text"
+                value={nameInput}
+                onChange={(e) => setNameInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && nameInput.trim() && (setUserName(nameInput.trim()), setShowNameModal(false), !hasApiConfig && setShowApiSetupModal(true))}
+                placeholder="如：小明"
+                maxLength={12}
+                className="mt-4 w-full rounded-md border bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-gray-300"
+                style={{ borderColor: "rgba(0,0,0,0.08)" }}
+                autoFocus
+              />
+              <div className="mt-5 flex gap-3">
+                <button
+                  onClick={() => {
+                    if (nameInput.trim()) setUserName(nameInput.trim());
+                    setShowNameModal(false);
+                    if (!hasApiConfig) setShowApiSetupModal(true);
+                  }}
+                  className="flex-1 rounded-md bg-[#1a1a1a] px-4 py-2.5 text-sm font-semibold text-white transition-all hover:bg-[#333] active:scale-[0.98]"
+                >
+                  开始体验
+                </button>
+                <button
+                  onClick={() => { setShowNameModal(false); if (!hasApiConfig) setShowApiSetupModal(true); }}
+                  className="flex-1 rounded-md border px-4 py-2.5 text-sm font-medium text-gray-600 transition-all hover:bg-gray-50"
+                  style={{ borderColor: "rgba(0,0,0,0.08)" }}
+                >
+                  跳过
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* API Setup Modal */}
         {showApiSetupModal && (
           <div
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
@@ -376,28 +460,29 @@ export default function Home() {
               style={{ borderColor: "rgba(0,0,0,0.06)" }}
               onClick={(e) => e.stopPropagation()}
             >
-              <h3 className="text-lg font-semibold">配置 AI 供应商</h3>
+              <h3 className="text-lg font-semibold">还差一步</h3>
               <p className="mt-2 text-sm text-gray-500">
-                系统不提供兜底的 AI 服务，请先配置你的 API Key 才能开始使用。
+                你的智囊团需要接入 AI 才能开始讨论。我们支持 OpenRouter（免费模型）、Gemini、Claude 等多种供应商，配置一次即可使用。
               </p>
+              <div className="mt-4 rounded-md bg-gray-50 px-3 py-2 text-xs text-gray-500">
+                推荐：OpenRouter 提供免费模型，无需充值即可体验。
+              </div>
               <div className="mt-5 flex gap-3">
                 <button
                   onClick={() => {
                     setShowApiSetupModal(false);
                     router.push("/settings");
                   }}
-                  className="flex-1 rounded-md bg-[#1a1a1a] px-4 py-2.5 text-sm font-semibold text-white
-                    transition-all hover:bg-[#333] active:scale-[0.98]"
+                  className="flex-1 rounded-md bg-[#1a1a1a] px-4 py-2.5 text-sm font-semibold text-white transition-all hover:bg-[#333] active:scale-[0.98]"
                 >
-                  去设置
+                  去配置
                 </button>
                 <button
                   onClick={() => setShowApiSetupModal(false)}
-                  className="flex-1 rounded-md border px-4 py-2.5 text-sm font-medium text-gray-600
-                    transition-all hover:bg-gray-50"
+                  className="flex-1 rounded-md border px-4 py-2.5 text-sm font-medium text-gray-600 transition-all hover:bg-gray-50"
                   style={{ borderColor: "rgba(0,0,0,0.08)" }}
                 >
-                  稍后设置
+                  我先逛逛
                 </button>
               </div>
             </div>
