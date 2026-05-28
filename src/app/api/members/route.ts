@@ -49,7 +49,11 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: "Member not found" }, { status: 404 });
     }
     const body = await req.json();
-    const updated: CabinetMember = { ...existing, ...body, id, source: "custom" };
+    const { member } = body as { member: CabinetMember };
+    if (!member) {
+      return NextResponse.json({ error: "Missing member data" }, { status: 400 });
+    }
+    const updated: CabinetMember = { ...existing, ...member, id, source: "custom" };
     saveMember(userId, updated);
     return NextResponse.json(updated);
   } catch {
