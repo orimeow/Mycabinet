@@ -187,6 +187,8 @@ function MembersPageContent() {
     handleScroll();
     const uid = getUserId();
     setUserId(uid);
+    // Always invalidate cache on mount to ensure fresh data
+    invalidateCache();
     loadCustomMembers(uid).then(setCustomMembers);
   }, []);
 

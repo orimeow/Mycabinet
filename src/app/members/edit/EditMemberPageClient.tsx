@@ -186,34 +186,6 @@ export default function EditMemberPageClient() {
         setDistillWarning(data.warning);
       }
       setCreationMode("manual");
-
-      // Auto-save distilled member immediately
-      const payload = {
-        ...distilled,
-        persona: {
-          ...DEFAULT_PERSONA,
-          ...distilled.persona,
-          mentalModels: distilled.persona.mentalModels?.length
-            ? distilled.persona.mentalModels
-            : [{ name: "", summary: "" }],
-        },
-      };
-      if (!distilled.id) payload.id = generateId(distilled.nameZh);
-      try {
-        const saveRes = await fetch("/api/members", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId, member: payload }),
-        });
-        if (!saveRes.ok) {
-          throw new Error("自动保存失败");
-        }
-        router.push("/members");
-      } catch {
-        // Auto-save failed — stay on edit page, user can manually save
-        setDistillError("成员已生成但保存失败，请检查网络后点击「创建成员」重试");
-        setCreationMode("manual");
-      }
     } catch (err) {
       setDistillError(err instanceof Error ? err.message : "蒸馏失败，请重试");
     } finally {
