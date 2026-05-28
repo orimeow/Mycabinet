@@ -346,7 +346,7 @@ export default function Home() {
                   : "";
                 setQuestion(prefix + q);
               }}
-              className="rounded-md px-3 py-1.5 text-xs text-gray-400 transition-all hover:bg-white/50 hover:text-gray-600"
+              className="rounded-md px-3 py-1.5 text-sm text-gray-500 transition-all hover:bg-white/50 hover:text-gray-700"
             >
               {q}
             </button>
