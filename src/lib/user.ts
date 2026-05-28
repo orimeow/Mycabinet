@@ -53,3 +53,15 @@ export function checkApiConfig(): boolean {
   }
   return !!localStorage.getItem("ai-api-key");
 }
+
+// --- Onboarding tracking ---
+
+export function isOnboardingComplete(): boolean {
+  if (typeof window === "undefined") return false;
+  return localStorage.getItem("onboarding-complete") === "1";
+}
+
+export function markOnboardingComplete(): void {
+  if (typeof window === "undefined") return;
+  localStorage.setItem("onboarding-complete", "1");
+}

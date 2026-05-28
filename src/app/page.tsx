@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { cabinetMembers as builtInMembers } from "@/data/personas";
 import { AIProviderConfig, CabinetMember } from "@/lib/types";
-import { getUserId, getUserName, hasUserName, setUserName, checkApiConfig } from "@/lib/user";
+import { getUserId, getUserName, hasUserName, setUserName, checkApiConfig, isOnboardingComplete, markOnboardingComplete } from "@/lib/user";
 import { loadCustomMembers } from "@/lib/members";
 import MemberPicker from "@/components/common/MemberPicker";
 
@@ -75,6 +75,7 @@ export default function Home() {
   const [hasApiConfig, setHasApiConfig] = useState(false);
   const [showNameModal, setShowNameModal] = useState(false);
   const [nameInput, setNameInput] = useState("");
+  const [showOnboardingComplete, setShowOnboardingComplete] = useState(false);
   // SSR: show first 3 questions (deterministic). Client: randomize after mount.
   const [displayedQuestions, setDisplayedQuestions] = useState<string[]>(
     () => debateQuestions.slice(0, 3)
@@ -103,10 +104,15 @@ export default function Home() {
       setShowNameModal(true);
     } else if (!configOk) {
       setShowApiSetupModal(true);
+    } else if (!isOnboardingComplete()) {
+      // Both name and API are set, but onboarding not yet marked complete
+      setShowOnboardingComplete(true);
     }
 
     // Listen for config changes from other tabs/pages
-    const onStorage = () => setHasApiConfig(checkApiConfig());
+    const onStorage = () => {
+      setHasApiConfig(checkApiConfig());
+    };
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
   }, []);
@@ -495,6 +501,42 @@ export default function Home() {
                   我先逛逛
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Onboarding complete modal */}
+        {showOnboardingComplete && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+            onClick={() => {
+              setShowOnboardingComplete(false);
+              markOnboardingComplete();
+            }}
+          >
+            <div
+              className="w-full max-w-sm rounded-xl border bg-white p-6 shadow-xl mx-4 text-center"
+              style={{ borderColor: "rgba(0,0,0,0.06)" }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50">
+                <svg className="h-6 w-6 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold">准备就绪</h3>
+              <p className="mt-2 text-sm text-gray-500">
+                昵称和 API 都已配置完成，你的智囊团已经就位，可以开始提问了。
+              </p>
+              <button
+                onClick={() => {
+                  setShowOnboardingComplete(false);
+                  markOnboardingComplete();
+                }}
+                className="mt-5 w-full rounded-md bg-[#1a1a1a] px-4 py-2.5 text-sm font-semibold text-white transition-all hover:bg-[#333] active:scale-[0.98]"
+              >
+                开始使用
+              </button>
             </div>
           </div>
         )}
