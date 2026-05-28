@@ -419,7 +419,14 @@ export default function Home() {
                 type="text"
                 value={nameInput}
                 onChange={(e) => setNameInput(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && nameInput.trim() && (setUserName(nameInput.trim()), setShowNameModal(false), !hasApiConfig && setShowApiSetupModal(true))}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && nameInput.trim()) {
+                    setUserName(nameInput.trim());
+                    window.dispatchEvent(new CustomEvent("nickname-changed"));
+                    setShowNameModal(false);
+                    if (!hasApiConfig) setShowApiSetupModal(true);
+                  }
+                }}
                 placeholder="如：小明"
                 maxLength={12}
                 className="mt-4 w-full rounded-md border bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-gray-300"
@@ -429,7 +436,10 @@ export default function Home() {
               <div className="mt-5 flex gap-3">
                 <button
                   onClick={() => {
-                    if (nameInput.trim()) setUserName(nameInput.trim());
+                    if (nameInput.trim()) {
+                      setUserName(nameInput.trim());
+                      window.dispatchEvent(new CustomEvent("nickname-changed"));
+                    }
                     setShowNameModal(false);
                     if (!hasApiConfig) setShowApiSetupModal(true);
                   }}

@@ -33,7 +33,25 @@ export default function Header() {
   const hasConfig = useHasAiConfig();
 
   useEffect(() => {
+    // Read nickname on mount
     setUserNameState(getUserName());
+
+    // Listen for storage changes (cross-tab sync)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "user-name") {
+        setUserNameState(e.newValue);
+      }
+    };
+    window.addEventListener("storage", handleStorageChange);
+
+    // Listen for same-tab nickname change event
+    const handleNameChange = () => setUserNameState(getUserName());
+    window.addEventListener("nickname-changed", handleNameChange);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("nickname-changed", handleNameChange);
+    };
   }, []);
 
   const handleSaveName = () => {
