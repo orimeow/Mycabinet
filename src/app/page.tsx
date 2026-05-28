@@ -230,8 +230,10 @@ export default function Home() {
       return;
     }
 
+    // Store question + mode + memberIds in sessionStorage for discussion/new page
+    // DO NOT store API key — discussion/new reads config from localStorage directly
     sessionStorage.setItem("pending-question", question);
-    sessionStorage.setItem("pending-config", JSON.stringify({ ...config, mode, selectedMemberIds: selectedIds }));
+    sessionStorage.setItem("pending-config", JSON.stringify({ mode, selectedMemberIds: selectedIds }));
     router.push(`/discussion/new`);
   };
 

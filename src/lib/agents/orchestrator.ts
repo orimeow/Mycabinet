@@ -220,6 +220,7 @@ export async function* runDiscussion(
       const userPrompt = `作为内阁成员，请就以下问题发表你的初始观点：\n\n"${question}"\n\n请完全基于你自己的思维框架、价值观和决策逻辑独立发言，不要提及或复述其他成员的观点。请用你的身份特有的思维方式和说话风格来表达。`;
 
       let fullContent = "";
+      let round1Failed = false;
       let memberUsage: { inputTokens: number; outputTokens: number } | null = null;
       try {
         for await (const result of streamChat(
@@ -248,6 +249,7 @@ export async function* runDiscussion(
         }
       } catch (err) {
         fullContent = `[发言失败：${(err as Error).message}]`;
+        round1Failed = true;
         yield {
           type: "error",
           data: { message: `${member.nameZh} 发言失败：${(err as Error).message}` },
@@ -270,6 +272,13 @@ export async function* runDiscussion(
           sender: "member",
         },
       };
+    }
+
+    // Abort if all Round 1 members failed — no point continuing
+    const round1Successful = round1Content.filter((c) => !c.includes("[发言失败：")).length;
+    if (round1Successful === 0) {
+      yield { type: "error", data: { message: "所有成员发言均失败，辩论无法继续" } };
+      return;
     }
 
     yield { type: "round_complete", data: { round: 1 } };
@@ -438,6 +447,13 @@ export async function* runDiscussion(
           },
         };
       }
+    }
+
+    // Abort if all Round 2 pairs failed
+    const round2Successful = round2Context.filter((c) => !c.includes("[发言失败：")).length;
+    if (round2Successful === 0) {
+      yield { type: "error", data: { message: "交叉辩论环节所有发言均失败，无法继续总结" } };
+      return;
     }
 
     yield { type: "round_complete", data: { round: 2 } };

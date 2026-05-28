@@ -8,6 +8,14 @@ export interface StreamChunk {
   usage?: TokenUsage;
 }
 
+/** Average characters per output token — used for estimation when API doesn't report usage */
+const CHARS_PER_TOKEN = 3.5;
+
+/** Estimate output tokens from text length when the API doesn't report usage */
+function estimateOutputTokens(text: string): number {
+  return Math.ceil(text.length / CHARS_PER_TOKEN);
+}
+
 export interface AIProvider {
   name: string;
   chatCompletion(params: {
@@ -93,7 +101,7 @@ export class ClaudeProvider implements AIProvider {
 
     // Fallback: estimate output tokens if not provided by API
     if (outputTokens === 0 && outputText) {
-      outputTokens = Math.ceil(outputText.length / 3.5);
+      outputTokens = estimateOutputTokens(outputText);
     }
     yield { usage: { inputTokens, outputTokens } };
   }
@@ -152,7 +160,7 @@ export class OpenAIProvider implements AIProvider {
 
     // Fallback: estimate if API didn't return usage
     if (inputTokens === 0 && outputTokens === 0 && outputText) {
-      outputTokens = Math.ceil(outputText.length / 3.5);
+      outputTokens = estimateOutputTokens(outputText);
     }
     yield { usage: { inputTokens, outputTokens } };
   }
@@ -235,7 +243,7 @@ export class OpenRouterProvider implements AIProvider {
         }
 
         if (inputTokens === 0 && outputTokens === 0 && outputText) {
-          outputTokens = Math.ceil(outputText.length / 3.5);
+          outputTokens = estimateOutputTokens(outputText);
         }
         yield { usage: { inputTokens, outputTokens } };
         return; // success, exit generator
@@ -317,7 +325,7 @@ export class OllamaProvider implements AIProvider {
     }
 
     // Ollama doesn't return usage in streaming mode; estimate
-    const outputTokens = outputText ? Math.ceil(outputText.length / 3.5) : 0;
+    const outputTokens = outputText ? estimateOutputTokens(outputText) : 0;
     yield { usage: { inputTokens: 0, outputTokens } };
   }
 }
@@ -389,7 +397,7 @@ export class GeminiProvider implements AIProvider {
     }
 
     // Fallback estimate
-    const outputTokens = outputText ? Math.ceil(outputText.length / 3.5) : 0;
+    const outputTokens = outputText ? estimateOutputTokens(outputText) : 0;
     yield { usage: { inputTokens: 0, outputTokens } };
   }
 }

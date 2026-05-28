@@ -353,7 +353,22 @@ export function useDiscussion() {
           existingMessages,
         });
       } catch (err) {
-        if ((err as Error).name === "AbortError") return;
+        if ((err as Error).name === "AbortError") {
+          // Distinguish user-initiated abort from timeout abort
+          if (!controllerRef.current) {
+            // User called abort() — no error needed
+            return;
+          }
+          // Timeout abort — set error message
+          setState((prev) => ({
+            ...prev,
+            isRunning: false,
+            loadingMember: null,
+            retrying: null,
+            error: "请求超时（5 分钟），请检查 API 配置后重试",
+          }));
+          return;
+        }
         setState((prev) => ({
           ...prev,
           isRunning: false,

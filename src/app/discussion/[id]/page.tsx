@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { Discussion, AIProviderConfig, CabinetMember } from "@/lib/types";
 import DiscussionView from "@/components/discussion/DiscussionView";
 import { getUserId } from "@/lib/user";
+import { STATUS_COLORS, STATUS_LABELS } from "@/lib/constants";
 import { cabinetMembers as builtInMembers } from "@/data/personas";
 import { loadCustomMembers } from "@/lib/members";
 import ReactMarkdown from "react-markdown";
@@ -143,17 +144,11 @@ export default function DiscussionDetailPage() {
 }
 
 function StatusBadge({ status }: { status: Discussion["status"] }) {
-  const styles: Record<string, { bg: string; color: string; label: string }> = {
-    running: { bg: "rgba(234,179,8,0.1)", color: "#ca8a04", label: "进行中" },
-    completed: { bg: "rgba(34,197,94,0.1)", color: "#16a34a", label: "已完成" },
-    terminated: { bg: "rgba(107,114,128,0.1)", color: "#6b7280", label: "已终止" },
-    failed: { bg: "rgba(239,68,68,0.1)", color: "#ef4444", label: "失败" },
-    pending: { bg: "rgba(107,114,128,0.1)", color: "#6b7280", label: "待开始" },
-  };
-  const s = styles[status] ?? styles.pending;
+  const s = STATUS_COLORS[status ?? "pending"] ?? STATUS_COLORS.pending;
+  const label = STATUS_LABELS[status ?? "pending"] ?? "待开始";
   return (
     <span className="rounded-full px-2 py-0.5" style={{ backgroundColor: s.bg, color: s.color }}>
-      {s.label}
+      {label}
     </span>
   );
 }

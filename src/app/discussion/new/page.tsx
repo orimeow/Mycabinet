@@ -4,12 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { AIProviderConfig } from "@/lib/types";
 import DiscussionView from "@/components/discussion/DiscussionView";
-import { getUserId } from "@/lib/user";
-
-interface PendingConfig extends AIProviderConfig {
-  mode?: "debate" | "chat";
-  selectedMemberIds?: string[];
-}
+import { getUserId, DEFAULT_PROVIDER } from "@/lib/user";
 
 export default function NewDiscussionPage() {
   const router = useRouter();
@@ -27,21 +22,23 @@ export default function NewDiscussionPage() {
     setUserId(getUserId());
 
     const stored = sessionStorage.getItem("pending-question");
-    const storedConfig = sessionStorage.getItem("pending-config");
-    if (!stored || !storedConfig) {
+    const storedMeta = sessionStorage.getItem("pending-config");
+    if (!stored || !storedMeta) {
       router.push("/");
       return;
     }
     setQuestion(stored);
-    const parsed = JSON.parse(storedConfig) as PendingConfig;
+    const meta = JSON.parse(storedMeta) as { mode?: "debate" | "chat"; selectedMemberIds?: string[] };
+
+    // Read API config from localStorage — never stored in sessionStorage
     setConfig({
-      provider: parsed.provider,
-      apiKey: parsed.apiKey,
-      model: parsed.model,
-      baseUrl: parsed.baseUrl,
+      provider: (localStorage.getItem("ai-provider") as AIProviderConfig["provider"]) || DEFAULT_PROVIDER,
+      apiKey: localStorage.getItem("ai-api-key") || "",
+      model: localStorage.getItem("ai-model") || "google/gemma-4-31b-it:free",
+      baseUrl: localStorage.getItem("ai-base-url") || undefined,
     });
-    setMode(parsed.mode ?? "debate");
-    setSelectedMemberIds(parsed.selectedMemberIds ?? []);
+    setMode(meta.mode ?? "debate");
+    setSelectedMemberIds(meta.selectedMemberIds ?? []);
     sessionStorage.removeItem("pending-question");
     sessionStorage.removeItem("pending-config");
   }, [router]);
