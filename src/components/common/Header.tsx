@@ -4,13 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { getUserName, setUserName, checkApiConfig } from "@/lib/user";
-
-const navItems = [
-  { href: "/", label: "首页" },
-  { href: "/members", label: "成员" },
-  { href: "/history", label: "历史" },
-  { href: "/settings", label: "设置" },
-];
+import { useI18n } from "@/lib/i18n";
 
 function useHasAiConfig(): boolean {
   const [has, setHas] = useState(false);
@@ -25,31 +19,38 @@ function useHasAiConfig(): boolean {
 
 export default function Header() {
   const pathname = usePathname();
+  const { locale, setLocale, t } = useI18n();
   const [menuOpen, setMenuOpen] = useState(false);
   const [userName, setUserNameState] = useState<string | null>(null);
   const [showNameEdit, setShowNameEdit] = useState(false);
   const [editName, setEditName] = useState("");
   const hasConfig = useHasAiConfig();
 
-  useEffect(() => {
-    // Read nickname on mount
-    setUserNameState(getUserName());
+  const navItems = [
+    { href: "/", label: t("header.home") },
+    { href: "/members", label: t("header.members") },
+    { href: "/history", label: t("header.history") },
+    { href: "/settings", label: t("header.settings") },
+  ];
 
-    // Listen for storage changes (cross-tab sync)
+  useEffect(() => {
+    setUserNameState(getUserName());
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === "user-name") {
         setUserNameState(e.newValue);
       }
     };
-    window.addEventListener("storage", handleStorageChange);
-
-    // Listen for same-tab nickname change event
     const handleNameChange = () => setUserNameState(getUserName());
+    const handleLocaleChange = (e: CustomEvent) => {
+      // Cross-tab locale sync is handled by I18nProvider
+    };
+    window.addEventListener("storage", handleStorageChange);
     window.addEventListener("nickname-changed", handleNameChange);
-
+    window.addEventListener("locale-changed", handleLocaleChange as EventListener);
     return () => {
       window.removeEventListener("storage", handleStorageChange);
       window.removeEventListener("nickname-changed", handleNameChange);
+      window.removeEventListener("locale-changed", handleLocaleChange as EventListener);
     };
   }, []);
 
@@ -63,6 +64,10 @@ export default function Header() {
     setEditName("");
   };
 
+  const toggleLocale = () => {
+    setLocale(locale === "zh" ? "en" : "zh");
+  };
+
   return (
     <>
       <header className="sticky top-0 z-50 border-b bg-white/80 backdrop-blur-xl" style={{ borderColor: 'rgba(0,0,0,0.06)' }}>
@@ -73,7 +78,7 @@ export default function Header() {
                 <path d="M7 2L12 11H2L7 2Z" fill="white" />
               </svg>
             </div>
-            <span className="text-sm font-semibold tracking-tight">我的智囊团</span>
+            <span className="text-sm font-semibold tracking-tight">{t("header.appName")}</span>
           </Link>
 
           {/* Desktop nav */}
@@ -94,10 +99,18 @@ export default function Header() {
                 )}
               </Link>
             ))}
+            {/* Language toggle */}
+            <button
+              onClick={toggleLocale}
+              className="ml-1 rounded-md px-2 py-1 text-xs font-medium text-gray-400 transition-colors hover:bg-black/5 hover:text-gray-600"
+              title={t("common.language")}
+            >
+              {locale === "zh" ? "中" : "En"}
+            </button>
             {userName ? (
               <button
                 onClick={() => { setEditName(userName); setShowNameEdit(true); }}
-                className="ml-2 flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50"
+                className="ml-1 flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50"
                 style={{ borderColor: "rgba(0,0,0,0.08)" }}
               >
                 <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#1a1a1a] text-[10px] font-bold text-white">
@@ -108,9 +121,9 @@ export default function Header() {
             ) : (
               <button
                 onClick={() => setShowNameEdit(true)}
-                className="ml-2 rounded-md px-3 py-1 text-xs font-medium text-gray-400 transition-colors hover:bg-black/5 hover:text-gray-600"
+                className="ml-1 rounded-md px-3 py-1 text-xs font-medium text-gray-400 transition-colors hover:bg-black/5 hover:text-gray-600"
               >
-                设置昵称
+                {t("header.setNickname")}
               </button>
             )}
           </nav>
@@ -119,7 +132,7 @@ export default function Header() {
           <button
             className="flex h-8 w-8 items-center justify-center rounded-md md:hidden"
             onClick={() => setMenuOpen(!menuOpen)}
-            aria-label="菜单"
+            aria-label={t("header.menu")}
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               {menuOpen
@@ -161,10 +174,17 @@ export default function Header() {
               </Link>
             ))}
             <button
+              onClick={() => { setMenuOpen(false); toggleLocale(); }}
+              className="flex w-full items-center justify-between px-4 py-3 text-left text-sm font-medium text-gray-500 transition-colors hover:bg-black/5 hover:text-gray-900"
+            >
+              <span>{t("common.language")}</span>
+              <span className="text-xs text-gray-400">{locale === "zh" ? "中文" : "English"}</span>
+            </button>
+            <button
               onClick={() => { setMenuOpen(false); setShowNameEdit(true); }}
               className="block w-full px-4 py-3 text-left text-sm font-medium text-gray-500 transition-colors hover:bg-black/5 hover:text-gray-900"
             >
-              {userName ? `修改昵称 (${userName})` : "设置昵称"}
+              {userName ? `${t("header.editNickname")} (${userName})` : t("header.setNickname")}
             </button>
           </div>
         </div>
@@ -181,18 +201,20 @@ export default function Header() {
             style={{ borderColor: "rgba(0,0,0,0.08)" }}
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-lg font-semibold">{userName ? "修改昵称" : "怎么称呼你？"}</h3>
+            <h3 className="text-lg font-semibold">
+              {userName ? t("header.nicknameEditTitle") : t("header.nicknameTitle")}
+            </h3>
             <p className="mt-2 text-sm text-gray-500">
               {userName
-                ? "你可以随时修改显示的名称。"
-                : "设置一个昵称，让你的智囊团体验更个性化。"}
+                ? t("header.nicknameEditSubtitle")
+                : t("header.nicknameSubtitle")}
             </p>
             <input
               type="text"
               value={editName}
               onChange={(e) => setEditName(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSaveName()}
-              placeholder="如：小明"
+              placeholder={t("header.nicknamePlaceholder")}
               maxLength={12}
               className="mt-4 w-full rounded-md border bg-white px-3 py-2.5 text-base focus:outline-none focus:ring-1 focus:ring-gray-300"
               style={{ borderColor: "rgba(0,0,0,0.08)" }}
@@ -204,14 +226,14 @@ export default function Header() {
                 disabled={!editName.trim()}
                 className="flex-1 rounded-md bg-[#1a1a1a] px-4 py-2.5 text-sm font-semibold text-white transition-all hover:bg-[#333] active:scale-[0.98] disabled:opacity-50"
               >
-                保存
+                {t("common.save")}
               </button>
               <button
                 onClick={() => setShowNameEdit(false)}
                 className="flex-1 rounded-md border px-4 py-2.5 text-sm font-medium text-gray-600 transition-all hover:bg-gray-50"
                 style={{ borderColor: "rgba(0,0,0,0.08)" }}
               >
-                取消
+                {t("common.cancel")}
               </button>
             </div>
           </div>

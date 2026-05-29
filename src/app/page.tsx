@@ -7,6 +7,7 @@ import { AIProviderConfig, CabinetMember } from "@/lib/types";
 import { getUserId, getUserName, hasUserName, setUserName, checkApiConfig, isOnboardingComplete, markOnboardingComplete } from "@/lib/user";
 import { loadCustomMembers } from "@/lib/members";
 import MemberPicker from "@/components/common/MemberPicker";
+import { useI18n } from "@/lib/i18n";
 
 const debateQuestions = [
   "AI 是否会取代人类工作？我们该如何应对？",
@@ -65,6 +66,7 @@ function getRandomQuestions(pool: string[], count: number, seed: number): string
 }
 
 export default function Home() {
+  const { t } = useI18n();
   const router = useRouter();
   const [mode, setMode] = useState<"debate" | "chat">("debate");
   const [question, setQuestion] = useState("");
@@ -259,13 +261,13 @@ export default function Home() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M12 17.25a5.25 5.25 0 100-10.5 5.25 5.25 0 000 10.5z" />
             </svg>
             <span className="flex-1 text-amber-800">
-              尚未配置 AI Provider，无法开始讨论。
+              {t("home.apiNotConfiguredBanner")}
             </span>
             <button
               onClick={() => router.push("/settings")}
               className="shrink-0 rounded-md bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white transition-all hover:bg-amber-700"
             >
-              去设置
+              {t("home.goToSettings")}
             </button>
           </div>
         )}
