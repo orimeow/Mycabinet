@@ -174,7 +174,7 @@ async function handleDebate(
         if (resumeStartRound > 1) {
           for (let r = 1; r < resumeStartRound; r++) {
             controller.enqueue(encoder.encode(`event: round_start\ndata: ${JSON.stringify({ round: r })}\n\n`));
-            controller.enqueue(encoder.encode(`event: round_complete\data: ${JSON.stringify({ round: r })}\n\n`));
+            controller.enqueue(encoder.encode(`event: round_complete\ndata: ${JSON.stringify({ round: r })}\n\n`));
           }
         }
 
@@ -351,10 +351,10 @@ async function handleChat(
             // Initial request: include only the user's question, not other members' responses.
             // This prevents the LLM from echoing prior members' exact sentences.
             // The system prompt rule #9 reinforces this at the instruction level.
-            const sessionHistory: AIMessage[] = [
-              ...conversationHistory.filter((m) => m.role === "user"),
-              ...(message ? [{ role: "user" as const, content: message }] : []),
-            ];
+            // Initial request: only pass the user's question — no prior history exists yet.
+            const sessionHistory: AIMessage[] = message
+              ? [{ role: "user" as const, content: message }]
+              : [];
 
             for await (const event of runChatSession(
               message ?? "",
