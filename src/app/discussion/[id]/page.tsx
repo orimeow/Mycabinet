@@ -10,8 +10,10 @@ import { cabinetMembers as builtInMembers } from "@/data/personas";
 import { loadCustomMembers } from "@/lib/members";
 import ReactMarkdown from "react-markdown";
 import Avatar from "@/components/common/Avatar";
+import { useI18n } from "@/lib/i18n";
 
 export default function DiscussionDetailPage() {
+  const { t } = useI18n();
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
@@ -59,7 +61,7 @@ export default function DiscussionDetailPage() {
   if (loading) {
     return (
       <div className="flex h-[calc(100dvh-56px)] items-center justify-center">
-        <div className="text-sm text-gray-400">加载中...</div>
+        <div className="text-sm text-gray-400">{t("common.loading")}</div>
       </div>
     );
   }
@@ -67,12 +69,12 @@ export default function DiscussionDetailPage() {
   if (!discussion) {
     return (
       <div className="flex h-[calc(100dvh-56px)] flex-col items-center justify-center gap-3">
-        <p className="text-sm text-gray-400">讨论不存在</p>
+        <p className="text-sm text-gray-400">{t("error.discussionNotFound")}</p>
         <button
           onClick={() => router.push("/")}
           className="rounded-md bg-[#1a1a1a] px-4 py-2 text-sm text-white"
         >
-          返回首页
+          {t("detail.backToHome")}
         </button>
       </div>
     );
@@ -93,7 +95,7 @@ export default function DiscussionDetailPage() {
       >
         <h2 className="text-base md:text-lg font-bold tracking-tight break-words">{discussion.question}</h2>
         <div className="mt-1 md:mt-2 flex flex-wrap items-center gap-2 text-xs text-gray-400">
-          <span>{discussion.messages.length} 条发言</span>
+          <span>{t("detail.speechCount", { count: discussion.messages.length })}</span>
           <StatusBadge status={discussion.status} />
         </div>
         <div className="mt-2 md:mt-3 flex flex-wrap gap-2">
@@ -102,21 +104,21 @@ export default function DiscussionDetailPage() {
               onClick={handleResume}
               className="rounded-md bg-[#1a1a1a] px-3 py-1.5 text-xs text-white transition-colors hover:bg-[#333]"
             >
-              继续讨论
+              {t("detail.resume")}
             </button>
           )}
           <button
             onClick={() => router.push("/history")}
             className="rounded-md px-3 py-1.5 text-xs text-gray-500 transition-colors hover:bg-black/5"
           >
-            返回历史
+            {t("detail.backToHistory")}
           </button>
           {!isRunning && (
             <button
               onClick={() => router.push("/")}
               className="rounded-md bg-[#1a1a1a] px-3 py-1.5 text-xs text-white transition-colors hover:bg-[#333]"
             >
-              新讨论
+              {t("detail.newDiscussion")}
             </button>
           )}
         </div>
@@ -193,7 +195,7 @@ function DebateReadOnlyMessages({ messages, allMembers }: { messages: Discussion
     const member = allMembers.find((m) => m.id === msg.speakerId);
     const color = msg.speakerId === "moderator" ? "#6b7280" : (msg.speakerColor || member?.color || "#6b7280");
     const avatar = msg.speakerId === "moderator" ? null : (msg.speakerAvatar || member?.avatar);
-    const name = msg.speakerId === "moderator" ? "主持人" : (msg.speakerName || member?.nameZh || msg.speakerId);
+    const name = msg.speakerId === "moderator" ? "Moderator" : (msg.speakerName || member?.nameZh || msg.speakerId);
     return (
       <div
         key={msg.id}
@@ -206,7 +208,7 @@ function DebateReadOnlyMessages({ messages, allMembers }: { messages: Discussion
             {name}
           </span>
           {msg.round > 0 && (
-            <span className="text-xs text-gray-400">第{msg.round}轮</span>
+            <span className="text-xs text-gray-400">{t("discussion.roundLabel", { n: String(msg.round) })}</span>
           )}
         </div>
         <div className="mt-2 text-sm leading-relaxed text-gray-700 markdown-content">

@@ -4,6 +4,7 @@ import { getMemberById } from "@/data/personas";
 import Avatar from "@/components/common/Avatar";
 import { motion } from "framer-motion";
 import ReactMarkdown from "react-markdown";
+import { useI18n } from "@/lib/i18n";
 
 function formatTime(ts: string): string {
   return new Date(ts).toLocaleTimeString("zh-CN", {
@@ -19,6 +20,7 @@ interface Props {
 }
 
 export default function MessageBubble({ message, isActive, member }: Props) {
+  const { t } = useI18n();
   const resolvedMember =
     message.speakerId === "moderator"
       ? null
@@ -26,7 +28,7 @@ export default function MessageBubble({ message, isActive, member }: Props) {
         ? member
         : getMemberById(message.speakerId);
 
-  const name = resolvedMember?.nameZh || "主持人";
+  const name = resolvedMember?.nameZh || t("discussion.moderator");
   const nameEn = resolvedMember?.nameEn || "";
   const color = resolvedMember?.color || "#6B7280";
 
@@ -75,7 +77,7 @@ export default function MessageBubble({ message, isActive, member }: Props) {
           <span className="rounded-md bg-red-50 px-1.5 py-0.5 text-xs text-red-500"
             style={{ backgroundColor: "rgba(220,38,38,0.06)" }}
           >
-            → 挑战 {getMemberById(message.challengeTarget)?.nameZh}
+            → {getMemberById(message.challengeTarget)?.nameZh}
           </span>
         )}
       </div>
@@ -85,7 +87,7 @@ export default function MessageBubble({ message, isActive, member }: Props) {
         {message.content ? (
           <ReactMarkdown>{message.content}</ReactMarkdown>
         ) : (
-          <span className="animate-pulse text-gray-400">正在思考...</span>
+          <span className="animate-pulse text-gray-400">{t("discussion.thinking", { name })}</span>
         )}
       </div>
 

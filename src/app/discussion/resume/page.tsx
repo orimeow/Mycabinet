@@ -5,8 +5,10 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { Discussion, AIProviderConfig } from "@/lib/types";
 import DiscussionView from "@/components/discussion/DiscussionView";
 import { getUserId } from "@/lib/user";
+import { useI18n } from "@/lib/i18n";
 
 function ResumeContent() {
+  const { t } = useI18n();
   const searchParams = useSearchParams();
   const router = useRouter();
   const discussionId = searchParams.get("id");
@@ -36,7 +38,7 @@ function ResumeContent() {
   if (loading) {
     return (
       <div className="flex h-[calc(100dvh-56px)] items-center justify-center">
-        <div className="text-sm text-gray-400">正在连接讨论...</div>
+        <div className="text-sm text-gray-400">{t("resume.connecting")}</div>
       </div>
     );
   }
@@ -68,7 +70,7 @@ function ResumeContent() {
 
 export default function ResumeDiscussionPage() {
   return (
-    <Suspense fallback={<div className="flex h-[calc(100dvh-56px)] items-center justify-center"><div className="text-sm text-gray-400">加载中...</div></div>}>
+    <Suspense fallback={<div className="flex h-[calc(100dvh-56px)] items-center justify-center"><div className="text-sm text-gray-400">...</div></div>}>
       <ResumeContent />
     </Suspense>
   );

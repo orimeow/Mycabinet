@@ -7,8 +7,10 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { loadCustomMembers, invalidateCache } from "@/lib/members";
 import { getUserId } from "@/lib/user";
 import Avatar from "@/components/common/Avatar";
+import { useI18n } from "@/lib/i18n";
 
 function DetailContent({ selected, mobile, onEdit, onDelete }: { selected: CabinetMember; mobile?: boolean; onEdit?: () => void; onDelete?: () => void }) {
+  const { t } = useI18n();
   const isCustom = selected.source === "custom";
   return (
     <div className={mobile ? "rounded-md border bg-white/80 p-4 backdrop-blur-sm" : "rounded-md border bg-white/80 p-4 md:p-8 backdrop-blur-sm"}
@@ -23,7 +25,7 @@ function DetailContent({ selected, mobile, onEdit, onDelete }: { selected: Cabin
             <p className="text-sm text-gray-400">{selected.nameEn}</p>
             <p className="mt-0.5 text-xs text-gray-400">{selected.title}</p>
             {isCustom && (
-              <span className="mt-1 inline-block rounded-full bg-gray-100 px-2 py-0.5 text-[10px] text-gray-500">自定义</span>
+              <span className="mt-1 inline-block rounded-full bg-gray-100 px-2 py-0.5 text-[10px] text-gray-500">{t("members.source.custom")}</span>
             )}
           </div>
         </div>
@@ -33,14 +35,14 @@ function DetailContent({ selected, mobile, onEdit, onDelete }: { selected: Cabin
               onClick={onEdit}
               className="rounded-md px-2 py-1 text-xs text-gray-500 transition-colors hover:bg-black/5"
             >
-              编辑
+              {t("common.edit")}
             </button>
             <button
               onClick={onDelete}
               disabled={!onDelete}
               className="rounded-md px-2 py-1 text-xs text-red-400 transition-colors hover:bg-red-50 disabled:opacity-40"
             >
-              删除
+              {t("common.delete")}
             </button>
           </div>
         )}
@@ -49,13 +51,13 @@ function DetailContent({ selected, mobile, onEdit, onDelete }: { selected: Cabin
       <div className="grid gap-4 grid-cols-2">
         {/* Biography */}
         <div className="col-span-2">
-          <h3 className="text-sm font-bold text-gray-900">生平</h3>
+          <h3 className="text-sm font-bold text-gray-900">{t("members.biography")}</h3>
           <p className="mt-2 text-xs leading-relaxed text-gray-600">{selected.persona.biography}</p>
         </div>
 
         {/* Core Values */}
         <div>
-          <h3 className="text-sm font-bold text-gray-900">核心价值观</h3>
+          <h3 className="text-sm font-bold text-gray-900">{t("members.coreValues")}</h3>
           <ul className="mt-2 space-y-1.5">
             {selected.persona.coreValues.map((v, i) => (
               <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
@@ -71,7 +73,7 @@ function DetailContent({ selected, mobile, onEdit, onDelete }: { selected: Cabin
 
         {/* Decision Framework */}
         <div>
-          <h3 className="text-sm font-bold text-gray-900">决策框架</h3>
+          <h3 className="text-sm font-bold text-gray-900">{t("members.decisionFramework")}</h3>
           <ul className="mt-2 space-y-1.5">
             {selected.persona.decisionFramework.map((v, i) => (
               <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
@@ -87,13 +89,13 @@ function DetailContent({ selected, mobile, onEdit, onDelete }: { selected: Cabin
 
         {/* Speaking Style */}
         <div className="col-span-2">
-          <h3 className="text-sm font-bold text-gray-900">说话风格</h3>
+          <h3 className="text-sm font-bold text-gray-900">{t("members.speakingStyle")}</h3>
           <p className="mt-2 text-sm leading-relaxed text-gray-600">{selected.persona.speakingStyle}</p>
         </div>
 
         {/* Biases */}
         <div>
-          <h3 className="text-sm font-bold text-gray-900">已知偏见</h3>
+          <h3 className="text-sm font-bold text-gray-900">{t("members.biases")}</h3>
           <ul className="mt-2 space-y-1.5">
             {selected.persona.biases.map((b, i) => (
               <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
@@ -109,7 +111,7 @@ function DetailContent({ selected, mobile, onEdit, onDelete }: { selected: Cabin
 
         {/* Catchphrases */}
         <div>
-          <h3 className="text-sm font-bold text-gray-900">名言</h3>
+          <h3 className="text-sm font-bold text-gray-900">{t("members.catchphrases")}</h3>
           <ul className="mt-2 space-y-1.5">
             {selected.persona.catchphrases.map((p, i) => (
               <li key={i} className="text-sm italic leading-relaxed text-gray-600">
@@ -122,15 +124,15 @@ function DetailContent({ selected, mobile, onEdit, onDelete }: { selected: Cabin
         {/* Historical Views */}
         {Object.keys(selected.persona.historicalViews).length > 0 && (
           <div className="col-span-2">
-            <h3 className="text-sm font-bold text-gray-900">历史观点</h3>
+            <h3 className="text-sm font-bold text-gray-900">{t("members.historicalViews")}</h3>
             <div className="mt-2 grid gap-3 grid-cols-1">
               {Object.entries(selected.persona.historicalViews).map(([topic, view]) => {
                 const topicLabels: Record<string, string> = {
-                  ai: "人工智能",
-                  education: "教育",
-                  climate: "环境与能源",
-                  government: "政府与监管",
-                  wealth: "财富与投资",
+                  ai: t("members.topicLabel.ai"),
+                  education: t("members.topicLabel.education"),
+                  climate: t("members.topicLabel.climate"),
+                  government: t("members.topicLabel.government"),
+                  wealth: t("members.topicLabel.wealth"),
                 };
                 return (
                   <div
@@ -154,6 +156,7 @@ function DetailContent({ selected, mobile, onEdit, onDelete }: { selected: Cabin
 }
 
 function MembersPageContent() {
+  const { t } = useI18n();
   const searchParams = useSearchParams();
   const router = useRouter();
   const [selectedId, setSelectedId] = useState(builtInMembers[0].id);
@@ -202,7 +205,7 @@ function MembersPageContent() {
   const selected = allMembers.find((m) => m.id === selectedId) || builtInMembers[0];
 
   const handleDelete = async (memberId: string) => {
-    if (!confirm("确定要删除这个成员吗？相关的历史讨论仍可正常显示。")) return;
+    if (!confirm(t("members.deleteConfirm", { name: "" }))) return;
     if (deletingId) return;
     setDeletingId(memberId);
     try {
@@ -233,14 +236,14 @@ function MembersPageContent() {
         {/* Title */}
         <div className="mb-6 md:mb-8 flex items-start justify-between">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight md:text-4xl">内阁成员</h1>
-            <p className="mt-2 text-sm text-gray-400">了解每位成员的思想与决策框架</p>
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight md:text-4xl">{t("members.title")}</h1>
+            <p className="mt-2 text-sm text-gray-400">{t("members.pageSubtitle")}</p>
           </div>
           <button
             onClick={() => router.push("/members/edit")}
             className="shrink-0 rounded-md bg-[#1a1a1a] px-4 py-2 text-sm font-medium text-white transition-all hover:bg-[#333] active:scale-[0.98]"
           >
-            + 创建成员
+            {t("members.createMember")}
           </button>
         </div>
 
@@ -326,7 +329,7 @@ function MembersPageContent() {
                     <p className="text-sm text-gray-400">{selected.nameEn}</p>
                     <p className="mt-0.5 md:mt-1 text-xs text-gray-400">{selected.title}</p>
                     {selected.source === "custom" && (
-                      <span className="mt-1 inline-block rounded-full bg-gray-100 px-2 py-0.5 text-[10px] text-gray-500">自定义</span>
+                      <span className="mt-1 inline-block rounded-full bg-gray-100 px-2 py-0.5 text-[10px] text-gray-500">{t("members.source.custom")}</span>
                     )}
                   </div>
                 </div>
@@ -336,14 +339,14 @@ function MembersPageContent() {
                       onClick={() => router.push(`/members/edit?id=${selected.id}`)}
                       className="rounded-md px-2 py-1 text-xs text-gray-500 transition-colors hover:bg-black/5"
                     >
-                      编辑
+                      {t("common.edit")}
                     </button>
                     <button
                       onClick={() => handleDelete(selected.id)}
                       disabled={deletingId === selected.id}
                       className="rounded-md px-2 py-1 text-xs text-red-400 transition-colors hover:bg-red-50 disabled:opacity-40"
                     >
-                      {deletingId === selected.id ? "删除中..." : "删除"}
+                      {deletingId === selected.id ? t("members.deleting") : t("common.delete")}
                     </button>
                   </div>
                 )}
@@ -352,13 +355,13 @@ function MembersPageContent() {
               <div className="grid gap-4 md:gap-6 md:grid-cols-2">
                 {/* Biography */}
                 <div className="md:col-span-2">
-                  <h3 className="text-sm md:text-base font-bold text-gray-900">生平</h3>
+                  <h3 className="text-sm md:text-base font-bold text-gray-900">{t("members.biography")}</h3>
                   <p className="mt-2 text-xs md:text-sm leading-relaxed text-gray-600">{selected.persona.biography}</p>
                 </div>
 
                 {/* Core Values */}
                 <div>
-                  <h3 className="text-sm md:text-base font-bold text-gray-900">核心价值观</h3>
+                  <h3 className="text-sm md:text-base font-bold text-gray-900">{t("members.coreValues")}</h3>
                   <ul className="mt-2 md:mt-3 space-y-1.5 md:space-y-2">
                     {selected.persona.coreValues.map((v, i) => (
                       <li key={i} className="flex items-start gap-2 text-xs md:text-sm text-gray-600">
@@ -374,7 +377,7 @@ function MembersPageContent() {
 
                 {/* Decision Framework */}
                 <div>
-                  <h3 className="text-sm md:text-base font-bold text-gray-900">决策框架</h3>
+                  <h3 className="text-sm md:text-base font-bold text-gray-900">{t("members.decisionFramework")}</h3>
                   <ul className="mt-2 md:mt-3 space-y-1.5 md:space-y-2">
                     {selected.persona.decisionFramework.map((v, i) => (
                       <li key={i} className="flex items-start gap-2 text-xs md:text-sm text-gray-600">
@@ -390,13 +393,13 @@ function MembersPageContent() {
 
                 {/* Speaking Style */}
                 <div className="md:col-span-2">
-                  <h3 className="text-sm md:text-base font-bold text-gray-900">说话风格</h3>
+                  <h3 className="text-sm md:text-base font-bold text-gray-900">{t("members.speakingStyle")}</h3>
                   <p className="mt-2 text-xs md:text-sm leading-relaxed text-gray-600">{selected.persona.speakingStyle}</p>
                 </div>
 
                 {/* Biases */}
                 <div>
-                  <h3 className="text-sm md:text-base font-bold text-gray-900">已知偏见</h3>
+                  <h3 className="text-sm md:text-base font-bold text-gray-900">{t("members.biases")}</h3>
                   <ul className="mt-2 md:mt-3 space-y-1.5 md:space-y-2">
                     {selected.persona.biases.map((b, i) => (
                       <li key={i} className="flex items-start gap-2 text-xs md:text-sm text-gray-600">
@@ -412,7 +415,7 @@ function MembersPageContent() {
 
                 {/* Catchphrases */}
                 <div>
-                  <h3 className="text-sm md:text-base font-bold text-gray-900">名言</h3>
+                  <h3 className="text-sm md:text-base font-bold text-gray-900">{t("members.catchphrases")}</h3>
                   <ul className="mt-2 md:mt-3 space-y-1.5 md:space-y-2">
                     {selected.persona.catchphrases.map((p, i) => (
                       <li key={i} className="text-xs md:text-sm italic leading-relaxed text-gray-600">
@@ -425,15 +428,15 @@ function MembersPageContent() {
                 {/* Historical Views */}
                 {Object.keys(selected.persona.historicalViews).length > 0 && (
                   <div className="md:col-span-2">
-                    <h3 className="text-sm md:text-base font-bold text-gray-900">历史观点</h3>
+                    <h3 className="text-sm md:text-base font-bold text-gray-900">{t("members.historicalViews")}</h3>
                     <div className="mt-2 md:mt-3 grid gap-3 md:grid-cols-2">
                       {Object.entries(selected.persona.historicalViews).map(([topic, view]) => {
                         const topicLabels: Record<string, string> = {
-                          ai: "人工智能",
-                          education: "教育",
-                          climate: "环境与能源",
-                          government: "政府与监管",
-                          wealth: "财富与投资",
+                          ai: t("members.topicLabel.ai"),
+                          education: t("members.topicLabel.education"),
+                          climate: t("members.topicLabel.climate"),
+                          government: t("members.topicLabel.government"),
+                          wealth: t("members.topicLabel.wealth"),
                         };
                         return (
                           <div
@@ -462,7 +465,7 @@ function MembersPageContent() {
 
 export default function MembersPage() {
   return (
-    <Suspense fallback={<div className="flex h-screen items-center justify-center text-sm text-gray-400">加载中...</div>}>
+    <Suspense fallback={<div className="flex h-screen items-center justify-center text-sm text-gray-400">...</div>}>
       <MembersPageContent />
     </Suspense>
   );

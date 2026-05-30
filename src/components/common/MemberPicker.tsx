@@ -4,6 +4,7 @@ import { cabinetMembers as builtInMembers } from "@/data/personas";
 import type { CabinetMember } from "@/lib/types";
 import { useEffect, useRef } from "react";
 import Avatar from "@/components/common/Avatar";
+import { useI18n } from "@/lib/i18n";
 
 interface Props {
   mode: "debate" | "chat";
@@ -16,6 +17,7 @@ interface Props {
 }
 
 export default function MemberPicker({ mode, selectedIds, onChange, onClose, onSelect, members }: Props) {
+  const { t } = useI18n();
   const allMembers = members ?? builtInMembers;
   const overlayRef = useRef<HTMLDivElement>(null);
 
@@ -51,7 +53,7 @@ export default function MemberPicker({ mode, selectedIds, onChange, onClose, onS
       >
         <div className="flex items-center justify-between">
           <h3 className="text-base font-semibold">
-            {mode === "debate" ? "选择辩论成员" : "选择聊天对象"}
+            {mode === "debate" ? t("picker.title.debate") : t("picker.title.chat")}
           </h3>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -61,8 +63,8 @@ export default function MemberPicker({ mode, selectedIds, onChange, onClose, onS
         </div>
 
         <p className="mt-1 text-xs text-gray-400">
-          {mode === "debate" ? "辩论至少需要 2 位成员" : "聊天至少需要 1 位成员"}
-          {selectedIds.length > 0 && ` · 已选 ${selectedIds.length} 位`}
+          {mode === "debate" ? t("picker.title.debate") : t("picker.title.chat")}
+          {selectedIds.length > 0 && ` · ${t("picker.selected", { count: selectedIds.length })}`}
         </p>
 
         <div className="mt-4 grid grid-cols-3 gap-2">
@@ -98,9 +100,7 @@ export default function MemberPicker({ mode, selectedIds, onChange, onClose, onS
 
         <div className="mt-5 flex items-center justify-between">
           <span className={`text-xs ${selectedIds.length < minCount ? "text-amber-600" : "text-green-600"}`}>
-            {selectedIds.length < minCount
-              ? `还需选择 ${minCount - selectedIds.length} 位`
-              : `${selectedIds.length} 位成员已选择`}
+            {t("picker.selected", { count: selectedIds.length })}
           </span>
           <button
             onClick={onClose}
@@ -111,7 +111,7 @@ export default function MemberPicker({ mode, selectedIds, onChange, onClose, onS
             }`}
             disabled={selectedIds.length < minCount}
           >
-            确认
+            {t("picker.confirm")}
           </button>
         </div>
       </div>

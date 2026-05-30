@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { AIProviderConfig } from "@/lib/types";
 import { getUserId, DEFAULT_PROVIDER } from "@/lib/user";
+import { useI18n } from "@/lib/i18n";
 
 const PROVIDER_OPTIONS = [
   { value: "gemini", label: "Google Gemini", defaultModel: "gemini-2.0-flash" },
@@ -60,6 +61,7 @@ function getStored(key: string, fallback: string) {
 }
 
 export default function SettingsPage() {
+  const { t } = useI18n();
   const [provider, setProvider] = useState(DEFAULT_PROVIDER);
   const [apiKey, setApiKey] = useState("");
   const [model, setModel] = useState("gemini-2.0-flash");
@@ -95,7 +97,6 @@ export default function SettingsPage() {
     localStorage.setItem("ai-token-limit", String(tokenLimit));
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
-    // Notify other pages (e.g. homepage) that config has changed
     window.dispatchEvent(new StorageEvent("storage", { key: "ai-api-key" }));
   };
 
@@ -104,7 +105,7 @@ export default function SettingsPage() {
     setTestResult(null);
 
     if (provider !== "ollama" && !apiKey.trim()) {
-      setTestResult("请先输入 API Key");
+      setTestResult(t("settings.errorEnterApiKey"));
       setTesting(false);
       return;
     }
@@ -140,24 +141,21 @@ export default function SettingsPage() {
     if (opt) setModel(opt.defaultModel);
   };
 
-  const borderColor = 'rgba(0,0,0,0.06)';
+  const borderColor = "rgba(0,0,0,0.06)";
 
   return (
     <div className="relative min-h-screen overflow-hidden">
-      {/* Gradient mesh background */}
       <div className="pointer-events-none fixed inset-0">
         <div className="absolute -left-40 -top-40 h-[600px] w-[600px] rounded-full bg-gradient-to-br from-pink-200/40 to-orange-200/40 blur-3xl" />
         <div className="absolute -right-40 top-1/3 h-[500px] w-[500px] rounded-full bg-gradient-to-br from-teal-200/30 to-cyan-200/30 blur-3xl" />
       </div>
 
       <main className="relative mx-auto max-w-3xl px-4 py-4 md:px-6 md:py-6">
-        {/* Title */}
         <div className="mb-6">
-          <h1 className="text-lg md:text-xl font-semibold">设置</h1>
-          <p className="mt-1 text-sm text-gray-400">配置 AI 供应商和 API 密钥</p>
+          <h1 className="text-lg md:text-xl font-semibold">{t("settings.pageTitle")}</h1>
+          <p className="mt-1 text-sm text-gray-400">{t("settings.pageSubtitle")}</p>
         </div>
 
-        {/* User account ID */}
         {userId && (
           <div className="mb-3 rounded-md border bg-white p-4" style={{ borderColor }}>
             <div className="flex items-center gap-3">
@@ -167,35 +165,30 @@ export default function SettingsPage() {
                 </svg>
               </div>
               <div className="min-w-0">
-                <p className="text-xs font-medium text-gray-400">设备 ID</p>
+                <p className="text-xs font-medium text-gray-400">{t("settings.deviceId")}</p>
                 <p className="font-mono text-sm font-medium text-gray-700 truncate">{userId}</p>
               </div>
             </div>
           </div>
         )}
 
-        {/* Current active config indicator */}
         {isConfigured && (
           <div className="mb-3 rounded-md border bg-emerald-50 p-3" style={{ borderColor: "rgba(16,185,129,0.2)" }}>
             <p className="text-xs text-emerald-700">
-              当前生效：<strong>{PROVIDER_LABELS[provider]}</strong> · {model}
+              {t("settings.currentActive")}<strong>{PROVIDER_LABELS[provider]}</strong> · {model}
             </p>
           </div>
         )}
 
-        {/* AI Config Card */}
         <div className="rounded-md border bg-white p-5" style={{ borderColor }}>
-          {/* Provider selection */}
-          <p className="mb-3 text-xs font-medium uppercase tracking-wider text-gray-400">AI 供应商</p>
+          <p className="mb-3 text-xs font-medium uppercase tracking-wider text-gray-400">{t("settings.aiProvider")}</p>
           <div className="grid grid-cols-2 gap-2 md:grid-cols-3 mb-5">
             {PROVIDER_OPTIONS.map((opt) => (
               <button
                 key={opt.value}
                 onClick={() => handleProviderChange(opt.value)}
                 className={`rounded-md px-3 py-3 text-sm font-medium transition-all duration-200 ${
-                  provider === opt.value
-                    ? 'bg-[#1a1a1a] text-white'
-                    : 'border text-gray-600 hover:bg-gray-50'
+                  provider === opt.value ? "bg-[#1a1a1a] text-white" : "border text-gray-600 hover:bg-gray-50"
                 }`}
                 style={{ borderColor: provider === opt.value ? undefined : borderColor, borderWidth: provider === opt.value ? undefined : 1 }}
               >
@@ -204,13 +197,11 @@ export default function SettingsPage() {
             ))}
           </div>
 
-          {/* Divider */}
           <div className="border-t my-4" style={{ borderColor }} />
 
-          {/* API Key / Ollama URL */}
           {provider === "ollama" ? (
             <div className="mb-5">
-              <p className="mb-2 text-xs font-medium uppercase tracking-wider text-gray-400">服务地址</p>
+              <p className="mb-2 text-xs font-medium uppercase tracking-wider text-gray-400">{t("settings.baseUrl")}</p>
               <input
                 type="text"
                 value={baseUrl}
@@ -222,7 +213,7 @@ export default function SettingsPage() {
             </div>
           ) : (
             <div className="mb-5">
-              <p className="mb-2 text-xs font-medium uppercase tracking-wider text-gray-400">API Key</p>
+              <p className="mb-2 text-xs font-medium uppercase tracking-wider text-gray-400">{t("settings.apiKey")}</p>
               <input
                 type="password"
                 value={apiKey}
@@ -232,46 +223,31 @@ export default function SettingsPage() {
                 style={{ borderColor }}
               />
               {provider === "openrouter" && (
-                <p className="mt-2 text-xs text-gray-400">
-                  在 openrouter.ai 获取 API Key，免费模型无需付费。
-                </p>
+                <p className="mt-2 text-xs text-gray-400">{t("settings.openrouterHint")}</p>
               )}
               {provider === "bailian" && (
-                <p className="mt-2 text-xs text-gray-400">
-                  在阿里云百炼控制台创建 API Key，使用 OpenAI 兼容格式。
-                </p>
+                <p className="mt-2 text-xs text-gray-400">{t("settings.bailianHint")}</p>
               )}
             </div>
           )}
 
-          {/* Divider */}
           <div className="border-t my-4" style={{ borderColor }} />
 
-          {/* Model */}
           <div>
-            <p className="mb-2 text-xs font-medium uppercase tracking-wider text-gray-400">模型</p>
+            <p className="mb-2 text-xs font-medium uppercase tracking-wider text-gray-400">{t("settings.model")}</p>
             <input
               type="text"
               value={model}
               onChange={(e) => setModel(e.target.value)}
-              placeholder="模型名称"
+              placeholder={t("settings.modelPlaceholder")}
               className="w-full rounded-md border bg-gray-50 px-4 py-3 text-sm focus:border-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-300"
               style={{ borderColor }}
             />
-
-            {/* Model quick-select */}
             {provider === "gemini" && (
               <div className="mt-3 flex flex-wrap gap-1.5">
                 {GEMINI_MODELS.map((m) => (
-                  <button
-                    key={m}
-                    onClick={() => setModel(m)}
-                    className={`rounded-md px-3 py-1.5 text-xs transition-colors ${
-                      model === m
-                        ? 'bg-[#1a1a1a] text-white'
-                        : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-                    }`}
-                  >
+                  <button key={m} onClick={() => setModel(m)}
+                    className={`rounded-md px-3 py-1.5 text-xs transition-colors ${model === m ? "bg-[#1a1a1a] text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200"}`}>
                     {m}
                   </button>
                 ))}
@@ -280,15 +256,8 @@ export default function SettingsPage() {
             {provider === "openrouter" && (
               <div className="mt-3 flex flex-wrap gap-1.5">
                 {OPENROUTER_FREE_MODELS.map((m) => (
-                  <button
-                    key={m}
-                    onClick={() => setModel(m)}
-                    className={`rounded-md px-3 py-1.5 text-xs transition-colors ${
-                      model === m
-                        ? 'bg-[#1a1a1a] text-white'
-                        : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-                    }`}
-                  >
+                  <button key={m} onClick={() => setModel(m)}
+                    className={`rounded-md px-3 py-1.5 text-xs transition-colors ${model === m ? "bg-[#1a1a1a] text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200"}`}>
                     {m.split("/")[1]}
                   </button>
                 ))}
@@ -297,15 +266,8 @@ export default function SettingsPage() {
             {provider === "bailian" && (
               <div className="mt-3 flex flex-wrap gap-1.5">
                 {BAILIAN_MODELS.map((m) => (
-                  <button
-                    key={m}
-                    onClick={() => setModel(m)}
-                    className={`rounded-md px-3 py-1.5 text-xs transition-colors ${
-                      model === m
-                        ? 'bg-[#1a1a1a] text-white'
-                        : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-                    }`}
-                  >
+                  <button key={m} onClick={() => setModel(m)}
+                    className={`rounded-md px-3 py-1.5 text-xs transition-colors ${model === m ? "bg-[#1a1a1a] text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200"}`}>
                     {m}
                   </button>
                 ))}
@@ -314,36 +276,22 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        {/* Token limit config */}
         <div className="mt-3 rounded-md border bg-white p-5" style={{ borderColor }}>
           <div className="flex items-center justify-between mb-3">
-            <p className="text-xs font-medium uppercase tracking-wider text-gray-400">Token 消耗上限</p>
-            <span className="text-xs text-gray-500">
-              {tokenLimit.toLocaleString()} tokens
-            </span>
+            <p className="text-xs font-medium uppercase tracking-wider text-gray-400">{t("settings.tokenLimitLabel")}</p>
+            <span className="text-xs text-gray-500">{tokenLimit.toLocaleString()} tokens</span>
           </div>
           <input
-            type="range"
-            min="5000"
-            max="500000"
-            step="5000"
-            value={tokenLimit}
+            type="range" min="5000" max="500000" step="5000" value={tokenLimit}
             onChange={(e) => setTokenLimit(Number(e.target.value))}
             className="w-full accent-gray-800"
           />
           <div className="mt-2 flex justify-between text-xs text-gray-400">
-            <span>5K</span>
-            <span>50K</span>
-            <span>100K</span>
-            <span>200K</span>
-            <span>500K</span>
+            <span>5K</span><span>50K</span><span>100K</span><span>200K</span><span>500K</span>
           </div>
-          <p className="mt-2 text-xs text-gray-400">
-            当单次讨论的 Token 消耗超过此上限时，讨论将被自动终止。
-          </p>
+          <p className="mt-2 text-xs text-gray-400">{t("settings.tokenLimitHelp")}</p>
         </div>
 
-        {/* Actions row */}
         <div className="flex items-center gap-3 mt-3">
           <div className="flex items-center gap-3">
             <button
@@ -352,11 +300,11 @@ export default function SettingsPage() {
               className="rounded-md border px-5 py-3 text-sm font-medium transition-all duration-200 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
               style={{ borderColor }}
             >
-              {testing ? "测试中..." : "测试连接"}
+              {testing ? t("settings.testing") : t("settings.testConnection")}
             </button>
             {testResult && (
               <span className={`text-sm ${testResult === "ok" ? "text-green-600" : "text-red-600"}`}>
-                {testResult === "ok" ? "✓ 连接成功" : `✗ ${testResult.slice(4)}`}
+                {testResult === "ok" ? t("settings.testSuccess") : `✗ ${testResult.slice(4)}`}
               </span>
             )}
             <div className="flex-1" />
@@ -364,7 +312,7 @@ export default function SettingsPage() {
               onClick={handleSave}
               className="rounded-md bg-[#1a1a1a] px-5 py-3 text-sm font-medium text-white transition-all hover:bg-[#333] active:scale-[0.98]"
             >
-              {saved ? "✓ 已保存" : "保存设置"}
+              {saved ? t("settings.savedShort") : t("settings.saveSettings")}
             </button>
           </div>
         </div>

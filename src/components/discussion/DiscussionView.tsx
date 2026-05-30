@@ -9,9 +9,7 @@ import RoundDivider from "./RoundDivider";
 import { AIProviderConfig } from "@/lib/types";
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import Avatar from "@/components/common/Avatar";
-
-const PLACEHOLDER_DESKTOP = "输入消息，@成员 定向提问，或留空让所有成员回复";
-const PLACEHOLDER_MOBILE = "输入消息，@成员 定向提问";
+import { useI18n } from "@/lib/i18n";
 
 // Per-discussionId set to prevent StrictMode double-mount from starting the same discussion twice.
 // Uses a Set keyed by discussionId (or a synthetic key) so multiple DiscussionView instances don't interfere.
@@ -45,6 +43,7 @@ export default function DiscussionView({
   mode = "debate",
   selectedMemberIds = [],
 }: Props) {
+  const { t } = useI18n();
   const { state, startDiscussion, sendMessage, terminateDiscussion: abortLocal } = useDiscussion();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [autoScroll, setAutoScroll] = useState(true);
@@ -261,7 +260,7 @@ export default function DiscussionView({
     const lines: string[] = [];
     lines.push(`# 讨论：${state.question || question}`);
     lines.push("");
-    lines.push(`**模式**：${isDebate ? "辩论" : "聊天"}`);
+    lines.push(`**${t("common.settings")}**：${isDebate ? t("home.debate") : t("home.chat")}`);
     const participantNames = sidebarMembers.map((m) => m.nameZh).join("、");
     lines.push(`**成员**：${participantNames}`);
     lines.push(`**时间**：${new Date().toLocaleString("zh-CN")}`);
@@ -281,7 +280,7 @@ export default function DiscussionView({
         lines.push("");
         for (const msg of roundMessages) {
           const member = memberMap.get(msg.speakerId);
-          const name = member?.nameZh || (msg.speakerId === "moderator" ? "主持人" : msg.speakerId);
+          const name = member?.nameZh || (msg.speakerId === "moderator" ? t("discussion.moderator") : msg.speakerId);
           lines.push(`### ${name}`);
           if (msg.challengeTarget) {
             const target = memberMap.get(msg.challengeTarget)?.nameZh || msg.challengeTarget;
@@ -313,7 +312,7 @@ export default function DiscussionView({
       await navigator.clipboard.writeText(text);
       alert(`已复制${label}到剪贴板`);
     } catch {
-      alert("复制失败，请手动复制");
+      alert(t("discussion.copyFailed"));
     }
   }, []);
 
@@ -352,7 +351,7 @@ export default function DiscussionView({
         style={{ borderColor: "rgba(0,0,0,0.06)" }}
       >
         <h3 className="mb-4 text-xs font-medium uppercase tracking-wider text-gray-400">
-          {isDebate ? "参与成员" : "对话对象"}
+          {isDebate ? t("discussion.participants.debate") : t("discussion.participants.chat")}
         </h3>
         <SidebarMembers members={sidebarMembers} state={state} isDebate={isDebate} onMemberClick={handleSidebarMemberClick} chatInput={chatInput} />
       </div>
@@ -367,7 +366,7 @@ export default function DiscussionView({
           <div className="min-w-0 flex-1">
             <h2 className="text-base md:text-lg font-bold tracking-tight break-words">{state.question || question}</h2>
             <div className="mt-1 md:mt-2 flex flex-wrap items-center gap-2 text-xs text-gray-400">
-              <span>已发言 {state.messages.length} 条</span>
+              <span>{t("history.speechCount", { count: state.messages.length })}</span>
               {state.loadingMember && (
                 <span className="flex items-center gap-1.5 text-gray-600">
                   <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-gray-400" />
@@ -377,11 +376,11 @@ export default function DiscussionView({
               {state.isRunning && !state.loadingMember && (
                 <span className="flex items-center gap-1.5 text-gray-600">
                   <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-gray-400" />
-                  {isDebate ? "讨论进行中" : "AI 正在回复..."}
+                  {isDebate ? t("discussion.running") : t("discussion.aiReplying")}
                 </span>
               )}
               {!state.isRunning && state.messages.length > 0 && (
-                <span className="text-green-600">✓ 完成</span>
+                <span className="text-green-600">✓ {t("discussion.completed")}</span>
               )}
             </div>
             {isDebate && (
@@ -401,7 +400,7 @@ export default function DiscussionView({
           <button
             className="shrink-0 flex h-8 w-8 items-center justify-center rounded-md md:hidden"
             onClick={() => setMobileSidebarOpen(true)}
-            aria-label="查看成员"
+            aria-label={t("members.title")}
           >
             <svg className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -420,7 +419,7 @@ export default function DiscussionView({
             >
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-xs font-medium uppercase tracking-wider text-gray-400">
-                  {isDebate ? "参与成员" : "对话对象"}
+                  {isDebate ? t("discussion.participants.debate") : t("discussion.participants.chat")}
                 </h3>
                 <button onClick={() => setMobileSidebarOpen(false)} className="text-gray-400 hover:text-gray-600">
                   <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -447,8 +446,8 @@ export default function DiscussionView({
                   <span className="inline-block h-2 w-2 animate-bounce rounded-full bg-gray-400" style={{ animationDelay: "150ms" }} />
                   <span className="inline-block h-2 w-2 animate-bounce rounded-full bg-gray-400" style={{ animationDelay: "300ms" }} />
                 </div>
-                <p className="text-sm text-gray-500">{state.loadingMember || "正在连接 AI..."}</p>
-                <p className="mt-1 text-xs text-gray-400">AI 模型正在连接中...</p>
+                <p className="text-sm text-gray-500">{state.loadingMember || t("discussion.connecting")}</p>
+                <p className="mt-1 text-xs text-gray-400">{t("discussion.connecting")}</p>
               </div>
             )}
 
@@ -573,10 +572,10 @@ export default function DiscussionView({
                 }}
                 placeholder={
                   state.isRunning
-                    ? "AI 正在回复..."
+                    ? t("discussion.aiReplying")
                     : isMobile
-                      ? "输入消息，@成员 提问"
-                      : "输入消息，@成员 定向提问，或留空让所有成员回复"
+                      ? t("discussion.inputMobile")
+                      : t("discussion.inputDesktop")
                 }
                 disabled={state.isRunning}
                 rows={1}
@@ -600,7 +599,7 @@ export default function DiscussionView({
               <div className="flex items-center gap-2 text-xs text-gray-400">
                 <span className="hidden sm:inline">
                   {config.provider === "openrouter" ? "OpenRouter" : config.provider} ·{" "}
-                  {config.model || "默认模型"}
+                  {config.model || t("settings.model")}
                 </span>
                 <span className="hidden md:inline">
                   {externalDiscussionId && (
@@ -622,7 +621,7 @@ export default function DiscussionView({
                     <button
                       onClick={() => setShowExportMenu((v) => !v)}
                       className="rounded-lg px-2.5 py-1.5 text-xs text-gray-500 transition-colors hover:bg-black/5 md:px-3"
-                      title="导出讨论"
+                      title={t("discussion.export")}
                     >
                       导出
                     </button>
@@ -665,7 +664,7 @@ export default function DiscussionView({
                   onClick={() => setAutoScroll(!autoScroll)}
                   className="rounded-lg px-2.5 py-1.5 text-xs text-gray-400 transition-colors hover:bg-black/5 md:px-3"
                 >
-                  {autoScroll ? "暂停" : "滚动"}
+                  {autoScroll ? t("discussion.pause") : t("discussion.scroll")}
                 </button>
               </div>
             </div>

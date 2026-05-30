@@ -1,0 +1,37 @@
+{
+  "id": "d-1780145894666-b26dc3",
+  "question": "我手里有50万，是买房还是创业？",
+  "userId": "test-user-07",
+  "mode": "chat",
+  "selectedMemberIds": [
+    "musk",
+    "stevejobs"
+  ],
+  "messages": [
+    {
+      "id": "chat-musk-1780145895593",
+      "round": 0,
+      "speakerId": "musk",
+      "speakerName": "埃隆·马斯克",
+      "speakerColor": "#38A169",
+      "speakerAvatar": "https://cdn.jsdelivr.net/gh/orimeow/Mycabinet@main/public/avatars/musk.webp",
+      "content": "先算物理成本。买房是资产，创业是负债。50万能买什么房？一线城市只能买个厕所。但50万能造什么？一辆电动车的电池成本才8万。你要是想让钱生钱，得选能乘以10倍的赛道。别被房地产绑架了。",
+      "timestamp": "2026-05-30T12:58:15.593Z",
+      "sender": "member"
+    },
+    {
+      "id": "chat-stevejobs-1780145899474",
+      "round": 0,
+      "speakerId": "stevejobs",
+      "speakerName": "史蒂夫·乔布斯",
+      "speakerColor": "#6366F1",
+      "speakerAvatar": "https://cdn.jsdelivr.net/gh/orimeow/Mycabinet@main/public/avatars/jobs.jpg",
+      "content": "我不会问这个问题。这不是一个需要选择的问题，而是一个需要判断的问题。你有没有想过，为什么你会觉得必须在这两者之间做选择？50万不是用来做选择题的，而是用来创造价值的。\n\n如果你要买房，那你要问自己：这房子是让你的生活更简单，还是更复杂？如果是后者，那你可能在用金钱换焦虑。而创业呢？它不是冒险，是责任。你得先问问自己：你有没有准备好承担失败的风险？有没有准备好面对那些不理解你的人？\n\n别让别人告诉你该做什么。你有50万，那就去做一件能让你睡得着觉的事。如果那件事是创业，那就去做；如果是买房，也去。但别让恐惧或社会期望来决定你的选择。你的时间比钱更宝贵，而时间只能用一次。",
+      "timestamp": "2026-05-30T12:58:19.474Z",
+      "sender": "member"
+    }
+  ],
+  "status": "running",
+  "createdAt": "2026-05-30T12:58:14.666Z",
+  "provider": "bailian"
+}

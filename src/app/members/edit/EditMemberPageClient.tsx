@@ -6,6 +6,7 @@ import { CabinetMember, PersonaDoc, AIProviderConfig } from "@/lib/types";
 import { getUserId, DEFAULT_PROVIDER } from "@/lib/user";
 import { loadCustomMembers } from "@/lib/members";
 import Avatar from "@/components/common/Avatar";
+import { useI18n } from "@/lib/i18n";
 
 const DEFAULT_PERSONA: PersonaDoc = {
   biography: "",
@@ -64,6 +65,7 @@ function getStoredConfig(): AIProviderConfig | null {
 }
 
 export default function EditMemberPageClient() {
+  const { t } = useI18n();
   const router = useRouter();
   const searchParams = useSearchParams();
   const editId = searchParams.get("id");
@@ -107,9 +109,9 @@ export default function EditMemberPageClient() {
             },
           });
           if (found.avatar && found.avatar.startsWith("data:")) {
-            setAvatarFileName("已上传图片");
+            setAvatarFileName(t("edit.uploadedImage"));
           } else if (found.avatar) {
-            setAvatarFileName("外部链接");
+            setAvatarFileName(t("edit.externalLink"));
             setUseUrlAvatar(true);
           }
         }
@@ -128,7 +130,7 @@ export default function EditMemberPageClient() {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 2 * 1024 * 1024) {
-      alert("图片大小不能超过 2MB");
+      alert(t("edit.imageTooLarge"));
       return;
     }
     const reader = new FileReader();
@@ -138,7 +140,7 @@ export default function EditMemberPageClient() {
       setAvatarFileName(file.name);
     };
     reader.onerror = () => {
-      alert("图片读取失败，请重试");
+      alert(t("edit.imageReadFailed"));
     };
     reader.readAsDataURL(file);
   }, []);
@@ -150,12 +152,12 @@ export default function EditMemberPageClient() {
 
   const handleDistill = async () => {
     if (!distillName.trim()) {
-      setDistillError("请输入名人名字");
+      setDistillError(t("edit.distillError.missingName"));
       return;
     }
     const config = getStoredConfig();
     if (!config) {
-      setDistillError("请先配置 AI Provider（设置页面）");
+      setDistillError(t("edit.distillError.missingConfig"));
       return;
     }
     setDistilling(true);
@@ -167,7 +169,7 @@ export default function EditMemberPageClient() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: distillName.trim(), config }),
       });
-      const data = await res.json().catch(() => ({ error: "服务器响应异常" }));
+      const data = await res.json().catch(() => ({ error: t("error.serverError") }));
       if (!res.ok) {
         throw new Error(data.error || "蒸馏失败");
       }
@@ -187,7 +189,7 @@ export default function EditMemberPageClient() {
       }
       setCreationMode("manual");
     } catch (err) {
-      setDistillError(err instanceof Error ? err.message : "蒸馏失败，请重试");
+      setDistillError(err instanceof Error ? err.message : t("edit.distillError.failed"));
     } finally {
       setDistilling(false);
     }
@@ -195,11 +197,11 @@ export default function EditMemberPageClient() {
 
   const handleSave = async () => {
     if (!member.nameZh || !member.nameEn) {
-      alert("请填写成员名称");
+      alert(t("edit.missingName"));
       return;
     }
     if (!member.persona.biography) {
-      alert("请填写生平介绍");
+      alert(t("edit.missingBiography"));
       return;
     }
     setSaving(true);
@@ -222,7 +224,7 @@ export default function EditMemberPageClient() {
       }
       router.push("/members");
     } catch (err) {
-      alert(err instanceof Error ? err.message : "保存失败，请重试");
+      alert(err instanceof Error ? err.message : t("edit.saveFailed"));
       setSaving(false);
     }
   };
@@ -230,7 +232,7 @@ export default function EditMemberPageClient() {
   if (loading) {
     return (
       <div className="flex h-[calc(100dvh-56px)] items-center justify-center">
-        <div className="text-sm text-gray-400">加载中...</div>
+        <div className="text-sm text-gray-400">{t("common.loading")}</div>
       </div>
     );
   }
@@ -242,14 +244,14 @@ export default function EditMemberPageClient() {
         <main className="relative mx-auto max-w-2xl px-4 py-6 md:px-8 md:py-8">
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <h1 className="text-lg md:text-xl font-bold tracking-tight">创建成员</h1>
-              <p className="mt-1 text-sm text-gray-400">自定义你的内阁成员，赋予其独特的思维框架</p>
+              <h1 className="text-lg md:text-xl font-bold tracking-tight">{t("edit.title.create")}</h1>
+              <p className="mt-1 text-sm text-gray-400">{t("edit.subtitleCreate")}</p>
             </div>
             <button
               onClick={() => router.push("/members")}
               className="rounded-md px-3 py-1.5 text-sm text-gray-500 transition-colors hover:bg-black/5"
             >
-              取消
+              {t("common.cancel")}
             </button>
           </div>
 
@@ -259,53 +261,47 @@ export default function EditMemberPageClient() {
               onClick={() => setCreationMode("distill")}
               className="flex-1 rounded-md py-2 text-sm font-medium transition-all bg-[#1a1a1a] text-white"
             >
-              自动蒸馏
+              {t("edit.autoDistill")}
             </button>
             <button
               onClick={() => setCreationMode("manual")}
               className="flex-1 rounded-md py-2 text-sm font-medium text-gray-500 transition-all hover:bg-black/5"
             >
-              手动录入
+              {t("edit.manual")}
             </button>
           </div>
 
           <div className="rounded-xl border bg-white/60 p-6 backdrop-blur-sm" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
             <div className="mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">AI 自动蒸馏</h2>
-              <p className="mt-1 text-sm text-gray-400">
-                输入一个真实人物的名字，AI 会自动调研并生成完整的思维框架画像。
-              </p>
+              <h2 className="text-lg font-semibold text-gray-900">{t("edit.aiDistill.title")}</h2>
+              <p className="mt-1 text-sm text-gray-400">{t("edit.aiDistill.description")}</p>
             </div>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1.5">名人名字</label>
+                <label className="block text-xs font-medium text-gray-500 mb-1.5">{t("edit.celebrity.label")}</label>
                 <input
                   type="text"
                   value={distillName}
                   onChange={(e) => setDistillName(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && !distilling && handleDistill()}
-                  placeholder="如：埃隆·马斯克、Charlie Munger、张一鸣..."
+                  placeholder={t("edit.celebrity.placeholder")}
                   className="w-full rounded-md border bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-gray-300"
                   style={{ borderColor: "rgba(0,0,0,0.08)" }}
                   disabled={distilling}
                 />
-                <p className="mt-1.5 text-xs text-gray-400 leading-relaxed">
-                  适合：有较多公开资料的真实人物（企业家、学者、艺术家等）
-                  <br />
-                  不适合：虚构角色、普通人、名字有误的人物
-                </p>
+                <p className="mt-1.5 text-xs text-gray-400 leading-relaxed">{t("edit.nameHint")}</p>
               </div>
 
               {aiConfig ? (
                 <div className="rounded-md bg-gray-50 px-3 py-2 text-xs text-gray-500">
-                  当前使用：{aiConfig.provider} / {aiConfig.model}
+                  {t("edit.currentUsing")} {aiConfig.provider} / {aiConfig.model}
                 </div>
               ) : (
                 <div className="rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-600">
-                  尚未配置 AI Provider，请先前往
-                  <button onClick={() => router.push("/settings")} className="ml-1 underline">设置页面</button>
-                  配置
+                  {t("edit.configureProviderFirst")}
+                  <button onClick={() => router.push("/settings")} className="ml-1 underline">{t("edit.settingsPage")}</button>
+                  {" "}{t("edit.configure")}
                 </div>
               )}
 
@@ -326,10 +322,10 @@ export default function EditMemberPageClient() {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                     </svg>
-                    正在蒸馏中，请稍候...
+                    {t("edit.distillingProgress")}
                   </span>
                 ) : (
-                  "开始蒸馏"
+                  t("edit.startDistill")
                 )}
               </button>
             </div>
@@ -401,14 +397,14 @@ export default function EditMemberPageClient() {
       <main className="relative mx-auto max-w-2xl px-4 py-6 md:px-8 md:py-8">
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <h1 className="text-lg md:text-xl font-bold tracking-tight">{editId ? "编辑成员" : "创建成员"}</h1>
-            <p className="mt-1 text-sm text-gray-400">自定义你的内阁成员，赋予其独特的思维框架</p>
+            <h1 className="text-lg md:text-xl font-bold tracking-tight">{editId ? t("edit.title.edit") : t("edit.title.create")}</h1>
+            <p className="mt-1 text-sm text-gray-400">{t("edit.subtitleCreate")}</p>
           </div>
           <button
             onClick={() => router.push("/members")}
             className="rounded-md px-3 py-1.5 text-sm text-gray-500 transition-colors hover:bg-black/5"
           >
-            取消
+            {t("common.cancel")}
           </button>
         </div>
 
@@ -419,13 +415,13 @@ export default function EditMemberPageClient() {
               onClick={() => setCreationMode("distill")}
               className={`flex-1 rounded-md py-2 text-sm font-medium transition-all ${creationMode === "distill" ? "bg-[#1a1a1a] text-white" : "text-gray-500 hover:bg-black/5"}`}
             >
-              自动蒸馏
+              {t("edit.autoDistill")}
             </button>
             <button
               onClick={() => setCreationMode("manual")}
               className={`flex-1 rounded-md py-2 text-sm font-medium transition-all ${creationMode === "manual" ? "bg-[#1a1a1a] text-white" : "text-gray-500 hover:bg-black/5"}`}
             >
-              手动录入
+              {t("edit.manual")}
             </button>
           </div>
         )}
@@ -437,8 +433,8 @@ export default function EditMemberPageClient() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M12 17.25a5.25 5.25 0 100-10.5 5.25 5.25 0 000 10.5z" />
               </svg>
               <div className="text-sm text-amber-800">
-                <p className="font-medium">以下内容由 AI 自动生成</p>
-                <p className="mt-0.5 text-xs text-amber-700">AI 生成的内容可能存在不准确之处，请仔细核对后再保存。核心字段已标为必填。</p>
+                <p className="font-medium">{t("edit.aiGenWarning.title")}</p>
+                <p className="mt-0.5 text-xs text-amber-700">{t("edit.aiGenWarning.body")}</p>
               </div>
             </div>
           </div>
@@ -456,24 +452,24 @@ export default function EditMemberPageClient() {
         )}
 
         <div className="space-y-4">
-          <Section title="基本信息" keyName="basic">
+          <Section title={t("edit.sectionBasic")} keyName="basic">
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <Label required>中文名</Label>
-                <TextInput value={member.nameZh} onChange={(v) => setMember((p) => ({ ...p, nameZh: v }))} placeholder="如：埃隆·马斯克" required />
+                <Label required>{t("edit.field.nameZh")}</Label>
+                <TextInput value={member.nameZh} onChange={(v) => setMember((p) => ({ ...p, nameZh: v }))} placeholder="e.g. Elon Musk" required />
               </div>
               <div>
-                <Label required>英文名</Label>
+                <Label required>{t("edit.field.nameEn")}</Label>
                 <TextInput value={member.nameEn} onChange={(v) => setMember((p) => ({ ...p, nameEn: v }))} placeholder="如：Elon Musk" required />
               </div>
             </div>
             <div>
-              <Label required>头衔</Label>
+              <Label required>{t("edit.field.title")}</Label>
               <TextInput value={member.title} onChange={(v) => setMember((p) => ({ ...p, title: v }))} placeholder="如：Tesla / SpaceX CEO" />
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <Label>主题色</Label>
+                <Label>{t("edit.field.color")}</Label>
                 <div className="flex items-center gap-2">
                   <input
                     type="color"
@@ -486,13 +482,13 @@ export default function EditMemberPageClient() {
                 </div>
               </div>
               <div>
-                <Label>头像</Label>
+                <Label>{t("edit.field.avatar")}</Label>
                 <div className="flex items-center gap-3">
                   <Avatar src={member.avatar} name={member.nameZh || "?"} color={member.color} size={48} />
                   <div className="flex-1 space-y-1.5">
                     <div className="flex items-center gap-2">
                       <label className="cursor-pointer rounded-md border px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
-                        选择图片
+                        {t("edit.selectImage")}
                         <input
                           type="file"
                           accept="image/jpeg,image/png,image/webp"
@@ -505,11 +501,11 @@ export default function EditMemberPageClient() {
                           onClick={clearAvatar}
                           className="text-xs text-gray-400 hover:text-red-500 transition-colors"
                         >
-                          清除
+                          {t("edit.clearAvatar")}
                         </button>
                       )}
                     </div>
-                    <p className="text-[10px] text-gray-400">支持 JPG / PNG / WEBP，最大 2MB</p>
+                    <p className="text-[10px] text-gray-400">{t("edit.avatarFormat")}</p>
                     {avatarFileName && (
                       <p className="text-[10px] text-gray-500">{avatarFileName}</p>
                     )}
@@ -517,7 +513,7 @@ export default function EditMemberPageClient() {
                       onClick={() => setUseUrlAvatar((p) => !p)}
                       className="text-[10px] text-gray-400 underline hover:text-gray-600"
                     >
-                      {useUrlAvatar ? "使用图片上传" : "使用图片链接"}
+                      {useUrlAvatar ? t("edit.useUpload") : t("edit.useUrl")}
                     </button>
                     {useUrlAvatar && (
                       <TextInput
@@ -532,26 +528,26 @@ export default function EditMemberPageClient() {
             </div>
           </Section>
 
-          <Section title="人格核心" keyName="persona">
+          <Section title={t("edit.sectionPersona")} keyName="persona">
             <div>
-              <Label required>生平介绍</Label>
+              <Label required>{t("edit.field.biography")}</Label>
               <TextArea
                 value={member.persona.biography}
                 onChange={(v) => updatePersona({ biography: v })}
-                placeholder="成员的背景、经历和核心使命..."
+                placeholder={t("edit.bioPlaceholder")}
                 rows={5}
               />
             </div>
             <div>
-              <Label>核心价值观</Label>
-              <ArrayTextArea value={member.persona.coreValues} onChange={(v) => updatePersona({ coreValues: v })} placeholder="每行一条价值观，如：深度理解大于快速使用" />
+              <Label>{t("edit.field.coreValues")}</Label>
+              <ArrayTextArea value={member.persona.coreValues} onChange={(v) => updatePersona({ coreValues: v })} placeholder={t("edit.coreValuesPlaceholder")} />
             </div>
             <div>
-              <Label>决策框架</Label>
-              <ArrayTextArea value={member.persona.decisionFramework} onChange={(v) => updatePersona({ decisionFramework: v })} placeholder="每行一条决策原则" />
+              <Label>{t("edit.field.decisionFramework")}</Label>
+              <ArrayTextArea value={member.persona.decisionFramework} onChange={(v) => updatePersona({ decisionFramework: v })} placeholder={t("edit.decisionFrameworkPlaceholder")} />
             </div>
             <div>
-              <Label>心智模型</Label>
+              <Label>{t("edit.field.mentalModels")}</Label>
               <div className="space-y-2">
                 {member.persona.mentalModels.map((m, i) => (
                   <div key={m.name + m.summary + i} className="flex gap-2">
@@ -563,7 +559,7 @@ export default function EditMemberPageClient() {
                         next[i] = { ...next[i], name: e.target.value };
                         updatePersona({ mentalModels: next });
                       }}
-                      placeholder="模型名称"
+                      placeholder={t("edit.mentalModelName")}
                       className="w-1/3 rounded-md border bg-white px-3 py-2 text-sm"
                       style={{ borderColor: "rgba(0,0,0,0.08)" }}
                     />
@@ -575,7 +571,7 @@ export default function EditMemberPageClient() {
                         next[i] = { ...next[i], summary: e.target.value };
                         updatePersona({ mentalModels: next });
                       }}
-                      placeholder="简要说明"
+                      placeholder={t("edit.mentalModelSummary")}
                       className="flex-1 rounded-md border bg-white px-3 py-2 text-sm"
                       style={{ borderColor: "rgba(0,0,0,0.08)" }}
                     />
@@ -586,7 +582,7 @@ export default function EditMemberPageClient() {
                       }}
                       className="rounded-md px-2 text-xs text-gray-400 hover:text-red-500"
                     >
-                      删除
+                      {t("common.delete")}
                     </button>
                   </div>
                 ))}
@@ -594,57 +590,57 @@ export default function EditMemberPageClient() {
                   onClick={() => updatePersona({ mentalModels: [...member.persona.mentalModels, { name: "", summary: "" }] })}
                   className="text-xs text-gray-500 hover:text-gray-700"
                 >
-                  + 添加心智模型
+                  {t("edit.addMentalModel")}
                 </button>
               </div>
             </div>
             <div>
-              <Label>决策启发式</Label>
-              <ArrayTextArea value={member.persona.decisionHeuristics} onChange={(v) => updatePersona({ decisionHeuristics: v })} placeholder="每行一条启发式规则" />
+              <Label>{t("edit.field.decisionHeuristics")}</Label>
+              <ArrayTextArea value={member.persona.decisionHeuristics} onChange={(v) => updatePersona({ decisionHeuristics: v })} placeholder={t("edit.decisionHeuristicsPlaceholder")} />
             </div>
           </Section>
 
-          <Section title="表达风格" keyName="style">
+          <Section title={t("edit.sectionStyle")} keyName="style">
             <div>
-              <Label>说话风格</Label>
+              <Label>{t("edit.field.speakingStyle")}</Label>
               <TextArea
                 value={member.persona.speakingStyle}
                 onChange={(v) => updatePersona({ speakingStyle: v })}
-                placeholder="描述成员的说话方式、语气、节奏..."
+                placeholder={t("edit.speakingStylePlaceholder")}
                 rows={4}
               />
             </div>
             <div>
-              <Label>表达 DNA</Label>
+              <Label>{t("edit.field.expressionDNA")}</Label>
               <TextArea
                 value={member.persona.expressionDNA}
                 onChange={(v) => updatePersona({ expressionDNA: v })}
-                placeholder="具体的输出格式、用词偏好、禁忌、幽默方式..."
+                placeholder={t("edit.expressionDNAPlaceholder")}
                 rows={5}
               />
             </div>
           </Section>
 
-          <Section title="元信息" keyName="meta">
+          <Section title={t("edit.sectionMeta")} keyName="meta">
             <div>
-              <Label>已知偏见</Label>
+              <Label>{t("edit.field.biases")}</Label>
               <ArrayTextArea value={member.persona.biases} onChange={(v) => updatePersona({ biases: v })} />
             </div>
             <div>
-              <Label>内在张力</Label>
+              <Label>{t("edit.field.innerTensions")}</Label>
               <ArrayTextArea value={member.persona.innerTensions} onChange={(v) => updatePersona({ innerTensions: v })} />
             </div>
             <div>
-              <Label>明确拒绝的事</Label>
+              <Label>{t("edit.field.antiPatterns")}</Label>
               <ArrayTextArea value={member.persona.antiPatterns} onChange={(v) => updatePersona({ antiPatterns: v })} />
             </div>
             <div>
-              <Label>名言 / 口头禅</Label>
+              <Label>{t("edit.field.catchphrases")}</Label>
               <ArrayTextArea value={member.persona.catchphrases} onChange={(v) => updatePersona({ catchphrases: v })} />
             </div>
             <div>
-              <Label>历史观点</Label>
-              <p className="mb-1 text-[10px] text-gray-400">格式：话题=观点（每行一个）</p>
+              <Label>{t("edit.field.historicalViews")}</Label>
+              <p className="mb-1 text-[10px] text-gray-400">{t("edit.historicalViewsFormat")}</p>
               <TextArea
                 value={Object.entries(member.persona.historicalViews).map(([k, v]) => `${k}=${v}`).join("\n")}
                 onChange={(v) => {
@@ -655,7 +651,7 @@ export default function EditMemberPageClient() {
                   });
                   updatePersona({ historicalViews: obj });
                 }}
-                placeholder="ai=对AI的看法\neducation=对教育的看法"
+                placeholder={t("edit.historicalViewsPlaceholder")}
                 rows={4}
               />
             </div>
@@ -668,14 +664,14 @@ export default function EditMemberPageClient() {
             className="rounded-md border px-5 py-2.5 text-sm font-medium text-gray-600 transition-all hover:bg-gray-50"
             style={{ borderColor: "rgba(0,0,0,0.08)" }}
           >
-            取消
+            {t("common.cancel")}
           </button>
           <button
             onClick={handleSave}
             disabled={saving}
             className="rounded-md bg-[#1a1a1a] px-6 py-2.5 text-sm font-semibold text-white transition-all hover:bg-[#333] active:scale-[0.98] disabled:opacity-50"
           >
-            {saving ? "保存中..." : editId ? "保存修改" : "创建成员"}
+            {saving ? t("edit.saving") : editId ? t("edit.saveChanges") : t("edit.createMember")}
           </button>
         </div>
       </main>

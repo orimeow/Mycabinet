@@ -5,8 +5,10 @@ import { useRouter } from "next/navigation";
 import { AIProviderConfig } from "@/lib/types";
 import DiscussionView from "@/components/discussion/DiscussionView";
 import { getUserId, DEFAULT_PROVIDER } from "@/lib/user";
+import { useI18n } from "@/lib/i18n";
 
 export default function NewDiscussionPage() {
+  const { t } = useI18n();
   const router = useRouter();
   const [question, setQuestion] = useState("");
   const [config, setConfig] = useState<AIProviderConfig | null>(null);
@@ -52,7 +54,7 @@ export default function NewDiscussionPage() {
             <span className="inline-block h-2 w-2 animate-bounce rounded-full bg-gray-400" style={{ animationDelay: "150ms" }} />
             <span className="inline-block h-2 w-2 animate-bounce rounded-full bg-gray-400" style={{ animationDelay: "300ms" }} />
           </div>
-          <p className="text-sm">正在进入讨论...</p>
+          <p className="text-sm">{t("discussion.entering")}</p>
         </div>
       </div>
     );
