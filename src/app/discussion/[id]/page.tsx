@@ -146,8 +146,9 @@ export default function DiscussionDetailPage() {
 }
 
 function StatusBadge({ status }: { status: Discussion["status"] }) {
+  const { t } = useI18n();
   const s = STATUS_COLORS[status ?? "pending"] ?? STATUS_COLORS.pending;
-  const label = STATUS_LABELS[status ?? "pending"] ?? "待开始";
+  const label = STATUS_LABELS[status ?? "pending"] ?? t("history.status.pending");
   return (
     <span className="rounded-full px-2 py-0.5" style={{ backgroundColor: s.bg, color: s.color }}>
       {label}
@@ -191,11 +192,12 @@ function ChatReadOnlyMessages({ messages, allMembers }: { messages: Discussion["
 }
 
 function DebateReadOnlyMessages({ messages, allMembers }: { messages: Discussion["messages"]; allMembers: CabinetMember[] }) {
+  const { t } = useI18n();
   return messages.map((msg) => {
     const member = allMembers.find((m) => m.id === msg.speakerId);
     const color = msg.speakerId === "moderator" ? "#6b7280" : (msg.speakerColor || member?.color || "#6b7280");
     const avatar = msg.speakerId === "moderator" ? null : (msg.speakerAvatar || member?.avatar);
-    const name = msg.speakerId === "moderator" ? "Moderator" : (msg.speakerName || member?.nameZh || msg.speakerId);
+    const name = msg.speakerId === "moderator" ? t("discussion.moderator") : (msg.speakerName || member?.nameZh || msg.speakerId);
     return (
       <div
         key={msg.id}
@@ -208,7 +210,7 @@ function DebateReadOnlyMessages({ messages, allMembers }: { messages: Discussion
             {name}
           </span>
           {msg.round > 0 && (
-            <span className="text-xs text-gray-400">Round {msg.round}</span>
+            <span className="text-xs text-gray-400">{t("detail.roundLabel", { round: String(msg.round) })}</span>
           )}
         </div>
         <div className="mt-2 text-sm leading-relaxed text-gray-700 markdown-content">

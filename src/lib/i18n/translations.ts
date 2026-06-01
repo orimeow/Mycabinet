@@ -540,6 +540,7 @@ const translations = {
     "detail.backToHome": "Back to Home",
     "detail.resume": "Resume",
     "detail.speechCount": "{count} messages",
+    "detail.roundLabel": "Round {round}",
 
     // ===== Resume =====
     "resume.connecting": "Connecting to discussion...",
