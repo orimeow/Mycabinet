@@ -165,6 +165,8 @@ const translations = {
     "detail.messageCount": "{count} 条发言",
     "detail.newDiscussion": "新讨论",
     "detail.roundLabel": "第{round}轮",
+    "detail.resume": "继续讨论",
+    "detail.speechCount": "{count} 条发言",
 
     // ===== New Discussion =====
     "new.entering": "正在进入讨论...",
@@ -302,12 +304,6 @@ const translations = {
     "discussion.copyFailed": "复制失败，请手动复制",
     "discussion.roundLabel": "第{n}轮",
     "discussion.entering": "正在进入讨论...",
-
-    // ===== Detail page extra =====
-    "detail.newDiscussion": "新讨论",
-    "detail.backToHome": "返回首页",
-    "detail.resume": "继续讨论",
-    "detail.speechCount": "{count} 条发言",
 
     // ===== History extra =====
     "history.speechCount": "{count} 条发言",
@@ -540,6 +536,10 @@ const translations = {
     "detail.backToHistory": "Back to History",
     "detail.question": "Question",
     "detail.participants": "Participants",
+    "detail.newDiscussion": "New Discussion",
+    "detail.backToHome": "Back to Home",
+    "detail.resume": "Resume",
+    "detail.speechCount": "{count} messages",
 
     // ===== Resume =====
     "resume.connecting": "Connecting to discussion...",
@@ -674,12 +674,6 @@ const translations = {
     "discussion.copyFailed": "Copy failed, please copy manually",
     "discussion.roundLabel": "Round {n}",
     "discussion.entering": "Entering discussion...",
-
-    // ===== Detail page extra =====
-    "detail.newDiscussion": "New Discussion",
-    "detail.backToHome": "Back to Home",
-    "detail.resume": "Resume",
-    "detail.speechCount": "{count} messages",
 
     // ===== History extra =====
     "history.speechCount": "{count} messages",

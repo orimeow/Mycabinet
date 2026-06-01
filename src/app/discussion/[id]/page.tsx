@@ -208,7 +208,7 @@ function DebateReadOnlyMessages({ messages, allMembers }: { messages: Discussion
             {name}
           </span>
           {msg.round > 0 && (
-            <span className="text-xs text-gray-400">{t("discussion.roundLabel", { n: String(msg.round) })}</span>
+            <span className="text-xs text-gray-400">Round {msg.round}</span>
           )}
         </div>
         <div className="mt-2 text-sm leading-relaxed text-gray-700 markdown-content">
