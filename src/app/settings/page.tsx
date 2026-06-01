@@ -10,7 +10,7 @@ const PROVIDER_OPTIONS = [
   { value: "openrouter", label: "OpenRouter", defaultModel: "google/gemma-4-31b-it:free" },
   { value: "claude", label: "Claude API (Anthropic)", defaultModel: "claude-sonnet-4-20250514" },
   { value: "openai", label: "OpenAI", defaultModel: "gpt-4o" },
-  { value: "bailian", label: "阿里云百炼", defaultModel: "qwen-plus" },
+  { value: "bailian", label: "settings.bailianLabel", defaultModel: "qwen-plus" },
   { value: "ollama", label: "Ollama (Local)", defaultModel: "llama3" },
 ];
 
@@ -46,12 +46,12 @@ const BAILIAN_MODELS = [
   "yi-lightning",
 ];
 
-const PROVIDER_LABELS: Record<string, string> = {
+const PROVIDER_LABEL_KEYS: Record<string, string> = {
   gemini: "Google Gemini",
   openrouter: "OpenRouter",
   claude: "Claude API",
   openai: "OpenAI",
-  bailian: "阿里云百炼",
+  bailian: "settings.bailianLabel",
   ollama: "Ollama",
 };
 
@@ -175,7 +175,7 @@ export default function SettingsPage() {
         {isConfigured && (
           <div className="mb-3 rounded-md border bg-emerald-50 p-3" style={{ borderColor: "rgba(16,185,129,0.2)" }}>
             <p className="text-xs text-emerald-700">
-              {t("settings.currentActive")}<strong>{PROVIDER_LABELS[provider]}</strong> · {model}
+              {t("settings.currentActive")}<strong>{PROVIDER_LABEL_KEYS[provider]?.startsWith("settings.") ? t(PROVIDER_LABEL_KEYS[provider]) : (PROVIDER_LABEL_KEYS[provider] ?? provider)}</strong> · {model}
             </p>
           </div>
         )}
@@ -192,7 +192,7 @@ export default function SettingsPage() {
                 }`}
                 style={{ borderColor: provider === opt.value ? undefined : borderColor, borderWidth: provider === opt.value ? undefined : 1 }}
               >
-                {opt.label}
+                {opt.label.startsWith("settings.") ? t(opt.label) : opt.label}
               </button>
             ))}
           </div>
