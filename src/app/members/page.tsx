@@ -4,14 +4,36 @@ import { cabinetMembers as builtInMembers } from "@/data/personas";
 import type { CabinetMember } from "@/lib/types";
 import { useState, useEffect, Suspense, useRef, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { loadCustomMembers, invalidateCache } from "@/lib/members";
+import {
+  loadCustomMembers, invalidateCache,
+  getMemberName, getMemberTitle, getMemberBiography,
+  getMemberCoreValues, getMemberDecisionFramework,
+  getMemberSpeakingStyle, getMemberBiases,
+  getMemberCatchphrases, getMemberHistoricalViews,
+} from "@/lib/members";
 import { getUserId } from "@/lib/user";
 import Avatar from "@/components/common/Avatar";
 import { useI18n } from "@/lib/i18n";
 
 function DetailContent({ selected, mobile, onEdit, onDelete }: { selected: CabinetMember; mobile?: boolean; onEdit?: () => void; onDelete?: () => void }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const isCustom = selected.source === "custom";
+  const displayName = getMemberName(selected, locale);
+  const displayTitle = getMemberTitle(selected, locale);
+  const displayBio = getMemberBiography(selected, locale);
+  const displayCoreValues = getMemberCoreValues(selected, locale);
+  const displayDecisionFramework = getMemberDecisionFramework(selected, locale);
+  const displaySpeakingStyle = getMemberSpeakingStyle(selected, locale);
+  const displayBiases = getMemberBiases(selected, locale);
+  const displayCatchphrases = getMemberCatchphrases(selected, locale);
+  const displayHistoricalViews = getMemberHistoricalViews(selected, locale);
+  const topicLabels: Record<string, string> = {
+    ai: t("members.topicLabel.ai"),
+    education: t("members.topicLabel.education"),
+    climate: t("members.topicLabel.climate"),
+    government: t("members.topicLabel.government"),
+    wealth: t("members.topicLabel.wealth"),
+  };
   return (
     <div className={mobile ? "rounded-md border bg-white/80 p-4 backdrop-blur-sm" : "rounded-md border bg-white/80 p-4 md:p-8 backdrop-blur-sm"}
       style={{ borderColor: 'rgba(0,0,0,0.06)' }}
@@ -19,11 +41,11 @@ function DetailContent({ selected, mobile, onEdit, onDelete }: { selected: Cabin
       {/* Header */}
       <div className={mobile ? "mb-5 flex items-start justify-between gap-3" : "mb-5 md:mb-8 flex items-start justify-between gap-3"}>
         <div className="flex items-start gap-3">
-          <Avatar src={selected.avatar} name={selected.nameZh} color={selected.color} size={48} />
+          <Avatar src={selected.avatar} name={displayName} color={selected.color} size={48} />
           <div>
-            <h2 className="text-lg md:text-xl font-bold tracking-tight">{selected.nameZh}</h2>
+            <h2 className="text-lg md:text-xl font-bold tracking-tight">{displayName}</h2>
             <p className="text-sm text-gray-400">{selected.nameEn}</p>
-            <p className="mt-0.5 text-xs text-gray-400">{selected.title}</p>
+            <p className="mt-0.5 text-xs text-gray-400">{displayTitle}</p>
             {isCustom && (
               <span className="mt-1 inline-block rounded-full bg-gray-100 px-2 py-0.5 text-[10px] text-gray-500">{t("members.source.custom")}</span>
             )}
@@ -52,14 +74,14 @@ function DetailContent({ selected, mobile, onEdit, onDelete }: { selected: Cabin
         {/* Biography */}
         <div className="col-span-2">
           <h3 className="text-sm font-bold text-gray-900">{t("members.biography")}</h3>
-          <p className="mt-2 text-xs leading-relaxed text-gray-600">{selected.persona.biography}</p>
+          <p className="mt-2 text-xs leading-relaxed text-gray-600">{displayBio}</p>
         </div>
 
         {/* Core Values */}
         <div>
           <h3 className="text-sm font-bold text-gray-900">{t("members.coreValues")}</h3>
           <ul className="mt-2 space-y-1.5">
-            {selected.persona.coreValues.map((v, i) => (
+            {displayCoreValues.map((v, i) => (
               <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
                 <span
                   className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full"
@@ -75,7 +97,7 @@ function DetailContent({ selected, mobile, onEdit, onDelete }: { selected: Cabin
         <div>
           <h3 className="text-sm font-bold text-gray-900">{t("members.decisionFramework")}</h3>
           <ul className="mt-2 space-y-1.5">
-            {selected.persona.decisionFramework.map((v, i) => (
+            {displayDecisionFramework.map((v, i) => (
               <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
                 <span
                   className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full"
@@ -90,14 +112,14 @@ function DetailContent({ selected, mobile, onEdit, onDelete }: { selected: Cabin
         {/* Speaking Style */}
         <div className="col-span-2">
           <h3 className="text-sm font-bold text-gray-900">{t("members.speakingStyle")}</h3>
-          <p className="mt-2 text-sm leading-relaxed text-gray-600">{selected.persona.speakingStyle}</p>
+          <p className="mt-2 text-sm leading-relaxed text-gray-600">{displaySpeakingStyle}</p>
         </div>
 
         {/* Biases */}
         <div>
           <h3 className="text-sm font-bold text-gray-900">{t("members.biases")}</h3>
           <ul className="mt-2 space-y-1.5">
-            {selected.persona.biases.map((b, i) => (
+            {displayBiases.map((b, i) => (
               <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
                 <span
                   className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full"
@@ -113,7 +135,7 @@ function DetailContent({ selected, mobile, onEdit, onDelete }: { selected: Cabin
         <div>
           <h3 className="text-sm font-bold text-gray-900">{t("members.catchphrases")}</h3>
           <ul className="mt-2 space-y-1.5">
-            {selected.persona.catchphrases.map((p, i) => (
+            {displayCatchphrases.map((p, i) => (
               <li key={i} className="text-sm italic leading-relaxed text-gray-600">
                 &ldquo;{p}&rdquo;
               </li>
@@ -122,18 +144,11 @@ function DetailContent({ selected, mobile, onEdit, onDelete }: { selected: Cabin
         </div>
 
         {/* Historical Views */}
-        {Object.keys(selected.persona.historicalViews).length > 0 && (
+        {Object.keys(displayHistoricalViews).length > 0 && (
           <div className="col-span-2">
             <h3 className="text-sm font-bold text-gray-900">{t("members.historicalViews")}</h3>
             <div className="mt-2 grid gap-3 grid-cols-1">
-              {Object.entries(selected.persona.historicalViews).map(([topic, view]) => {
-                const topicLabels: Record<string, string> = {
-                  ai: t("members.topicLabel.ai"),
-                  education: t("members.topicLabel.education"),
-                  climate: t("members.topicLabel.climate"),
-                  government: t("members.topicLabel.government"),
-                  wealth: t("members.topicLabel.wealth"),
-                };
+              {Object.entries(displayHistoricalViews).map(([topic, view]) => {
                 return (
                   <div
                     key={topic}
@@ -156,7 +171,7 @@ function DetailContent({ selected, mobile, onEdit, onDelete }: { selected: Cabin
 }
 
 function MembersPageContent() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const searchParams = useSearchParams();
   const router = useRouter();
   const [selectedId, setSelectedId] = useState(builtInMembers[0].id);
@@ -203,6 +218,24 @@ function MembersPageContent() {
   }, [searchParams, allMembers.length]);
 
   const selected = allMembers.find((m) => m.id === selectedId) || builtInMembers[0];
+
+  // Locale-aware display values for the desktop detail panel
+  const displayName = getMemberName(selected, locale);
+  const displayTitle = getMemberTitle(selected, locale);
+  const displayBio = getMemberBiography(selected, locale);
+  const displayCoreValues = getMemberCoreValues(selected, locale);
+  const displayDecisionFramework = getMemberDecisionFramework(selected, locale);
+  const displaySpeakingStyle = getMemberSpeakingStyle(selected, locale);
+  const displayBiases = getMemberBiases(selected, locale);
+  const displayCatchphrases = getMemberCatchphrases(selected, locale);
+  const displayHistoricalViews = getMemberHistoricalViews(selected, locale);
+  const topicLabels: Record<string, string> = {
+    ai: t("members.topicLabel.ai"),
+    education: t("members.topicLabel.education"),
+    climate: t("members.topicLabel.climate"),
+    government: t("members.topicLabel.government"),
+    wealth: t("members.topicLabel.wealth"),
+  };
 
   const handleDelete = async (memberId: string) => {
     if (!confirm(t("members.deleteConfirm", { name: "" }))) return;
@@ -258,9 +291,9 @@ function MembersPageContent() {
                   onClick={() => setSelectedId(m.id)}
                   className="flex flex-col items-center gap-1.5 shrink-0"
                 >
-                  <Avatar src={m.avatar} name={m.nameZh} color={m.color} size={56} className="transition-all" />
+                  <Avatar src={m.avatar} name={getMemberName(m, locale)} color={m.color} size={56} className="transition-all" />
                   <span className={`text-xs whitespace-nowrap ${active ? 'font-semibold text-gray-900' : 'text-gray-400'}`}>
-                    {m.nameZh}
+                    {getMemberName(m, locale)}
                   </span>
                 </button>
               );
@@ -304,10 +337,10 @@ function MembersPageContent() {
                       borderWidth: 1,
                     }}
                   >
-                    <Avatar src={m.avatar} name={m.nameZh} color={m.color} size={40} />
+                    <Avatar src={m.avatar} name={getMemberName(m, locale)} color={m.color} size={40} />
                     <div className="min-w-0 flex-1">
-                      <div className={`text-sm font-semibold ${active ? 'text-white' : ''}`}>{m.nameZh}</div>
-                      <div className={`truncate text-xs ${active ? 'text-white/50' : 'text-gray-400'}`}>{m.title.split('/')[0]}</div>
+                      <div className={`text-sm font-semibold ${active ? 'text-white' : ''}`}>{getMemberName(m, locale)}</div>
+                      <div className={`truncate text-xs ${active ? 'text-white/50' : 'text-gray-400'}`}>{getMemberTitle(m, locale).split('/')[0]}</div>
                     </div>
                   </button>
                 );
@@ -323,11 +356,11 @@ function MembersPageContent() {
               {/* Header */}
               <div className="mb-5 md:mb-8 flex items-start justify-between gap-3">
                 <div className="flex items-start gap-3">
-                  <Avatar src={selected.avatar} name={selected.nameZh} color={selected.color} size={48} className="md:!h-16 md:!w-16" />
+                  <Avatar src={selected.avatar} name={displayName} color={selected.color} size={48} className="md:!h-16 md:!w-16" />
                   <div>
-                    <h2 className="text-xl md:text-2xl font-bold tracking-tight">{selected.nameZh}</h2>
+                    <h2 className="text-xl md:text-2xl font-bold tracking-tight">{displayName}</h2>
                     <p className="text-sm text-gray-400">{selected.nameEn}</p>
-                    <p className="mt-0.5 md:mt-1 text-xs text-gray-400">{selected.title}</p>
+                    <p className="mt-0.5 md:mt-1 text-xs text-gray-400">{displayTitle}</p>
                     {selected.source === "custom" && (
                       <span className="mt-1 inline-block rounded-full bg-gray-100 px-2 py-0.5 text-[10px] text-gray-500">{t("members.source.custom")}</span>
                     )}
@@ -356,14 +389,14 @@ function MembersPageContent() {
                 {/* Biography */}
                 <div className="md:col-span-2">
                   <h3 className="text-sm md:text-base font-bold text-gray-900">{t("members.biography")}</h3>
-                  <p className="mt-2 text-xs md:text-sm leading-relaxed text-gray-600">{selected.persona.biography}</p>
+                  <p className="mt-2 text-xs md:text-sm leading-relaxed text-gray-600">{displayBio}</p>
                 </div>
 
                 {/* Core Values */}
                 <div>
                   <h3 className="text-sm md:text-base font-bold text-gray-900">{t("members.coreValues")}</h3>
                   <ul className="mt-2 md:mt-3 space-y-1.5 md:space-y-2">
-                    {selected.persona.coreValues.map((v, i) => (
+                    {displayCoreValues.map((v, i) => (
                       <li key={i} className="flex items-start gap-2 text-xs md:text-sm text-gray-600">
                         <span
                           className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full"
@@ -379,7 +412,7 @@ function MembersPageContent() {
                 <div>
                   <h3 className="text-sm md:text-base font-bold text-gray-900">{t("members.decisionFramework")}</h3>
                   <ul className="mt-2 md:mt-3 space-y-1.5 md:space-y-2">
-                    {selected.persona.decisionFramework.map((v, i) => (
+                    {displayDecisionFramework.map((v, i) => (
                       <li key={i} className="flex items-start gap-2 text-xs md:text-sm text-gray-600">
                         <span
                           className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full"
@@ -394,14 +427,14 @@ function MembersPageContent() {
                 {/* Speaking Style */}
                 <div className="md:col-span-2">
                   <h3 className="text-sm md:text-base font-bold text-gray-900">{t("members.speakingStyle")}</h3>
-                  <p className="mt-2 text-xs md:text-sm leading-relaxed text-gray-600">{selected.persona.speakingStyle}</p>
+                  <p className="mt-2 text-xs md:text-sm leading-relaxed text-gray-600">{displaySpeakingStyle}</p>
                 </div>
 
                 {/* Biases */}
                 <div>
                   <h3 className="text-sm md:text-base font-bold text-gray-900">{t("members.biases")}</h3>
                   <ul className="mt-2 md:mt-3 space-y-1.5 md:space-y-2">
-                    {selected.persona.biases.map((b, i) => (
+                    {displayBiases.map((b, i) => (
                       <li key={i} className="flex items-start gap-2 text-xs md:text-sm text-gray-600">
                         <span
                           className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full"
@@ -417,7 +450,7 @@ function MembersPageContent() {
                 <div>
                   <h3 className="text-sm md:text-base font-bold text-gray-900">{t("members.catchphrases")}</h3>
                   <ul className="mt-2 md:mt-3 space-y-1.5 md:space-y-2">
-                    {selected.persona.catchphrases.map((p, i) => (
+                    {displayCatchphrases.map((p, i) => (
                       <li key={i} className="text-xs md:text-sm italic leading-relaxed text-gray-600">
                         &ldquo;{p}&rdquo;
                       </li>
@@ -426,11 +459,11 @@ function MembersPageContent() {
                 </div>
 
                 {/* Historical Views */}
-                {Object.keys(selected.persona.historicalViews).length > 0 && (
+                {Object.keys(displayHistoricalViews).length > 0 && (
                   <div className="md:col-span-2">
                     <h3 className="text-sm md:text-base font-bold text-gray-900">{t("members.historicalViews")}</h3>
                     <div className="mt-2 md:mt-3 grid gap-3 md:grid-cols-2">
-                      {Object.entries(selected.persona.historicalViews).map(([topic, view]) => {
+                      {Object.entries(displayHistoricalViews).map(([topic, view]) => {
                         const topicLabels: Record<string, string> = {
                           ai: t("members.topicLabel.ai"),
                           education: t("members.topicLabel.education"),

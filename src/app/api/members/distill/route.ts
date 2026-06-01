@@ -12,6 +12,17 @@ interface DistillRequest {
   config: AIProviderConfig;
 }
 
+interface DistillI18nEn {
+  title?: string;
+  biography?: string;
+  coreValues?: string[];
+  decisionFramework?: string[];
+  speakingStyle?: string;
+  biases?: string[];
+  catchphrases?: string[];
+  historicalViews?: Record<string, string>;
+}
+
 interface DistillResult {
   nameZh: string;
   nameEn: string;
@@ -30,6 +41,7 @@ interface DistillResult {
   antiPatterns: string[];
   catchphrases: string[];
   historicalViews: Record<string, string>;
+  i18n?: { en?: DistillI18nEn };
 }
 
 function generateId(nameZh: string): string {
@@ -91,6 +103,18 @@ function parseDistillResult(raw: string): DistillResult {
     historicalViews: typeof parsed.historicalViews === "object" && parsed.historicalViews !== null
       ? parsed.historicalViews
       : {},
+    i18n: parsed.i18n ? {
+      en: parsed.i18n.en ? {
+        title: parsed.i18n.en.title,
+        biography: parsed.i18n.en.biography,
+        coreValues: Array.isArray(parsed.i18n.en.coreValues) ? parsed.i18n.en.coreValues : undefined,
+        decisionFramework: Array.isArray(parsed.i18n.en.decisionFramework) ? parsed.i18n.en.decisionFramework : undefined,
+        speakingStyle: parsed.i18n.en.speakingStyle,
+        biases: Array.isArray(parsed.i18n.en.biases) ? parsed.i18n.en.biases : undefined,
+        catchphrases: Array.isArray(parsed.i18n.en.catchphrases) ? parsed.i18n.en.catchphrases : undefined,
+        historicalViews: typeof parsed.i18n.en.historicalViews === "object" ? parsed.i18n.en.historicalViews : undefined,
+      } : undefined,
+    } : undefined,
   };
 }
 
@@ -135,6 +159,7 @@ function toCabinetMember(result: DistillResult): CabinetMember {
     avatar: result.avatar,
     persona,
     source: "custom",
+    i18n: result.i18n,
   };
 }
 

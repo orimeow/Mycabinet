@@ -5,6 +5,7 @@ import type { CabinetMember } from "@/lib/types";
 import { useEffect, useRef } from "react";
 import Avatar from "@/components/common/Avatar";
 import { useI18n } from "@/lib/i18n";
+import { getMemberName } from "@/lib/members";
 
 interface Props {
   mode: "debate" | "chat";
@@ -17,7 +18,7 @@ interface Props {
 }
 
 export default function MemberPicker({ mode, selectedIds, onChange, onClose, onSelect, members }: Props) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const allMembers = members ?? builtInMembers;
   const overlayRef = useRef<HTMLDivElement>(null);
 
@@ -84,8 +85,8 @@ export default function MemberPicker({ mode, selectedIds, onChange, onClose, onS
                   backgroundColor: active ? "rgba(0,0,0,0.02)" : "transparent",
                 }}
               >
-                <Avatar src={m.avatar} name={m.nameZh} color={m.color} size={48} className="transition-all" />
-                <div className="text-xs font-medium leading-tight text-center">{m.nameZh}</div>
+                <Avatar src={m.avatar} name={getMemberName(m, locale)} color={m.color} size={48} className="transition-all" />
+                <div className="text-xs font-medium leading-tight text-center">{getMemberName(m, locale)}</div>
                 {active && (
                   <div className="absolute right-1.5 top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#1a1a1a]">
                     <svg className="h-2.5 w-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>

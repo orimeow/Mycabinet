@@ -1,3 +1,14 @@
+export interface MemberI18nContent {
+  title?: string;
+  biography?: string;
+  coreValues?: string[];
+  decisionFramework?: string[];
+  speakingStyle?: string;
+  biases?: string[];
+  catchphrases?: string[];
+  historicalViews?: Record<string, string>;
+}
+
 export interface CabinetMember {
   id: string;
   nameEn: string;
@@ -7,6 +18,7 @@ export interface CabinetMember {
   avatar: string;
   persona: PersonaDoc;
   source?: "built-in" | "custom";
+  i18n?: { en?: MemberI18nContent };
 }
 
 export interface PersonaDoc {

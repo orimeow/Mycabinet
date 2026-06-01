@@ -8,6 +8,7 @@ import { getUserId, getUserName, hasUserName, setUserName, checkApiConfig, isOnb
 import { loadCustomMembers } from "@/lib/members";
 import MemberPicker from "@/components/common/MemberPicker";
 import { useI18n } from "@/lib/i18n";
+import { getMemberName, getMemberTitle } from "@/lib/members";
 
 
 function getRandomQuestions(pool: string[], count: number, seed: number): string[] {
@@ -123,7 +124,7 @@ export default function Home() {
       const textarea = textareaRef.current;
       if (!textarea) return;
       const member = allMembers.find((m) => m.id === memberId);
-      const displayName = member ? member.nameZh : memberId;
+      const displayName = member ? getMemberName(member, locale) : memberId;
 
       const value = textarea.value;
       const targetAt = activeAtPos.current;
@@ -307,7 +308,7 @@ export default function Home() {
                 const prefix = selectedIds.length > 0
                   ? selectedIds.map((id) => {
                       const m = allMembers.find((c) => c.id === id);
-                      return m ? "@" + m.nameZh + " " : "";
+                      return m ? "@" + getMemberName(m, locale) + " " : "";
                     }).join("")
                   : "";
                 setQuestion(prefix + q);
@@ -346,17 +347,17 @@ export default function Home() {
                   {member.avatar ? (
                     <img
                       src={member.avatar}
-                      alt={member.nameZh}
+                      alt={getMemberName(member, locale)}
                       className="h-full w-full object-cover"
                     />
                   ) : (
                     <span className="text-lg md:text-2xl font-bold text-gray-400">
-                      {member.nameZh.charAt(0)}
+                      {getMemberName(member, locale).charAt(0)}
                     </span>
                   )}
                 </div>
-                <span className="text-xs md:text-sm font-medium text-gray-700 text-center whitespace-nowrap">{member.nameZh}</span>
-                <span className="hidden md:block text-xs text-gray-400">{member.title}</span>
+                <span className="text-xs md:text-sm font-medium text-gray-700 text-center whitespace-nowrap">{getMemberName(member, locale)}</span>
+                <span className="hidden md:block text-xs text-gray-400">{getMemberTitle(member, locale)}</span>
               </button>
             ))}
         </div>
