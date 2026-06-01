@@ -9,51 +9,6 @@ import { loadCustomMembers } from "@/lib/members";
 import MemberPicker from "@/components/common/MemberPicker";
 import { useI18n } from "@/lib/i18n";
 
-const debateQuestions = [
-  "AI 是否会取代人类工作？我们该如何应对？",
-  "面对气候变化，个人、企业和政府应该如何分工承担责任？",
-  "全球化和逆全球化趋势下，发展中国家应该如何选择发展道路？",
-  "全民基本收入是解决贫富差距的有效方案还是养懒人的福利陷阱？",
-  "数据隐私保护与国家安全之间应该如何取舍？",
-  "基因编辑技术是否应该被允许用于人类增强？",
-  "社交媒体平台是否应该为虚假内容承担责任？",
-  "自动驾驶汽车在不可避免的事故中应该优先保护谁？",
-  "加密货币是否应该被各国政府全面禁止？",
-  "远程办公是否会永久改变未来的工作模式？",
-  "教育应该优先培养创新能力还是基础知识？",
-  "太空探索的资源投入是否值得？",
-  "动物实验在医学研究中是否仍然必要？",
-  "核能是否是应对能源危机的最佳方案？",
-  "人工智能是否应该拥有法律人格？",
-  "贫富差距的根源在于制度还是个人能力？",
-  "言论自由的边界在哪里？",
-  "死刑是否应该被彻底废除？",
-  "数字人民币的推广是利大于弊还是弊大于利？",
-  "人类是否应该为火星殖民做准备？",
-];
-
-const chatQuestions = [
-  "如何高效管理个人财务并实现理财目标？",
-  "在职场中如何有效地向上级汇报工作成果？",
-  "如何平衡工作和生活，避免职业倦怠？",
-  "学习一门新语言的最佳方法是什么？",
-  "如何建立和维护高质量的人际关系？",
-  "面对重大决策时，如何克服选择困难症？",
-  "如何在团队中有效处理意见分歧和冲突？",
-  "如何培养长期主义思维来做人生规划？",
-  "在不确定时代，个人应该如何提升抗风险能力？",
-  "如何高效阅读并真正吸收一本书的内容？",
-  "创业者在早期阶段最应该关注什么？",
-  "如何通过写作来提升自己的思考能力？",
-  "面对信息过载，如何筛选有价值的信息？",
-  "如何有效地进行自我管理和时间规划？",
-  "在全球化时代，跨文化沟通能力为什么如此重要？",
-  "如何判断一个行业或领域是否值得深耕？",
-  "父母应该如何培养孩子的独立思考能力？",
-  "如何通过运动来改善心理健康？",
-  "在 AI 时代，人类最不可替代的能力是什么？",
-  "如何从失败中学习并快速恢复状态？",
-];
 
 function getRandomQuestions(pool: string[], count: number, seed: number): string[] {
   let x = seed;
@@ -66,8 +21,19 @@ function getRandomQuestions(pool: string[], count: number, seed: number): string
 }
 
 export default function Home() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const router = useRouter();
+
+  const debateQuestions = useMemo(
+    () => Array.from({ length: 20 }, (_, i) => t(`home.debateQ.${i}`)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [locale]
+  );
+  const chatQuestions = useMemo(
+    () => Array.from({ length: 20 }, (_, i) => t(`home.chatQ.${i}`)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [locale]
+  );
   const [mode, setMode] = useState<"debate" | "chat">("debate");
   const [question, setQuestion] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -79,9 +45,7 @@ export default function Home() {
   const [nameInput, setNameInput] = useState("");
   const [showOnboardingComplete, setShowOnboardingComplete] = useState(false);
   // SSR: show first 3 questions (deterministic). Client: randomize after mount.
-  const [displayedQuestions, setDisplayedQuestions] = useState<string[]>(
-    () => debateQuestions.slice(0, 3)
-  );
+  const [displayedQuestions, setDisplayedQuestions] = useState<string[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const didSelectInSession = useRef(false);
   const activeAtPos = useRef<number | null>(null);
@@ -284,7 +248,7 @@ export default function Home() {
                 mode === "debate" ? "bg-[#1a1a1a] text-white shadow-sm" : "text-gray-500 hover:text-gray-700"
               }`}
             >
-              辩论
+              {t("home.debate")}
             </button>
             <button
               onClick={() => setMode("chat")}
@@ -292,7 +256,7 @@ export default function Home() {
                 mode === "chat" ? "bg-[#1a1a1a] text-white shadow-sm" : "text-gray-500 hover:text-gray-700"
               }`}
             >
-              聊天
+              {t("home.chat")}
             </button>
           </div>
         </div>
@@ -310,7 +274,7 @@ export default function Home() {
               onKeyDown={(e) => {
                 if ((e.metaKey || e.ctrlKey) && e.key === "Enter") handleSubmit();
               }}
-              placeholder={mode === "debate" ? "输入问题后 @成员 开始辩论" : "输入消息后 @成员 开始聊天"}
+              placeholder={mode === "debate" ? t("home.inputPlaceholder") : t("home.inputPlaceholderChat")}
               className="w-full resize-none bg-transparent px-4 py-3 text-base leading-relaxed
                 placeholder:text-gray-400 placeholder:font-normal focus:outline-none"
               rows={3}
@@ -319,17 +283,17 @@ export default function Home() {
           </div>
           <div className="mt-2 flex items-center justify-between px-3 py-2 md:px-4">
             <span className="text-xs text-gray-400 md:hidden">
-              {selectedIds.length > 0 ? `已选 ${selectedIds.length} 人` : "点击头像选择成员"}
+              {selectedIds.length > 0 ? t("home.selectedCount", { count: selectedIds.length }) : t("home.selectMembers")}
             </span>
             <button
               onClick={handleSubmit}
               disabled={!canSubmit || !hasApiConfig}
-              title={!hasApiConfig ? "请先配置 AI Provider" : ""}
+              title={!hasApiConfig ? t("home.configureApiTooltip") : ""}
               className="ml-auto shrink-0 rounded-md bg-[#1a1a1a] px-5 py-2 text-sm font-semibold text-white
                 transition-all hover:bg-[#333] active:scale-[0.98]
                 disabled:cursor-not-allowed disabled:opacity-40 md:px-6"
             >
-              {!hasApiConfig ? "先配置 API" : mode === "debate" ? "开始辩论" : "发起聊天"}
+              {!hasApiConfig ? t("home.configApiFirst") : mode === "debate" ? t("home.startDebate") : t("home.startChat")}
             </button>
           </div>
         </div>
@@ -359,7 +323,7 @@ export default function Home() {
         <div className="my-10 flex items-center gap-4">
           <div className="h-px flex-1 bg-gray-200" />
           <span className="text-xs font-medium uppercase tracking-wider text-gray-400">
-            内阁成员
+            {t("home.membersSection")}
           </span>
           <div className="h-px flex-1 bg-gray-200" />
         </div>
@@ -421,10 +385,8 @@ export default function Home() {
               style={{ borderColor: "rgba(0,0,0,0.06)" }}
               onClick={(e) => e.stopPropagation()}
             >
-              <h3 className="text-lg font-semibold">欢迎</h3>
-              <p className="mt-2 text-sm text-gray-500">
-                怎么称呼你？设置一个昵称，让你的智囊团体验更个性化。
-              </p>
+              <h3 className="text-lg font-semibold">{t("onboarding.welcome")}</h3>
+              <p className="mt-2 text-sm text-gray-500">{t("onboarding.welcomeMessage")}</p>
               <input
                 type="text"
                 value={nameInput}
@@ -437,7 +399,7 @@ export default function Home() {
                     if (!hasApiConfig) setShowApiSetupModal(true);
                   }
                 }}
-                placeholder="如：小明"
+                placeholder={t("header.nicknamePlaceholder")}
                 maxLength={12}
                 className="mt-4 w-full rounded-md border bg-white px-3 py-2.5 text-base focus:outline-none focus:ring-1 focus:ring-gray-300"
                 style={{ borderColor: "rgba(0,0,0,0.08)" }}
@@ -455,14 +417,14 @@ export default function Home() {
                   }}
                   className="flex-1 rounded-md bg-[#1a1a1a] px-4 py-2.5 text-sm font-semibold text-white transition-all hover:bg-[#333] active:scale-[0.98]"
                 >
-                  开始体验
+                  {t("onboarding.start")}
                 </button>
                 <button
                   onClick={() => { setShowNameModal(false); if (!hasApiConfig) setShowApiSetupModal(true); }}
                   className="flex-1 rounded-md border px-4 py-2.5 text-sm font-medium text-gray-600 transition-all hover:bg-gray-50"
                   style={{ borderColor: "rgba(0,0,0,0.08)" }}
                 >
-                  跳过
+                  {t("onboarding.skip")}
                 </button>
               </div>
             </div>
@@ -480,12 +442,10 @@ export default function Home() {
               style={{ borderColor: "rgba(0,0,0,0.06)" }}
               onClick={(e) => e.stopPropagation()}
             >
-              <h3 className="text-lg font-semibold">还差一步</h3>
-              <p className="mt-2 text-sm text-gray-500">
-                你的智囊团需要接入 AI 才能开始讨论。我们支持 OpenRouter（免费模型）、Gemini、Claude 等多种供应商，配置一次即可使用。
-              </p>
+              <h3 className="text-lg font-semibold">{t("home.apiSetupTitle")}</h3>
+              <p className="mt-2 text-sm text-gray-500">{t("home.apiSetupDescription")}</p>
               <div className="mt-4 rounded-md bg-gray-50 px-3 py-2 text-xs text-gray-500">
-                推荐：OpenRouter 提供免费模型，无需充值即可体验。
+                {t("home.apiSetupRecommendation")}
               </div>
               <div className="mt-5 flex gap-3">
                 <button
@@ -495,14 +455,14 @@ export default function Home() {
                   }}
                   className="flex-1 rounded-md bg-[#1a1a1a] px-4 py-2.5 text-sm font-semibold text-white transition-all hover:bg-[#333] active:scale-[0.98]"
                 >
-                  去配置
+                  {t("home.goToConfigure")}
                 </button>
                 <button
                   onClick={() => setShowApiSetupModal(false)}
                   className="flex-1 rounded-md border px-4 py-2.5 text-sm font-medium text-gray-600 transition-all hover:bg-gray-50"
                   style={{ borderColor: "rgba(0,0,0,0.08)" }}
                 >
-                  我先逛逛
+                  {t("home.browseFirst")}
                 </button>
               </div>
             </div>
@@ -528,10 +488,8 @@ export default function Home() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold">准备就绪</h3>
-              <p className="mt-2 text-sm text-gray-500">
-                昵称和 API 都已配置完成，你的智囊团已经就位，可以开始提问了。
-              </p>
+              <h3 className="text-lg font-semibold">{t("onboarding.completeTitle")}</h3>
+              <p className="mt-2 text-sm text-gray-500">{t("onboarding.completeMessage")}</p>
               <button
                 onClick={() => {
                   setShowOnboardingComplete(false);
@@ -539,7 +497,7 @@ export default function Home() {
                 }}
                 className="mt-5 w-full rounded-md bg-[#1a1a1a] px-4 py-2.5 text-sm font-semibold text-white transition-all hover:bg-[#333] active:scale-[0.98]"
               >
-                开始使用
+                {t("onboarding.startUsing")}
               </button>
             </div>
           </div>
