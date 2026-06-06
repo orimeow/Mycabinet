@@ -1,6 +1,9 @@
 import { runDiscussion, runChatSession } from "@/lib/agents/orchestrator";
 import { saveDiscussion, getDiscussion } from "@/lib/db/database";
-import { AIProviderConfig, AIMessage, Discussion, DiscussionMessage } from "@/lib/types";
+import { AIProviderConfig, AIMessage, Discussion, DiscussionMessage, MemberSnapshot } from "@/lib/types";
+import { cabinetMembers as builtInMembers } from "@/data/personas";
+import { listMembers as listCustomMembers } from "@/lib/db/members";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 interface ChatRequestBody {
   question?: string;
@@ -45,6 +48,16 @@ export async function POST(req: Request) {
 
   if (!userId) {
     return new Response("Missing userId", { status: 400 });
+  }
+
+  // Layer 0: Rate limiting — 15 req/min per userId (covers multi-member chat bursts)
+  const rl = checkRateLimit(`chat:${userId}`, 15, 60_000);
+  if (!rl.allowed) {
+    const retryAfter = Math.ceil((rl.retryAfterMs ?? 60_000) / 1000);
+    return new Response(
+      JSON.stringify({ error: `请求过于频繁，请 ${retryAfter} 秒后重试` }),
+      { status: 429, headers: { "Content-Type": "application/json", "Retry-After": String(retryAfter) } }
+    );
   }
 
   // Layer 1: Safety filter
@@ -150,12 +163,18 @@ async function handleDebate(
     saveDiscussion(discussion);
   } else {
     const newId = `d-${Date.now()}-${crypto.randomUUID().slice(0, 6)}`;
+    const allMembers = [...builtInMembers, ...listCustomMembers(userId)];
+    const memberSnapshots: MemberSnapshot[] = selectedMemberIds
+      .map((id) => allMembers.find((m) => m.id === id))
+      .filter(Boolean)
+      .map((m) => ({ id: m!.id, nameZh: m!.nameZh, nameEn: m!.nameEn, title: m!.title, color: m!.color, avatar: m!.avatar }));
     discussion = {
       id: newId,
       question,
       userId,
       mode: "debate",
       selectedMemberIds,
+      memberSnapshots,
       messages: [...(existingMessages ?? [])],
       status: "running",
       createdAt: new Date().toISOString(),
@@ -232,37 +251,6 @@ async function handleDebate(
   });
 }
 
-/**
- * @deprecated Use server-side discussion.messages for resume state instead.
- * Kept for reference only.
- */
-function computeResumeState(
-  messages: DiscussionMessage[]
-): { startRound: number; lastSpeakerPerRound: Record<number, string> } {
-  const lastSpeakerPerRound: Record<number, string> = {};
-  let maxRound = 0;
-
-  for (const msg of messages) {
-    if (msg.round > maxRound) maxRound = msg.round;
-    lastSpeakerPerRound[msg.round] = msg.speakerId;
-  }
-
-  // Round 1: all members have round=1 messages → round 1 complete
-  // Round 2: has messages with round=2 → round 2 complete (or in progress)
-  // Round 3: has moderator message → round 3 complete
-
-  const hasRound3 = messages.some((m) => m.round === 3);
-  const hasRound2 = messages.some((m) => m.round === 2);
-  const hasRound1 = messages.some((m) => m.round === 1);
-
-  let startRound = 1;
-  if (hasRound3) startRound = 4; // all done
-  else if (hasRound2) startRound = 3; // start from summary
-  else if (hasRound1) startRound = 2; // start from cross-exam
-
-  return { startRound, lastSpeakerPerRound };
-}
-
 async function handleChat(
   body: ChatRequestBody,
   config: AIProviderConfig,
@@ -304,12 +292,18 @@ async function handleChat(
     if (memberIds.length === 0) {
       return new Response("Missing selectedMemberIds or selectedMemberId", { status: 400 });
     }
+    const allMembers = [...builtInMembers, ...listCustomMembers(userId)];
+    const memberSnapshots: MemberSnapshot[] = memberIds
+      .map((id) => allMembers.find((m) => m.id === id))
+      .filter(Boolean)
+      .map((m) => ({ id: m!.id, nameZh: m!.nameZh, nameEn: m!.nameEn, title: m!.title, color: m!.color, avatar: m!.avatar }));
     discussion = {
       id: `d-${Date.now()}-${crypto.randomUUID().slice(0, 6)}`,
       question: message ?? "",
       userId,
       mode: "chat",
       selectedMemberIds: memberIds,
+      memberSnapshots,
       messages: [],
       status: "running",
       createdAt: new Date().toISOString(),

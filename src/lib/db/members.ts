@@ -27,7 +27,10 @@ function getMemberFilePath(userId: string, id: string): string {
 }
 
 export function saveMember(userId: string, member: CabinetMember): void {
-  fs.writeFileSync(getMemberFilePath(userId, member.id), JSON.stringify(member, null, 2));
+  const filePath = getMemberFilePath(userId, member.id);
+  const tmpPath = filePath + ".tmp";
+  fs.writeFileSync(tmpPath, JSON.stringify(member, null, 2));
+  fs.renameSync(tmpPath, filePath);
 }
 
 export function getMember(userId: string, id: string): CabinetMember | null {

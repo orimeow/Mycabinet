@@ -56,12 +56,25 @@ export interface DiscussionMessage {
   challengeTarget?: string;
 }
 
+/** Lightweight member snapshot stored with each discussion at creation time.
+ *  Ensures history replay shows the persona as it was, not as it is now. */
+export interface MemberSnapshot {
+  id: string;
+  nameZh: string;
+  nameEn: string;
+  title: string;
+  color: string;
+  avatar: string;
+}
+
 export interface Discussion {
   id: string;
   question: string;
   userId: string;
   mode?: "debate" | "chat";
   selectedMemberIds?: string[];
+  /** Snapshot of selected members captured at discussion creation time. */
+  memberSnapshots?: MemberSnapshot[];
   messages: DiscussionMessage[];
   status: "pending" | "running" | "completed" | "terminated" | "failed";
   createdAt: string;

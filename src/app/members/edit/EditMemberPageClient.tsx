@@ -166,7 +166,7 @@ export default function EditMemberPageClient() {
     try {
       const res = await fetch("/api/members/distill", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "x-user-id": userId },
         body: JSON.stringify({ name: distillName.trim(), config }),
       });
       const data = await res.json().catch(() => ({ error: t("error.serverError") }));

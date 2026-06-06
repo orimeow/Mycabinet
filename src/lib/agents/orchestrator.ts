@@ -161,12 +161,6 @@ export async function* runDiscussion(
 
   const messages = existingMessages ?? [];
 
-  // ===== Compute resume state =====
-  const lastSpeakerPerRound: Record<number, string> = {};
-  for (const msg of messages) {
-    lastSpeakerPerRound[msg.round] = msg.speakerId;
-  }
-
   // Rebuild round content arrays from existing messages
   const round1Content: string[] = [];
   const round2Context: string[] = [];

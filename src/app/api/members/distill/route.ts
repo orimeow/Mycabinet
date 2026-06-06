@@ -3,6 +3,7 @@ import { createProvider } from "@/lib/ai/provider";
 import { chatCompletionNonStreaming } from "@/lib/ai/non-streaming";
 import { DISTILL_SYSTEM_PROMPT, buildDistillUserPrompt } from "@/lib/ai/distill-prompt";
 import { CabinetMember, PersonaDoc, AIProviderConfig } from "@/lib/types";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -176,6 +177,17 @@ export async function POST(req: NextRequest) {
 
     if (!name || !config) {
       return NextResponse.json({ error: "Missing name or config" }, { status: 400 });
+    }
+
+    // Rate limit: 5 distillations per userId per 10 minutes (expensive operation)
+    const userId = req.headers.get("x-user-id") ?? name;
+    const rl = checkRateLimit(`distill:${userId}`, 5, 10 * 60_000);
+    if (!rl.allowed) {
+      const retryAfter = Math.ceil((rl.retryAfterMs ?? 60_000) / 1000);
+      return NextResponse.json(
+        { error: `蒸馏请求过于频繁，请 ${Math.ceil(retryAfter / 60)} 分钟后重试` },
+        { status: 429, headers: { "Retry-After": String(retryAfter) } }
+      );
     }
 
     const provider = createProvider(config);
