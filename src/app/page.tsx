@@ -87,7 +87,7 @@ export default function Home() {
   useEffect(() => {
     const pool = mode === "debate" ? debateQuestions : chatQuestions;
     setDisplayedQuestions(getRandomQuestions(pool, 3, Math.floor(Math.random() * 10000)));
-  }, [mode]);
+  }, [mode, debateQuestions, chatQuestions]);
 
   // Track @ character in textarea
   const handleInputChange = useCallback(
