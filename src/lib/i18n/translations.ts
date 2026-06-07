@@ -2,6 +2,8 @@ export type Locale = "zh" | "en";
 
 const translations = {
   zh: {
+    "app.title": "我的智囊团",
+    "app.description": "汇聚多元思维框架，为你的问题提供多角度深度分析",
     // ===== Common =====
     "common.save": "保存",
     "common.cancel": "取消",
@@ -422,6 +424,8 @@ const translations = {
   },
 
   en: {
+    "app.title": "My Cabinet",
+    "app.description": "A council of great minds — multi-perspective analysis for your toughest questions",
     // ===== Common =====
     "common.save": "Save",
     "common.cancel": "Cancel",

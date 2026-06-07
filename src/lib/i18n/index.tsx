@@ -35,11 +35,16 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
   const [locale, setLocaleState] = useState<Locale>("zh");
 
   useEffect(() => {
-    setLocaleState(getInitialLocale());
+    const initial = getInitialLocale();
+    setLocaleState(initial);
+    document.title = getTranslation(initial)["app.title"] ?? document.title;
+    document.cookie = `${STORAGE_KEY}=${initial}; path=/; max-age=31536000; samesite=lax`;
   }, []);
 
   const setLocale = useCallback((newLocale: Locale) => {
     setLocaleState(newLocale);
+    document.title = getTranslation(newLocale)["app.title"] ?? document.title;
+    document.cookie = `${STORAGE_KEY}=${newLocale}; path=/; max-age=31536000; samesite=lax`;
     try {
       localStorage.setItem(STORAGE_KEY, newLocale);
     } catch {
