@@ -3,7 +3,7 @@ import { saveDiscussion, getDiscussion } from "@/lib/db/database";
 import { AIProviderConfig, AIMessage, Discussion, DiscussionMessage, MemberSnapshot } from "@/lib/types";
 import { cabinetMembers as builtInMembers } from "@/data/personas";
 import { listMembers as listCustomMembers } from "@/lib/db/members";
-import { checkRateLimit } from "@/lib/rate-limit";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 interface ChatRequestBody {
   question?: string;
@@ -50,8 +50,9 @@ export async function POST(req: Request) {
     return new Response("Missing userId", { status: 400 });
   }
 
-  // Layer 0: Rate limiting — 15 req/min per userId (covers multi-member chat bursts)
-  const rl = checkRateLimit(`chat:${userId}`, 15, 60_000);
+  // Layer 0: Rate limiting — keyed by IP (not userId, which is client-controlled)
+  const clientIp = getClientIp(req);
+  const rl = checkRateLimit(`chat:${clientIp}`, 15, 60_000);
   if (!rl.allowed) {
     const retryAfter = Math.ceil((rl.retryAfterMs ?? 60_000) / 1000);
     return new Response(
@@ -236,6 +237,12 @@ async function handleDebate(
           controller.enqueue(encoder.encode(errorEvent));
         }
       } finally {
+        // If client disconnected mid-stream, mark as terminated so resume logic works correctly
+        if (clientAbortSignal.aborted && discussion.status === "running") {
+          discussion.status = "terminated";
+          discussion.terminatedAt = new Date().toISOString();
+          try { saveDiscussion(discussion); } catch { /* best-effort */ }
+        }
         controller.close();
       }
     },
@@ -424,6 +431,11 @@ async function handleChat(
           controller.enqueue(encoder.encode(errorEvent));
         }
       } finally {
+        if (clientAbortSignal.aborted && discussion.status === "running") {
+          discussion.status = "terminated";
+          discussion.terminatedAt = new Date().toISOString();
+          try { saveDiscussion(discussion); } catch { /* best-effort */ }
+        }
         controller.close();
       }
     },

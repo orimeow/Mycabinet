@@ -38,6 +38,20 @@ export function checkRateLimit(
   return { allowed: true };
 }
 
+/**
+ * Extract client IP from request headers (works behind Railway / Nginx / Cloudflare proxies).
+ * Falls back to a constant so rate limiting degrades gracefully rather than failing open.
+ */
+export function getClientIp(req: Request): string {
+  const headers = req instanceof Request ? req.headers : (req as { headers: Headers }).headers;
+  return (
+    headers.get("cf-connecting-ip") ??      // Cloudflare
+    headers.get("x-real-ip") ??             // Nginx
+    headers.get("x-forwarded-for")?.split(",")[0].trim() ?? // Proxies (first hop)
+    "unknown"
+  );
+}
+
 // Purge expired entries every minute to prevent unbounded memory growth
 setInterval(() => {
   const now = Date.now();

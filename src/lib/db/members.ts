@@ -2,7 +2,10 @@ import { CabinetMember } from "@/lib/types";
 import fs from "fs";
 import path from "path";
 
-const ROOT_DATA_DIR = path.join(process.cwd(), "data", "users");
+const ROOT_DATA_DIR = path.join(
+  process.env.DATA_DIR ?? path.join(process.cwd(), "data"),
+  "users"
+);
 
 /** Whitelist validator for userId and member IDs — prevents path traversal */
 const SAFE_ID_RE = /^[a-zA-Z0-9][a-zA-Z0-9._-]{0,127}$/;
@@ -23,6 +26,7 @@ function getUserMembersDir(userId: string): string {
 }
 
 function getMemberFilePath(userId: string, id: string): string {
+  validateId(id, "memberId");
   return path.join(getUserMembersDir(userId), `${id}.json`);
 }
 

@@ -2,7 +2,12 @@ import { Discussion } from "@/lib/types";
 import fs from "fs";
 import path from "path";
 
-const ROOT_DATA_DIR = path.join(process.cwd(), "data", "users");
+// DATA_DIR env var lets Railway / Docker point to a persistent volume.
+// Fallback: project-local `data/` for local dev.
+const ROOT_DATA_DIR = path.join(
+  process.env.DATA_DIR ?? path.join(process.cwd(), "data"),
+  "users"
+);
 const MAX_MESSAGES_PER_DISCUSSION = 300;
 
 /** Whitelist validator for userId and discussion IDs — prevents path traversal */
@@ -24,6 +29,7 @@ function getUserDir(userId: string): string {
 }
 
 function getDiscussionFilePath(userId: string, id: string): string {
+  validateId(id, "discussionId");
   return path.join(getUserDir(userId), `${id}.json`);
 }
 

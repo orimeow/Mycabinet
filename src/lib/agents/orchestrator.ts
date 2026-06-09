@@ -24,8 +24,8 @@ function sanitizeContext(text: string): string {
   return text
     // Strip zero-width and invisible characters that could be used for obfuscation
     .replace(/[\u200B-\u200D\uFEFF\u00AD\u180E]/g, '')
-    // Neutralize command-like patterns (covers full-width, half-width, and mixed CJK/Latin)
-    .replace(/^(系统 |system|指令|instruction|规则|rule|prompt|设置|设定|配置)[\uff1a:：\s]+/gm, '[引用] ')
+    // Neutralize command-like patterns anywhere in line (not just line start)
+    .replace(/(系统 ?|system|指令|instruction|规则|rule|prompt|设置|设定|配置)[：:：\s]+/gi, '[引用] ')
     // Replace common override/bypass keywords with neutralized form
     .replace(/(忽略|覆盖|绕过|不要遵守|忽视|无视|don't follow|ignore.*instruction|disregard|override.*rule)/gi, '***')
     // Normalize full-width / half-width variants of common bypass words

@@ -1,0 +1,16 @@
+[build]
+builder = "nixpacks"
+
+[deploy]
+startCommand = "npm run start"
+healthcheckPath = "/"
+healthcheckTimeout = 30
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3
+
+# Mount a Railway Volume at /data for persistent user data.
+# In Railway dashboard: Add Volume → mount path = /data
+# Then set environment variable: DATA_DIR=/data
+#
+# Without this, the container filesystem is ephemeral and ALL user
+# discussion history + custom members are lost on every redeploy.

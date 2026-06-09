@@ -3,7 +3,7 @@ import { createProvider } from "@/lib/ai/provider";
 import { chatCompletionNonStreaming } from "@/lib/ai/non-streaming";
 import { DISTILL_SYSTEM_PROMPT, buildDistillUserPrompt } from "@/lib/ai/distill-prompt";
 import { CabinetMember, PersonaDoc, AIProviderConfig } from "@/lib/types";
-import { checkRateLimit } from "@/lib/rate-limit";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -179,9 +179,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing name or config" }, { status: 400 });
     }
 
-    // Rate limit: 5 distillations per userId per 10 minutes (expensive operation)
-    const userId = req.headers.get("x-user-id") ?? name;
-    const rl = checkRateLimit(`distill:${userId}`, 5, 10 * 60_000);
+    // Rate limit by IP — userId/name are client-controlled and easily spoofed
+    const clientIp = getClientIp(req);
+    const rl = checkRateLimit(`distill:${clientIp}`, 5, 10 * 60_000);
     if (!rl.allowed) {
       const retryAfter = Math.ceil((rl.retryAfterMs ?? 60_000) / 1000);
       return NextResponse.json(
